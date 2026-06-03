@@ -57,8 +57,8 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   selectedInvoiceId: null,
   user: {
     id: 'usr_1',
-    name: 'Ahmed Benali',
-    email: 'ahmed@distribuerp.com',
+    name: 'Mamadou Diallo',
+    email: 'mamadou@distribusn.com',
     role: 'admin',
     companyId: 'comp_1',
   },

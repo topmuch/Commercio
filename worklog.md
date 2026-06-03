@@ -187,3 +187,37 @@ Stage Summary:
 - AI assistant mock data fully localized
 - Settings defaults updated for Dakar, Senegal
 - ESLint passes with 0 errors
+
+---
+Task ID: 19
+Agent: Main
+Task: Browser verification, final polish, and fixes
+
+Work Log:
+- **Browser verification (Agent Browser)**: Opened app and verified all key pages
+  - Dashboard: ✅ KPI cards with CFA, revenue chart, top products, top commercials, recent orders table
+  - Clients CRM: ✅ Senegalese company names (+221 phones, Dakar/Kolda/Louga cities), color-coded status (Lead Rouge/Négociation Orange/Client Vert), CA in CFA
+  - Products: ✅ Real DB products (Coca-Cola, Youki, Tatam, Djama, etc.), prices 200-16,500 CFA, categories from DB
+  - Orders: ✅ CMD-2024-xxxx numbering, tabs (Nouvelle/Validée/Livrée), Senegalese client names, FCFA amounts
+  - Commercials: ✅ Rankings (Ousmane Diop, Aissatou Ba, Ibrahima Ndiaye), revenue in millions CFA
+  - Boutique: ✅ Now fetching real DB products instead of mock data, dynamic category filters from DB, WhatsApp checkout links
+  - Settings: ✅ Mamadou Diallo profile, +221 phones, Dakar address, DistribuSN company
+  - Dark mode: ✅ Toggle works correctly
+- **Fix: User name in Zustand store**: Changed `Ahmed Benali` → `Mamadou Diallo`, email `ahmed@distribuerp.com` → `mamadou@distribusn.com`
+- **Fix: Header notifications**: Updated to Senegalese context (Supermarché Sobatex, Youki, Marché Kermel)
+- **Fix: Added Settings to sidebar**: New "Système" group with "Paramètres" link in `app-sidebar.tsx`
+- **Rewrite: Boutique page**: Replaced all hardcoded mock data with real API calls
+  - Fetches products from `/api/products?status=active&limit=100`
+  - Fetches categories from `/api/categories` for dynamic category filter nav
+  - Fetches store settings from `/api/store-settings` for WhatsApp number
+  - Loading skeletons, error states, brand badges
+  - "Produits Populaires" section showing top products by stock
+- **New API route**: `/api/store-settings` — GET (with auto-create default) and PUT for boutique WhatsApp configuration
+- Final lint: 0 errors
+
+Stage Summary:
+- All pages verified working with real Senegal data via Agent Browser
+- Boutique page now fully dynamic (real DB products, categories, WhatsApp settings)
+- Settings accessible from sidebar
+- User identity fully Senegal-localized (Mamadou Diallo)
+- 16 API routes total, 15 page components, zero lint errors

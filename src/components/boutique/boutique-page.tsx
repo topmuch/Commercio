@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -14,32 +14,30 @@ import {
   Tag,
   Sparkles,
   Phone,
+  Loader2,
 } from 'lucide-react'
 
-// ── Mock data ──────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────
 
 interface BoutiqueProduct {
   id: string
   name: string
   reference: string
   price: number
-  resellerPrice: number
+  resellerPrice: number | null
   stock: number
   minStock: number
-  category: string
-  isNew: boolean
-  isPromo: boolean
-  promoPercent?: number
+  category: { name: string } | null
+  brand: string | null
+  status: string
   gradient: string
 }
 
-const categories = [
-  { id: 'all', label: 'Tous', icon: '🛍️' },
-  { id: 'boissons', label: 'Boissons', icon: '🥤' },
-  { id: 'alimentation', label: 'Alimentation', icon: '🍞' },
-  { id: 'entretien', label: 'Entretien', icon: '🧹' },
-  { id: 'cosmetiques', label: 'Cosmétiques', icon: '💄' },
-]
+interface CategoryItem {
+  id: string
+  name: string
+  _count: { products: number }
+}
 
 const gradients = [
   'from-rose-400 to-pink-500',
@@ -54,22 +52,22 @@ const gradients = [
   'from-yellow-400 to-amber-500',
   'from-teal-400 to-emerald-500',
   'from-orange-400 to-red-500',
+  'from-cyan-400 to-blue-500',
+  'from-green-400 to-emerald-500',
+  'from-pink-400 to-rose-500',
+  'from-indigo-400 to-violet-500',
 ]
 
-const allProducts: BoutiqueProduct[] = [
-  { id: '1', name: 'Coca-Cola 33cl', reference: 'BOI-001', price: 50, resellerPrice: 42, stock: 500, minStock: 50, category: 'boissons', isNew: false, isPromo: true, promoPercent: 10, gradient: gradients[0] },
-  { id: '2', name: 'Yaourt Danone Pack 12', reference: 'ALI-001', price: 650, resellerPrice: 580, stock: 200, minStock: 30, category: 'alimentation', isNew: false, isPromo: false, gradient: gradients[1] },
-  { id: '3', name: 'Détergent Tide 3kg', reference: 'ENT-001', price: 1200, resellerPrice: 1050, stock: 80, minStock: 20, category: 'entretien', isNew: true, isPromo: false, gradient: gradients[2] },
-  { id: '4', name: 'Shampoo Dove 400ml', reference: 'COS-001', price: 450, resellerPrice: 380, stock: 150, minStock: 25, category: 'cosmetiques', isNew: false, isPromo: false, gradient: gradients[3] },
-  { id: '5', name: 'Jus d\'Orange Al Hamra 1L', reference: 'BOI-002', price: 180, resellerPrice: 155, stock: 0, minStock: 40, category: 'boissons', isNew: false, isPromo: false, gradient: gradients[4] },
-  { id: '6', name: 'Semoule Couscous 5kg', reference: 'ALI-002', price: 450, resellerPrice: 390, stock: 300, minStock: 50, category: 'alimentation', isNew: true, isPromo: true, promoPercent: 15, gradient: gradients[5] },
-  { id: '7', name: 'Eau Javel 1L', reference: 'ENT-002', price: 80, resellerPrice: 65, stock: 15, minStock: 30, category: 'entretien', isNew: false, isPromo: false, gradient: gradients[6] },
-  { id: '8', name: 'Crème Nivea 200ml', reference: 'COS-002', price: 520, resellerPrice: 460, stock: 90, minStock: 15, category: 'cosmetiques', isNew: true, isPromo: false, gradient: gradients[7] },
-  { id: '9', name: 'Harissa CPL 70g x24', reference: 'ALI-003', price: 800, resellerPrice: 720, stock: 120, minStock: 20, category: 'alimentation', isNew: false, isPromo: true, promoPercent: 8, gradient: gradients[8] },
-  { id: '10', name: 'Sprite 33cl', reference: 'BOI-003', price: 50, resellerPrice: 42, stock: 400, minStock: 50, category: 'boissons', isNew: false, isPromo: false, gradient: gradients[9] },
-  { id: '11', name: 'Savon de Marseille 500g', reference: 'ENT-003', price: 250, resellerPrice: 210, stock: 60, minStock: 15, category: 'entretien', isNew: false, isPromo: false, gradient: gradients[10] },
-  { id: '12', name: 'Gel Douche Palmolive', reference: 'COS-003', price: 380, resellerPrice: 330, stock: 110, minStock: 20, category: 'cosmetiques', isNew: true, isPromo: false, gradient: gradients[11] },
-]
+const categoryIcons: Record<string, string> = {
+  'Boissons': '🥤',
+  'Alimentation': '🍞',
+  'Entretien': '🧹',
+  'Hygiène': '💅',
+  'Produits Laitiers': '🥛',
+  'Conserves': '🥫',
+  'Jus & Sodas': '🧃',
+  'Eau minérale': '💧',
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -87,7 +85,8 @@ function getStockBadge(stock: number, minStock: number) {
   return <Badge className="text-[10px] px-1.5 bg-erp-success text-white">En stock</Badge>
 }
 
-function buildWhatsAppUrl(product: BoutiqueProduct) {
+function buildWhatsAppUrl(product: BoutiqueProduct, whatsappNumber: string) {
+  const phone = whatsappNumber ? whatsappNumber.replace(/[^0-9]/g, '') : ''
   const message = encodeURIComponent(
     `Bonjour, je souhaite commander :\n\n` +
     `📦 Produit : ${product.name}\n` +
@@ -96,12 +95,12 @@ function buildWhatsAppUrl(product: BoutiqueProduct) {
     `${product.resellerPrice ? `🏷️ Prix revendeur : ${formatCFA(product.resellerPrice)}\n` : ''}` +
     `\nMerci de confirmer la disponibilité.`
   )
-  return `https://wa.me/?text=${message}`
+  return `https://wa.me/${phone}?text=${message}`
 }
 
 // ── Product Card ──────────────────────────────────────────────────────
 
-function ProductCard({ product }: { product: BoutiqueProduct }) {
+function ProductCard({ product, whatsappNumber }: { product: BoutiqueProduct; whatsappNumber: string }) {
   return (
     <Card className="group overflow-hidden border border-border/60 hover:shadow-lg transition-all duration-200 hover:border-erp-orange/30 flex flex-col">
       {/* Image placeholder */}
@@ -110,21 +109,14 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
           {product.name.charAt(0)}
         </div>
 
-        {/* Badges on image */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {product.isPromo && (
-            <Badge className="bg-erp-orange text-white text-[10px] px-1.5 py-0 gap-0.5">
-              <Tag className="h-3 w-3" />
-              -{product.promoPercent}%
+        {/* Brand badge */}
+        {product.brand && (
+          <div className="absolute top-2 left-2">
+            <Badge className="bg-black/20 text-white text-[10px] px-1.5 py-0 backdrop-blur-sm border-0">
+              {product.brand}
             </Badge>
-          )}
-          {product.isNew && (
-            <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 gap-0.5">
-              <Sparkles className="h-3 w-3" />
-              Nouveau
-            </Badge>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="absolute top-2 right-2">
           {getStockBadge(product.stock, product.minStock)}
@@ -142,6 +134,9 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Réf: {product.reference}
+            {product.category && (
+              <span className="ml-2">· {product.category.name}</span>
+            )}
           </p>
         </div>
 
@@ -151,11 +146,6 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
             <span className="text-lg font-bold text-foreground">
               {formatCFA(product.price)}
             </span>
-            {product.isPromo && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatCFA(Math.round(product.price / (1 - (product.promoPercent || 0) / 100)))}
-              </span>
-            )}
           </div>
           {product.resellerPrice && (
             <div className="flex items-center gap-1.5">
@@ -177,7 +167,7 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
             asChild
             disabled={product.stock === 0}
           >
-            <a href={buildWhatsAppUrl(product)} target="_blank" rel="noopener noreferrer">
+            <a href={buildWhatsAppUrl(product, whatsappNumber)} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-4 w-4" />
               Commander sur WhatsApp
             </a>
@@ -188,32 +178,149 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
   )
 }
 
+// ── Loading Skeleton ──────────────────────────────────────────────────
+
+function ProductCardSkeleton() {
+  return (
+    <Card className="overflow-hidden">
+      <div className="h-40 bg-muted animate-pulse" />
+      <CardContent className="p-4 space-y-3">
+        <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+        <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+        <div className="h-6 bg-muted rounded animate-pulse w-1/3" />
+        <div className="h-9 bg-muted rounded-lg animate-pulse w-full mt-4" />
+      </CardContent>
+    </Card>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────
 
 export default function BoutiquePage() {
+  const [products, setProducts] = useState<BoutiqueProduct[]>([])
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [whatsappNumber, setWhatsappNumber] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const [productsRes, categoriesRes, settingsRes] = await Promise.all([
+        fetch('/api/products?status=active&limit=100'),
+        fetch('/api/categories'),
+        fetch('/api/store-settings'),
+      ])
+
+      if (!productsRes.ok || !categoriesRes.ok) throw new Error('Erreur de chargement')
+
+      const productsJson = await productsRes.json()
+      const categoriesJson = await categoriesRes.json()
+
+      // Get WhatsApp number from store settings (non-blocking)
+      if (settingsRes.ok) {
+        const settingsJson = await settingsRes.json()
+        if (settingsJson.data?.whatsappNumber) {
+          setWhatsappNumber(settingsJson.data.whatsappNumber)
+        }
+      }
+
+      const mappedProducts: BoutiqueProduct[] = (productsJson.data || []).map(
+        (p: Record<string, unknown>, idx: number) => ({
+          id: p.id as string,
+          name: p.name as string,
+          reference: p.reference as string,
+          price: p.price as number,
+          resellerPrice: p.resellerPrice as number | null,
+          stock: p.stock as number,
+          minStock: p.minStock as number,
+          category: p.category as { name: string } | null,
+          brand: p.brand as string | null,
+          status: p.status as string,
+          gradient: gradients[idx % gradients.length],
+        })
+      )
+
+      setProducts(mappedProducts)
+      setCategories(categoriesJson.data || [])
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Build dynamic category nav from real data
+  const categoryNav = useMemo(() => {
+    const nav = [{ id: 'all', label: 'Tous', icon: '🛍️', count: products.length }]
+    categories.forEach((cat) => {
+      nav.push({
+        id: cat.id,
+        label: cat.name,
+        icon: categoryIcons[cat.name] || '📦',
+        count: cat._count.products,
+      })
+    })
+    return nav
+  }, [categories, products.length])
+
+  // Filter products
   const filteredProducts = useMemo(() => {
-    return allProducts.filter((p) => {
-      const matchesCategory = activeCategory === 'all' || p.category === activeCategory
+    return products.filter((p) => {
+      const matchesCategory = activeCategory === 'all' || p.category?.name === categories.find(c => c.id === activeCategory)?.name || p.category?.name === activeCategory
       const matchesSearch =
         !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.reference.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesCategory && matchesSearch
     })
-  }, [activeCategory, searchQuery])
+  }, [products, activeCategory, searchQuery, categories])
 
-  const promoProducts = useMemo(
-    () => allProducts.filter((p) => p.isPromo),
-    []
+  // Featured products: top 4 by highest stock
+  const featuredProducts = useMemo(
+    () => [...products].sort((a, b) => b.stock - a.stock).slice(0, 4),
+    [products]
   )
 
-  const newProducts = useMemo(
-    () => allProducts.filter((p) => p.isNew),
-    []
-  )
+  // ─── Loading State ───
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <section className="rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-erp-blue p-6 sm:p-10 lg:p-14 animate-pulse">
+          <div className="h-8 w-48 bg-white/20 rounded mb-4" />
+          <div className="h-12 w-80 bg-white/20 rounded mb-3" />
+          <div className="h-5 w-96 bg-white/15 rounded mb-6" />
+          <div className="h-11 w-full max-w-md bg-white/20 rounded-lg" />
+        </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Error State ───
+  if (error) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-sm text-erp-danger">{error}</p>
+          <Button variant="outline" onClick={fetchData}>Réessayer</Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -235,8 +342,8 @@ export default function BoutiquePage() {
             Bienvenue sur notre boutique
           </h1>
           <p className="text-sm sm:text-base text-white/70 mb-6 max-w-lg">
-            Parcourez notre catalogue de produits et commandez facilement via WhatsApp.
-            Prix compétitifs pour professionnels et revendeurs.
+            Parcourez notre catalogue de {products.length} produits et commandez facilement via WhatsApp.
+            Prix compétitifs pour professionnels et revendeurs au Sénégal.
           </p>
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -254,7 +361,7 @@ export default function BoutiquePage() {
       <section>
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex gap-2 pb-2">
-            {categories.map((cat) => (
+            {categoryNav.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
@@ -266,6 +373,7 @@ export default function BoutiquePage() {
               >
                 <span>{cat.icon}</span>
                 <span>{cat.label}</span>
+                <span className="text-[10px] opacity-60">({cat.count})</span>
               </button>
             ))}
           </div>
@@ -273,37 +381,19 @@ export default function BoutiquePage() {
         </ScrollArea>
       </section>
 
-      {/* ── Promotions Section ────────────────────────────── */}
+      {/* ── Featured Products (high stock) ──────────────────── */}
       {activeCategory === 'all' && !searchQuery && (
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Tag className="h-5 w-5 text-erp-orange" />
-            <h2 className="text-lg font-bold text-foreground">Promotions</h2>
+            <Star className="h-5 w-5 text-erp-orange" />
+            <h2 className="text-lg font-bold text-foreground">Produits Populaires</h2>
             <Badge variant="secondary" className="bg-erp-orange/10 text-erp-orange text-xs">
-              {promoProducts.length} articles
+              {featuredProducts.length} articles
             </Badge>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {promoProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Nouveautés Section ────────────────────────────── */}
-      {activeCategory === 'all' && !searchQuery && (
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold text-foreground">Nouveautés</h2>
-            <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
-              {newProducts.length} articles
-            </Badge>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {newProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} />
             ))}
           </div>
         </section>
@@ -313,9 +403,11 @@ export default function BoutiquePage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-erp-orange" />
+            <ShoppingCart className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">
-              {activeCategory === 'all' ? 'Tous les produits' : categories.find(c => c.id === activeCategory)?.label}
+              {activeCategory === 'all'
+                ? 'Tous les produits'
+                : categoryNav.find(c => c.id === activeCategory)?.label}
             </h2>
             <Badge variant="secondary" className="text-xs">
               {filteredProducts.length} articles
@@ -343,7 +435,7 @@ export default function BoutiquePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} />
             ))}
           </div>
         )}
@@ -358,6 +450,7 @@ export default function BoutiquePage() {
           <h3 className="font-semibold text-foreground">Besoin d&apos;aide pour commander ?</h3>
           <p className="text-sm text-muted-foreground mt-1">
             Contactez notre équipe directement via WhatsApp pour une assistance personnalisée.
+            Livraison disponible à Dakar et dans tout le Sénégal.
           </p>
         </div>
         <Button className="gap-2 bg-erp-success hover:bg-erp-success/90 text-white shrink-0">

@@ -88,6 +88,12 @@ const navGroups: NavGroup[] = [
       { id: 'ai-assistant', label: 'Assistant IA', icon: Bot },
     ],
   },
+  {
+    label: 'Système',
+    items: [
+      { id: 'settings', label: 'Paramètres', icon: Settings },
+    ],
+  },
 ]
 
 export function AppSidebar() {

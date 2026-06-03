@@ -169,15 +169,15 @@ export function AppHeader() {
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-                <span className="text-sm font-medium">Nouvelle commande #CMD-2024-0089</span>
-                <span className="text-xs text-muted-foreground">Il y a 5 minutes</span>
+                <span className="text-sm font-medium">Nouvelle commande #CMD-2024-0021</span>
+                <span className="text-xs text-muted-foreground">Supermarché Sobatex · Il y a 5 min</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-                <span className="text-sm font-medium">Stock faible : Produit A-102</span>
+                <span className="text-sm font-medium">Stock faible : Jus d&apos;Orange Youki</span>
                 <span className="text-xs text-muted-foreground">Il y a 15 minutes</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-                <span className="text-sm font-medium">Devis DEV-2024-0045 accepté</span>
+                <span className="text-sm font-medium">Client Lead rouge : Marché Kermel</span>
                 <span className="text-xs text-muted-foreground">Il y a 1 heure</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
