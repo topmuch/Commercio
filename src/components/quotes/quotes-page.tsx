@@ -46,7 +46,7 @@ import type { Quote, Client, Product } from '@/lib/types'
 
 // ── Helpers ──────────────────────────────────────────────
 function formatDA(value: number): string {
-  return new Intl.NumberFormat('fr-DZ').format(Math.round(value)) + ' DA'
+  return new Intl.NumberFormat('fr-FR').format(Math.round(value)) + ' CFA'
 }
 
 function formatDate(iso: string): string {

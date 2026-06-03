@@ -72,13 +72,8 @@ interface Commercial {
   name: string
 }
 
-function formatDZD(amount: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'currency',
-    currency: 'DZD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+function formatCFA(amount: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 function getTypeLabel(type: string): string {
@@ -158,7 +153,7 @@ function RegionMapCard({
         </div>
       </div>
       <p className={`text-xs ${getRegionHeatTextColor(region.revenue, maxRevenue)} opacity-80`}>
-        {formatDZD(region.revenue)}
+        {formatCFA(region.revenue)}
       </p>
     </button>
   )
@@ -502,7 +497,7 @@ export default function MapStoresPage() {
                             {getTypeLabel(client.type)}
                           </Badge>
                           <span className="text-[10px] text-emerald-600 font-medium">
-                            {formatDZD(client._revenue)}
+                            {formatCFA(client._revenue)}
                           </span>
                           <span className="text-[10px] text-muted-foreground">
                             ({client.orderCount} cmd)

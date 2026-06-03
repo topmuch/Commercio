@@ -44,20 +44,20 @@ const mockResponses: Record<string, string> = {
 
 Voici le résumé de vos performances ce mois-ci :
 
-1. **Chiffre d'affaires total** : 14,01 M DA (+12.5% vs mois dernier)
+1. **Chiffre d'affaires total** : 42,03 M CFA (+12.5% vs mois dernier)
 2. **Nombre de commandes** : 156 commandes traitées
-3. **Panier moyen** : 89 800 DA
+3. **Panier moyen** : 269 400 CFA
 4. **Taux de conversion** : 68% (en hausse de 3 points)
 
 **Points clés :**
 - Les **boissons** représentent 42% du CA total
-- La région d'**Alger** génère 35% des ventes
-- **Karim M.** est le meilleur commercial avec 3,12 M DA
+- La région de **Dakar** génère 38% des ventes
+- **Abdoulaye S.** est le meilleur commercial avec 12,48 M CFA
 - **12 nouveaux clients** ont été acquis ce mois
 
 **Recommandations :**
 - Augmenter le stock de Coca-Cola et Yaourt Danone (demande en hausse)
-- Renforcer la couverture dans la région de Constantine (+8% de croissance)`,
+- Renforcer la couverture dans la région de Thiès (+8% de croissance)`,
 
   'Produits en alerte stock': `⚠️ **Alertes de stock - Produits critiques**
 
@@ -82,12 +82,12 @@ Voici le résumé de vos performances ce mois-ci :
 
 | # | Commercial | CA | Objectif | Atteinte |
 |---|-----------|-----|----------|----------|
-| 1 | Karim M. | 3,12 M DA | 3 M DA | ✅ 104% |
-| 2 | Youcef K. | 2,78 M DA | 2,5 M DA | ✅ 111% |
-| 3 | Ahmed B. | 2,45 M DA | 3 M DA | ⚠️ 82% |
-| 4 | Rachid H. | 2,21 M DA | 2,5 M DA | ⚠️ 88% |
-| 5 | Sara L. | 1,89 M DA | 2,5 M DA | ⚠️ 76% |
-| 6 | Amina D. | 1,56 M DA | 2 M DA | ⚠️ 78% |
+| 1 | Abdoulaye S. | 12,48 M CFA | 12 M CFA | ✅ 104% |
+| 2 | Ibrahima F. | 11,12 M CFA | 10 M CFA | ✅ 111% |
+| 3 | Mamadou D. | 9,85 M CFA | 12 M CFA | ⚠️ 82% |
+| 4 | Ousmane B. | 8,84 M CFA | 10 M CFA | ⚠️ 88% |
+| 5 | Fatou N. | 7,56 M CFA | 10 M CFA | ⚠️ 76% |
+| 6 | Aminata D. | 6,24 M CFA | 8 M CFA | ⚠️ 78% |
 
 **Insights :**
 - **2 commerciaux** ont dépassé leur objectif
@@ -100,7 +100,7 @@ Voici le résumé de vos performances ce mois-ci :
 Basé sur l'historique et les tendances actuelles :
 
 **Mois prochain (projection) :**
-- **CA estimé** : 15,8 M DA (+12% de croissance)
+- **CA estimé** : 47,4 M CFA (+12% de croissance)
 - **Commandes prévues** : 175-190
 - **Nouveaux clients** : ~22
 
@@ -114,7 +114,7 @@ Basé sur l'historique et les tendances actuelles :
 - Augmenter le stock de boissons de 40%
 - Préparer des promotions sur les cosmétiques
 - Négocier de meilleurs tarifs avec les fournisseurs d'entretien
-- Recruter 1 commercial supplémentaire pour la couverture Alger`,
+- Recruter 1 commercial supplémentaire pour la couverture Dakar`,
 
   'Recommandations produits': `💡 **Recommandations produits - Intelligence de marché**
 

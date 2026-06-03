@@ -32,13 +32,8 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Commercial } from '@/lib/types'
 
-function formatDZD(amount: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'currency',
-    currency: 'DZD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+function formatCFA(amount: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 function getInitials(name: string): string {
@@ -121,7 +116,7 @@ function RankingPodium({ commercials }: { commercials: Commercial[] }) {
                 </p>
                 {commercial && (
                   <p className="text-xs font-bold text-amber-600 mt-0.5">
-                    {formatDZD(commercial._revenue || 0)}
+                    {formatCFA(commercial._revenue || 0)}
                   </p>
                 )}
               </div>
@@ -157,7 +152,7 @@ function KPIRow({ commercials }: { commercials: Commercial[] }) {
   const kpis = [
     {
       label: 'CA Équipe',
-      value: formatDZD(totalRevenue),
+      value: formatCFA(totalRevenue),
       icon: TrendingUp,
       color: 'text-emerald-600',
       bg: 'bg-emerald-50 dark:bg-emerald-950/30',
@@ -260,7 +255,7 @@ function CommercialCard({
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-muted-foreground font-medium">Chiffre d&apos;affaires</span>
-            <span className="text-sm font-bold text-emerald-600">{formatDZD(commercial._revenue || 0)}</span>
+            <span className="text-sm font-bold text-emerald-600">{formatCFA(commercial._revenue || 0)}</span>
           </div>
         </div>
 
@@ -281,10 +276,10 @@ function CommercialCard({
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-[10px] text-muted-foreground">
-                Atteint: {formatDZD(revenueTarget.achieved || 0)}
+                Atteint: {formatCFA(revenueTarget.achieved || 0)}
               </span>
               <span className="text-[10px] text-muted-foreground">
-                Objectif: {formatDZD(revenueTarget.value)}
+                Objectif: {formatCFA(revenueTarget.value)}
               </span>
             </div>
           </div>
@@ -397,7 +392,7 @@ function CommercialDetailDialog({
                 </Card>
                 <Card className="border-0 bg-muted/50">
                   <CardContent className="p-3 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">{formatDZD(commercial._revenue || 0)}</p>
+                    <p className="text-2xl font-bold text-emerald-600">{formatCFA(commercial._revenue || 0)}</p>
                     <p className="text-xs text-muted-foreground">CA Total</p>
                   </CardContent>
                 </Card>
@@ -414,8 +409,8 @@ function CommercialDetailDialog({
                         <span className="text-muted-foreground">CA moyen par client</span>
                         <span className="font-semibold">
                           {commercial._count?.clients
-                            ? formatDZD((commercial._revenue || 0) / (commercial._count?.clients || 1))
-                            : formatDZD(0)}
+                            ? formatCFA((commercial._revenue || 0) / (commercial._count?.clients || 1))
+                            : formatCFA(0)}
                         </span>
                       </div>
                     </div>
@@ -434,8 +429,8 @@ function CommercialDetailDialog({
                         <span className="text-muted-foreground">Panier moyen</span>
                         <span className="font-semibold">
                           {commercial._count?.orders
-                            ? formatDZD((commercial._revenue || 0) / (commercial._count?.orders || 1))
-                            : formatDZD(0)}
+                            ? formatCFA((commercial._revenue || 0) / (commercial._count?.orders || 1))
+                            : formatCFA(0)}
                         </span>
                       </div>
                     </div>
@@ -456,7 +451,7 @@ function CommercialDetailDialog({
                   <div className="space-y-3">
                     <div className="flex justify-between items-center py-2 border-b border-border/50">
                       <span className="text-sm text-muted-foreground">Chiffre d&apos;affaires</span>
-                      <span className="text-sm font-bold text-emerald-600">{formatDZD(commercial._revenue || 0)}</span>
+                      <span className="text-sm font-bold text-emerald-600">{formatCFA(commercial._revenue || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-border/50">
                       <span className="text-sm text-muted-foreground">Total commandes</span>
@@ -514,13 +509,13 @@ function CommercialDetailDialog({
                         <span>
                           Atteint:{' '}
                           {target.type === 'revenue'
-                            ? formatDZD(target.achieved)
+                            ? formatCFA(target.achieved)
                             : `${target.achieved}`}
                         </span>
                         <span>
                           Objectif:{' '}
                           {target.type === 'revenue'
-                            ? formatDZD(target.value)
+                            ? formatCFA(target.value)
                             : `${target.value}`}
                         </span>
                       </div>

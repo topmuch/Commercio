@@ -49,13 +49,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAppStore } from '@/lib/store'
 import type { Client, Commercial } from '@/lib/types'
 
-// Format number as Algerian Dinars
-function formatDZD(amount: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount) + ' DA'
+// Format number as CFA Francs
+function formatCFA(amount: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 const typeLabels: Record<string, string> = {
@@ -73,15 +69,15 @@ const typeColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
-  active: 'Actif',
-  inactive: 'Inactif',
-  prospect: 'Prospect',
+  lead_rouge: 'Lead Rouge',
+  negociation_orange: 'Négociation Orange',
+  client_vert: 'Client Vert',
 }
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  inactive: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  prospect: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  lead_rouge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  negociation_orange: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  client_vert: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
 }
 
 interface ClientWithRevenue extends Client {
@@ -118,7 +114,7 @@ export default function ClientsPage() {
     region: '',
     sector: '',
     type: 'boutique',
-    status: 'active',
+    status: 'client_vert',
     notes: '',
     commercialId: '',
   })
@@ -196,7 +192,7 @@ export default function ClientsPage() {
           region: '',
           sector: '',
           type: 'boutique',
-          status: 'active',
+          status: 'client_vert',
           notes: '',
           commercialId: '',
         })
@@ -239,9 +235,9 @@ export default function ClientsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Tous</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
-                  <SelectItem value="prospect">Prospect</SelectItem>
+                  <SelectItem value="lead_rouge">Lead Rouge</SelectItem>
+                  <SelectItem value="negociation_orange">Négociation Orange</SelectItem>
+                  <SelectItem value="client_vert">Client Vert</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -264,17 +260,20 @@ export default function ClientsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Toutes</SelectItem>
-                  <SelectItem value="Alger">Alger</SelectItem>
-                  <SelectItem value="Oran">Oran</SelectItem>
-                  <SelectItem value="Constantine">Constantine</SelectItem>
-                  <SelectItem value="Blida">Blida</SelectItem>
-                  <SelectItem value="Médéa">Médéa</SelectItem>
-                  <SelectItem value="Tlemcen">Tlemcen</SelectItem>
-                  <SelectItem value="Annaba">Annaba</SelectItem>
-                  <SelectItem value="Sétif">Sétif</SelectItem>
-                  <SelectItem value="Béjaïa">Béjaïa</SelectItem>
-                  <SelectItem value="Ouargla">Ouargla</SelectItem>
-                  <SelectItem value="Ghardaïa">Ghardaïa</SelectItem>
+                  <SelectItem value="Dakar">Dakar</SelectItem>
+                  <SelectItem value="Thiès">Thiès</SelectItem>
+                  <SelectItem value="Saint-Louis">Saint-Louis</SelectItem>
+                  <SelectItem value="Louga">Louga</SelectItem>
+                  <SelectItem value="Diourbel">Diourbel</SelectItem>
+                  <SelectItem value="Fatick">Fatick</SelectItem>
+                  <SelectItem value="Kaolack">Kaolack</SelectItem>
+                  <SelectItem value="Kaffrine">Kaffrine</SelectItem>
+                  <SelectItem value="Tambacounda">Tambacounda</SelectItem>
+                  <SelectItem value="Kolda">Kolda</SelectItem>
+                  <SelectItem value="Ziguinchor">Ziguinchor</SelectItem>
+                  <SelectItem value="Sédhiou">Sédhiou</SelectItem>
+                  <SelectItem value="Kédougou">Kédougou</SelectItem>
+                  <SelectItem value="Matam">Matam</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -330,9 +329,9 @@ export default function ClientsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {clients.filter((c) => c.status === 'active').length}
+                  {clients.filter((c) => c.status === 'client_vert').length}
                 </p>
-                <p className="text-xs text-muted-foreground">Actifs</p>
+                <p className="text-xs text-muted-foreground">Clients Verts</p>
               </div>
             </div>
           </CardContent>
@@ -345,9 +344,9 @@ export default function ClientsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {clients.filter((c) => c.status === 'prospect').length}
+                  {clients.filter((c) => c.status === 'lead_rouge').length}
                 </p>
-                <p className="text-xs text-muted-foreground">Prospects</p>
+                <p className="text-xs text-muted-foreground">Leads Rouges</p>
               </div>
             </div>
           </CardContent>
@@ -360,9 +359,9 @@ export default function ClientsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {clients.filter((c) => c.status === 'inactive').length}
+                  {clients.filter((c) => c.status === 'negociation_orange').length}
                 </p>
-                <p className="text-xs text-muted-foreground">Inactifs</p>
+                <p className="text-xs text-muted-foreground">Négociations</p>
               </div>
             </div>
           </CardContent>
@@ -464,7 +463,7 @@ export default function ClientsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="text-sm font-medium">
-                            {formatDZD(client.revenue)}
+                            {formatCFA(client.revenue)}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -543,7 +542,7 @@ export default function ClientsPage() {
                           {typeLabels[client.type] || client.type}
                         </Badge>
                         <span className="text-xs font-medium text-muted-foreground">
-                          {formatDZD(client.revenue)}
+                          {formatCFA(client.revenue)}
                         </span>
                       </div>
                     </div>
@@ -653,7 +652,7 @@ export default function ClientsPage() {
               <Label htmlFor="phone">Téléphone *</Label>
               <Input
                 id="phone"
-                placeholder="+213 555 000 000"
+                placeholder="+221 77 000 00 00"
                 value={newClient.phone}
                 onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
               />
@@ -662,7 +661,7 @@ export default function ClientsPage() {
               <Label htmlFor="whatsapp">WhatsApp</Label>
               <Input
                 id="whatsapp"
-                placeholder="+213 555 000 000"
+                placeholder="+221 77 000 00 00"
                 value={newClient.whatsapp}
                 onChange={(e) => setNewClient({ ...newClient, whatsapp: e.target.value })}
               />
@@ -716,7 +715,7 @@ export default function ClientsPage() {
               <Label htmlFor="region">Région</Label>
               <Input
                 id="region"
-                placeholder="Wilaya"
+                placeholder="Région"
                 value={newClient.region}
                 onChange={(e) => setNewClient({ ...newClient, region: e.target.value })}
               />
@@ -740,9 +739,9 @@ export default function ClientsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="prospect">Prospect</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
+                  <SelectItem value="client_vert">Client Vert</SelectItem>
+                  <SelectItem value="lead_rouge">Lead Rouge</SelectItem>
+                  <SelectItem value="negociation_orange">Négociation Orange</SelectItem>
                 </SelectContent>
               </Select>
             </div>

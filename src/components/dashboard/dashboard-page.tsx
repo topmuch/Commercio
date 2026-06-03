@@ -81,18 +81,13 @@ interface DashboardData {
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function formatDA(value: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'decimal',
-    maximumFractionDigits: 0,
-  })
-    .format(value)
-    .replace(/,/g, ' ') + ' DA'
+  return new Intl.NumberFormat('fr-FR').format(Math.round(value)) + ' CFA'
 }
 
 function formatShortDA(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace('.', ',')}M DA`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K DA`
-  return `${value} DA`
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace('.', ',')}M CFA`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K CFA`
+  return `${value} CFA`
 }
 
 const statusMap: Record<string, { label: string; className: string }> = {

@@ -53,7 +53,7 @@ import type { Invoice, Client, Product, Payment } from '@/lib/types'
 
 // ── Helpers ──────────────────────────────────────────────
 function formatDA(value: number): string {
-  return new Intl.NumberFormat('fr-DZ').format(Math.round(value)) + ' DA'
+  return new Intl.NumberFormat('fr-FR').format(Math.round(value)) + ' CFA'
 }
 
 function formatDate(iso: string): string {
@@ -876,7 +876,7 @@ export default function InvoicesPage() {
                     max={selectedInvoice.total - selectedInvoice.paid}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                    DA
+                    CFA
                   </span>
                 </div>
                 {payAmount && parseFloat(payAmount) > 0 && (

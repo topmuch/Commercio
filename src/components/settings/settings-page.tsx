@@ -36,15 +36,15 @@ export default function SettingsPage() {
   const setTheme = useAppStore((s) => s.setTheme)
 
   // Profile state
-  const [profileName, setProfileName] = useState(user?.name || 'Ahmed Benali')
-  const [profileEmail, setProfileEmail] = useState(user?.email || 'ahmed@distribuerp.com')
-  const [profilePhone, setProfilePhone] = useState('+213 555 123 456')
+  const [profileName, setProfileName] = useState(user?.name || 'Mamadou Diallo')
+  const [profileEmail, setProfileEmail] = useState(user?.email || 'mamadou@distribuerp.com')
+  const [profilePhone, setProfilePhone] = useState('+221 77 123 45 67')
 
   // Company state
   const [companyName, setCompanyName] = useState('DistribuERP SARL')
   const [companyEmail, setCompanyEmail] = useState('contact@distribuerp.com')
-  const [companyPhone, setCompanyPhone] = useState('+213 21 123 456')
-  const [companyAddress, setCompanyAddress] = useState('12 Rue Didouche Mourad, Alger Centre, 16000')
+  const [companyPhone, setCompanyPhone] = useState('+221 33 123 45 67')
+  const [companyAddress, setCompanyAddress] = useState('45 Rue Carnot, Plateau, Dakar, Sénégal')
 
   // Notification state
   const [notifications, setNotifications] = useState({

@@ -38,12 +38,8 @@ import {
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-function formatDZD(amount: number) {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount) + ' DA'
+function formatCFA(amount: number) {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 const COLORS = [
@@ -98,62 +94,62 @@ const reportTypes: ReportTypeConfig[] = [
 // ── Mock Data ──────────────────────────────────────────────────────────
 
 const commercialData = [
-  { name: 'Ahmed B.', ventes: 2450000, objectif: 3000000 },
-  { name: 'Karim M.', ventes: 3120000, objectif: 3000000 },
-  { name: 'Sara L.', ventes: 1890000, objectif: 2500000 },
-  { name: 'Youcef K.', ventes: 2780000, objectif: 2500000 },
-  { name: 'Amina D.', ventes: 1560000, objectif: 2000000 },
-  { name: 'Rachid H.', ventes: 2210000, objectif: 2500000 },
+  { name: 'Mamadou D.', ventes: 9850000, objectif: 12000000 },
+  { name: 'Abdoulaye S.', ventes: 12480000, objectif: 12000000 },
+  { name: 'Fatou N.', ventes: 7560000, objectif: 10000000 },
+  { name: 'Ibrahima F.', ventes: 11120000, objectif: 10000000 },
+  { name: 'Aminata D.', ventes: 6240000, objectif: 8000000 },
+  { name: 'Ousmane B.', ventes: 8840000, objectif: 10000000 },
 ]
 
 const regionData = [
-  { name: 'Alger', value: 35 },
-  { name: 'Oran', value: 22 },
-  { name: 'Constantine', value: 15 },
-  { name: 'Annaba', value: 10 },
-  { name: 'Sétif', value: 8 },
-  { name: 'Blida', value: 6 },
-  { name: 'Autres', value: 4 },
+  { name: 'Dakar', value: 38 },
+  { name: 'Thiès', value: 18 },
+  { name: 'Saint-Louis', value: 12 },
+  { name: 'Kaolack', value: 10 },
+  { name: 'Ziguinchor', value: 9 },
+  { name: 'Tambacounda', value: 7 },
+  { name: 'Autres', value: 6 },
 ]
 
 const productData = [
-  { name: 'Coca-Cola 33cl', ventes: 1850000 },
-  { name: 'Yaourt Danone', ventes: 1620000 },
-  { name: 'Semoule 5kg', ventes: 1480000 },
-  { name: 'Harissa CPL', ventes: 1240000 },
-  { name: 'Détergent Tide', ventes: 980000 },
-  { name: 'Eau Minérale', ventes: 890000 },
+  { name: 'Coca-Cola 33cl', ventes: 7400000 },
+  { name: 'Yaourt Danone', ventes: 6480000 },
+  { name: 'Semoule 5kg', ventes: 5920000 },
+  { name: 'Harissa CPL', ventes: 4960000 },
+  { name: 'Détergent Tide', ventes: 3920000 },
+  { name: 'Eau Minérale', ventes: 3560000 },
 ]
 
 const clientData = [
-  { name: 'Supermarché Central', ventes: 3200000 },
-  { name: 'Boutique El Feth', ventes: 1850000 },
-  { name: 'Épicerie Benali', ventes: 1420000 },
-  { name: 'Grossiste Hamdi', ventes: 2100000 },
-  { name: 'Mini-Market El Djazaïr', ventes: 980000 },
+  { name: 'Supermarché Central', ventes: 12800000 },
+  { name: 'Boutique du Port', ventes: 7400000 },
+  { name: 'Épicerie Médina', ventes: 5680000 },
+  { name: 'Grossiste Sandaga', ventes: 8400000 },
+  { name: 'Mini-Market Liberté', ventes: 3920000 },
 ]
 
 const topProductsData = [
-  { name: 'Coca-Cola 33cl', quantité: 45000, CA: 2250000 },
-  { name: 'Yaourt Danone 12p', quantité: 28000, CA: 1820000 },
-  { name: 'Semoule 5kg', quantité: 32000, CA: 1440000 },
-  { name: 'Eau Minérale 1.5L', quantité: 38000, CA: 1140000 },
-  { name: 'Harissa CPL 70g', quantité: 18000, CA: 1260000 },
+  { name: 'Coca-Cola 33cl', quantité: 45000, CA: 9000000 },
+  { name: 'Yaourt Danone 12p', quantité: 28000, CA: 7280000 },
+  { name: 'Semoule 5kg', quantité: 32000, CA: 5760000 },
+  { name: 'Eau Minérale 1.5L', quantité: 38000, CA: 4560000 },
+  { name: 'Harissa CPL 70g', quantité: 18000, CA: 5040000 },
 ]
 
 const performanceData = [
-  { mois: 'Jan', karim: 280, ahmed: 220, sara: 180 },
-  { mois: 'Fév', karim: 310, ahmed: 245, sara: 195 },
-  { mois: 'Mar', karim: 290, ahmed: 260, sara: 210 },
-  { mois: 'Avr', karim: 340, ahmed: 255, sara: 175 },
-  { mois: 'Mai', karim: 320, ahmed: 270, sara: 200 },
-  { mois: 'Jun', karim: 380, ahmed: 290, sara: 220 },
-  { mois: 'Jul', karim: 350, ahmed: 310, sara: 240 },
-  { mois: 'Aoû', karim: 400, ahmed: 285, sara: 215 },
-  { mois: 'Sep', karim: 370, ahmed: 320, sara: 250 },
-  { mois: 'Oct', karim: 410, ahmed: 330, sara: 230 },
-  { mois: 'Nov', karim: 390, ahmed: 345, sara: 260 },
-  { mois: 'Déc', karim: 450, ahmed: 360, sara: 280 },
+  { mois: 'Jan', abdoulaye: 280, mamadou: 220, fatou: 180 },
+  { mois: 'Fév', abdoulaye: 310, mamadou: 245, fatou: 195 },
+  { mois: 'Mar', abdoulaye: 290, mamadou: 260, fatou: 210 },
+  { mois: 'Avr', abdoulaye: 340, mamadou: 255, fatou: 175 },
+  { mois: 'Mai', abdoulaye: 320, mamadou: 270, fatou: 200 },
+  { mois: 'Jun', abdoulaye: 380, mamadou: 290, fatou: 220 },
+  { mois: 'Jul', abdoulaye: 350, mamadou: 310, fatou: 240 },
+  { mois: 'Aoû', abdoulaye: 400, mamadou: 285, fatou: 215 },
+  { mois: 'Sep', abdoulaye: 370, mamadou: 320, fatou: 250 },
+  { mois: 'Oct', abdoulaye: 410, mamadou: 330, fatou: 230 },
+  { mois: 'Nov', abdoulaye: 390, mamadou: 345, fatou: 260 },
+  { mois: 'Déc', abdoulaye: 450, mamadou: 360, fatou: 280 },
 ]
 
 // ── Summary cards generator ───────────────────────────────────────────
@@ -162,35 +158,35 @@ function getSummaryCards(reportType: ReportType) {
   switch (reportType) {
     case 'commercial':
       return [
-        { label: 'Total Ventes', value: '14.01M DA', change: '+12.5%', up: true },
-        { label: 'Objectif Global', value: '15.5M DA', change: '90.4%', up: true },
-        { label: 'Meilleur Commercial', value: 'Karim M.', change: '3.12M DA', up: true },
+        { label: 'Total Ventes', value: '56.09M CFA', change: '+12.5%', up: true },
+        { label: 'Objectif Global', value: '62M CFA', change: '90.4%', up: true },
+        { label: 'Meilleur Commercial', value: 'Abdoulaye S.', change: '12.48M CFA', up: true },
         { label: 'Commerciaux Actifs', value: '6', change: '6/6', up: true },
       ]
     case 'region':
       return [
-        { label: 'Région Dominante', value: 'Alger', change: '35%', up: true },
+        { label: 'Région Dominante', value: 'Dakar', change: '38%', up: true },
         { label: 'Couverture', value: '7 régions', change: '+2', up: true },
-        { label: 'Croissance Oran', value: '+18%', change: 'vs mois dernier', up: true },
-        { label: 'Nouvelle Zone', value: 'Béjaïa', change: 'Prospect', up: false },
+        { label: 'Croissance Thiès', value: '+18%', change: 'vs mois dernier', up: true },
+        { label: 'Nouvelle Zone', value: 'Kaffrine', change: 'Prospect', up: false },
       ]
     case 'product':
       return [
-        { label: 'CA Produits', value: '8.06M DA', change: '+8.3%', up: true },
-        { label: 'Produit #1', value: 'Coca-Cola', change: '1.85M DA', up: true },
+        { label: 'CA Produits', value: '32.24M CFA', change: '+8.3%', up: true },
+        { label: 'Produit #1', value: 'Coca-Cola', change: '7.4M CFA', up: true },
         { label: 'Catégorie Top', value: 'Boissons', change: '42% du CA', up: true },
         { label: 'Produits Actifs', value: '248', change: '+12', up: true },
       ]
     case 'client':
       return [
         { label: 'Total Clients', value: '156', change: '+18', up: true },
-        { label: 'Meilleur Client', value: 'Superm. Central', change: '3.2M DA', up: true },
-        { label: 'CA Moyen/Client', value: '95K DA', change: '+5.2%', up: true },
+        { label: 'Meilleur Client', value: 'Superm. Central', change: '12.8M CFA', up: true },
+        { label: 'CA Moyen/Client', value: '380K CFA', change: '+5.2%', up: true },
         { label: 'Nouveaux Clients', value: '18', change: 'ce mois', up: true },
       ]
     case 'top-products':
       return [
-        { label: 'Ventes Totales', value: '7.91M DA', change: '+15.2%', up: true },
+        { label: 'Ventes Totales', value: '31.64M CFA', change: '+15.2%', up: true },
         { label: 'Unités Vendues', value: '161,000', change: '+12%', up: true },
         { label: 'Meilleur Produit', value: 'Coca-Cola', change: '45,000 unités', up: true },
         { label: 'Marge Moyenne', value: '28%', change: '+2.1%', up: true },
@@ -198,7 +194,7 @@ function getSummaryCards(reportType: ReportType) {
     case 'performance':
       return [
         { label: 'Score Moyen', value: '305 pts', change: '+15%', up: true },
-        { label: 'Top Performeur', value: 'Karim M.', change: '410 pts/mois', up: true },
+        { label: 'Top Performeur', value: 'Abdoulaye S.', change: '410 pts/mois', up: true },
         { label: 'Progression Team', value: '+18%', change: 'vs Q3', up: true },
         { label: 'Objectif Atteint', value: '83%', change: '4/6', up: true },
       ]
@@ -215,7 +211,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
       {payload.map((entry, i) => (
         <p key={i} className="text-muted-foreground" style={{ color: entry.color }}>
           {entry.name}: {typeof entry.value === 'number' && entry.value > 10000
-            ? formatDZD(entry.value)
+            ? formatCFA(entry.value)
             : entry.value.toLocaleString('fr-FR')}
         </p>
       ))}
@@ -322,9 +318,9 @@ function PerformanceChart() {
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
-        <Line type="monotone" dataKey="karim" name="Karim M." stroke={COLORS[1]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        <Line type="monotone" dataKey="ahmed" name="Ahmed B." stroke={COLORS[0]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        <Line type="monotone" dataKey="sara" name="Sara L." stroke={COLORS[3]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+        <Line type="monotone" dataKey="abdoulaye" name="Abdoulaye S." stroke={COLORS[1]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+        <Line type="monotone" dataKey="mamadou" name="Mamadou D." stroke={COLORS[0]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+        <Line type="monotone" dataKey="fatou" name="Fatou N." stroke={COLORS[3]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
       </LineChart>
     </ResponsiveContainer>
   )

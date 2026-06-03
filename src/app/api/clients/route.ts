@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         region: region || null,
         sector: sector || null,
         type: type || 'boutique',
-        status: status || 'active',
+        status: status || 'lead_rouge',
         notes: notes || null,
         commercialId: commercialId || null,
         companyId,

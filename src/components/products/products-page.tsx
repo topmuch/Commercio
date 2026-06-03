@@ -44,12 +44,8 @@ import {
 import type { Product, Category } from '@/lib/types'
 import { toast } from 'sonner'
 
-function formatDZD(amount: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount) + ' DA'
+function formatCFA(amount: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 function getStockColor(stock: number, minStock: number): string {
@@ -451,7 +447,7 @@ export default function ProductsPage() {
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Prix</span>
-                    <span className="text-sm font-semibold">{formatDZD(product.price)}</span>
+                    <span className="text-sm font-semibold">{formatCFA(product.price)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Stock</span>
@@ -523,10 +519,10 @@ export default function ProductsPage() {
                         {product.category?.name || '—'}
                       </TableCell>
                       <TableCell className="font-medium text-sm">
-                        {formatDZD(product.price)}
+                        {formatCFA(product.price)}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {product.resellerPrice ? formatDZD(product.resellerPrice) : '—'}
+                        {product.resellerPrice ? formatCFA(product.resellerPrice) : '—'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
@@ -634,7 +630,7 @@ export default function ProductsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Prix (DA) *</Label>
+                <Label htmlFor="price">Prix (CFA) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -644,7 +640,7 @@ export default function ProductsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="resellerPrice">Prix Revendeur (DA)</Label>
+                <Label htmlFor="resellerPrice">Prix Revendeur (CFA)</Label>
                 <Input
                   id="resellerPrice"
                   type="number"

@@ -120,6 +120,19 @@ export async function GET() {
           ? 100
           : 0
 
+    // ─── Client status distribution ───
+    const [leadRougeCount, negociationOrangeCount, clientVertCount] = await Promise.all([
+      db.client.count({ where: { companyId, status: 'lead_rouge' } }),
+      db.client.count({ where: { companyId, status: 'negociation_orange' } }),
+      db.client.count({ where: { companyId, status: 'client_vert' } }),
+    ])
+
+    const clientStatusDistribution = {
+      leadRouge: leadRougeCount,
+      negociationOrange: negociationOrangeCount,
+      clientVert: clientVertCount,
+    }
+
     // ─── Top 5 products by sales ───
     const topProductsRaw = await db.orderItem.groupBy({
       by: ['productId'],
@@ -244,6 +257,7 @@ export async function GET() {
       revenueMonthGrowth: Math.round(revenueMonthGrowth * 10) / 10,
       orderGrowth: Math.round(orderGrowth * 10) / 10,
       clientGrowth: Math.round(clientGrowth * 10) / 10,
+      clientStatusDistribution,
       topProducts,
       topCommercials: topCommercials.slice(0, 5),
       revenueChartData,

@@ -73,12 +73,8 @@ const allProducts: BoutiqueProduct[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-function formatDZD(amount: number) {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount) + ' DA'
+function formatCFA(amount: number) {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 function getStockBadge(stock: number, minStock: number) {
@@ -96,8 +92,8 @@ function buildWhatsAppUrl(product: BoutiqueProduct) {
     `Bonjour, je souhaite commander :\n\n` +
     `📦 Produit : ${product.name}\n` +
     `📋 Référence : ${product.reference}\n` +
-    `💰 Prix : ${formatDZD(product.price)}\n` +
-    `${product.resellerPrice ? `🏷️ Prix revendeur : ${formatDZD(product.resellerPrice)}\n` : ''}` +
+    `💰 Prix : ${formatCFA(product.price)}\n` +
+    `${product.resellerPrice ? `🏷️ Prix revendeur : ${formatCFA(product.resellerPrice)}\n` : ''}` +
     `\nMerci de confirmer la disponibilité.`
   )
   return `https://wa.me/?text=${message}`
@@ -153,11 +149,11 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-bold text-foreground">
-              {formatDZD(product.price)}
+              {formatCFA(product.price)}
             </span>
             {product.isPromo && (
               <span className="text-xs text-muted-foreground line-through">
-                {formatDZD(Math.round(product.price / (1 - (product.promoPercent || 0) / 100)))}
+                {formatCFA(Math.round(product.price / (1 - (product.promoPercent || 0) / 100)))}
               </span>
             )}
           </div>
@@ -167,7 +163,7 @@ function ProductCard({ product }: { product: BoutiqueProduct }) {
                 Prix revendeur
               </span>
               <span className="text-xs font-semibold text-erp-orange">
-                {formatDZD(product.resellerPrice)}
+                {formatCFA(product.resellerPrice)}
               </span>
             </div>
           )}

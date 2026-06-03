@@ -47,13 +47,8 @@ interface MonthlyTrend {
   label: string
 }
 
-function formatDZD(amount: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'currency',
-    currency: 'DZD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+function formatCFA(amount: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 function getHeatColor(revenue: number, maxRevenue: number): string {
@@ -94,7 +89,7 @@ function HeatmapGrid({ regions }: { regions: RegionSale[] }) {
                 <MapPin className="h-3.5 w-3.5" />
                 <h4 className="text-sm font-bold truncate">{region.name}</h4>
               </div>
-              <p className="text-lg font-bold">{formatDZD(region.revenue)}</p>
+              <p className="text-lg font-bold">{formatCFA(region.revenue)}</p>
               <div className="flex items-center gap-3 mt-2 text-[10px] opacity-80">
                 <span>{region.clientCount} clients</span>
                 <span>{region.orderCount} cmd</span>
@@ -170,7 +165,7 @@ function RegionRankings({ regions }: { regions: RegionSale[] }) {
                   </div>
                 </TableCell>
                 <TableCell className="py-2.5 text-right">
-                  <span className="text-sm font-bold text-emerald-600">{formatDZD(region.revenue)}</span>
+                  <span className="text-sm font-bold text-emerald-600">{formatCFA(region.revenue)}</span>
                 </TableCell>
                 <TableCell className="py-2.5 text-right hidden sm:table-cell">
                   <span className="text-sm text-muted-foreground">{region.clientCount}</span>
@@ -225,7 +220,7 @@ function PerformanceIndicators({
                 {bestZone?.name || '—'}
               </p>
               <p className="text-xs font-semibold text-emerald-600">
-                {bestZone ? formatDZD(bestZone.revenue) : '—'}
+                {bestZone ? formatCFA(bestZone.revenue) : '—'}
               </p>
             </div>
           </div>
@@ -245,7 +240,7 @@ function PerformanceIndicators({
                 {worstZone?.name || '—'}
               </p>
               <p className="text-xs font-semibold text-red-500">
-                {worstZone ? formatDZD(worstZone.revenue) : '—'}
+                {worstZone ? formatCFA(worstZone.revenue) : '—'}
               </p>
             </div>
           </div>
@@ -262,7 +257,7 @@ function PerformanceIndicators({
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground">CA moyen / zone</p>
               <p className="text-sm font-bold text-foreground">
-                {formatDZD(avgRevenuePerZone)}
+                {formatCFA(avgRevenuePerZone)}
               </p>
             </div>
           </div>
@@ -295,7 +290,7 @@ function CommercialRanking({ commercialSales }: { commercialSales: CommercialSal
                 <span className="text-sm font-medium text-foreground">{c.name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-emerald-600">{formatDZD(c.revenue)}</span>
+                <span className="text-sm font-bold text-emerald-600">{formatCFA(c.revenue)}</span>
                 <span className="text-[10px] text-muted-foreground">({c.orderCount} cmd)</span>
               </div>
             </div>
@@ -336,7 +331,7 @@ function MonthlyTrend({ trend }: { trend: MonthlyTrend[] }) {
             return (
               <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
                 <span className="text-[9px] text-muted-foreground font-medium">
-                  {formatDZD(item.revenue)}
+                  {formatCFA(item.revenue)}
                 </span>
                 <div
                   className="w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t-md transition-all duration-500 hover:from-violet-700 hover:to-violet-500"
@@ -394,7 +389,7 @@ export default function MapSalesPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-xs">
-            CA Total: {formatDZD(totalRevenue)}
+            CA Total: {formatCFA(totalRevenue)}
           </Badge>
         </div>
       </div>

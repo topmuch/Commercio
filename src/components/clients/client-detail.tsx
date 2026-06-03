@@ -41,12 +41,8 @@ import { Separator } from '@/components/ui/separator'
 import { useAppStore } from '@/lib/store'
 import type { Client, Order, Quote, Invoice, Visit, Discussion, Payment } from '@/lib/types'
 
-function formatDZD(amount: number): string {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount) + ' DA'
+function formatCFA(amount: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
 }
 
 function formatDate(dateStr: string): string {
@@ -82,9 +78,9 @@ const typeColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
-  active: 'Actif',
-  inactive: 'Inactif',
-  prospect: 'Prospect',
+  lead_rouge: 'Lead Rouge',
+  negociation_orange: 'Négociation Orange',
+  client_vert: 'Client Vert',
   new: 'Nouvelle',
   validated: 'Validée',
   preparation: 'En préparation',
@@ -258,7 +254,7 @@ export default function ClientDetail() {
         </div>
         <Badge
           variant="secondary"
-          className={statusLabels[client.status] ? (client.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : client.status === 'inactive' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400') : ''}
+          className={statusLabels[client.status] ? (client.status === 'client_vert' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : client.status === 'lead_rouge' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400') : ''}
         >
           {statusLabels[client.status] || client.status}
         </Badge>
@@ -312,7 +308,7 @@ export default function ClientDetail() {
                 <CreditCard className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-lg font-bold">{formatDZD(client.stats.totalRevenue)}</p>
+                <p className="text-lg font-bold">{formatCFA(client.stats.totalRevenue)}</p>
                 <p className="text-[10px] text-muted-foreground">CA Total</p>
               </div>
             </div>
@@ -465,28 +461,28 @@ export default function ClientDetail() {
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">CA Total</span>
-                    <span className="font-semibold">{formatDZD(client.stats.totalRevenue)}</span>
+                    <span className="font-semibold">{formatCFA(client.stats.totalRevenue)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">CA Commandes</span>
-                    <span className="font-medium">{formatDZD(client.stats.totalOrdersRevenue)}</span>
+                    <span className="font-medium">{formatCFA(client.stats.totalOrdersRevenue)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Valeur Devis</span>
-                    <span className="font-medium">{formatDZD(client.stats.totalQuotesValue)}</span>
+                    <span className="font-medium">{formatCFA(client.stats.totalQuotesValue)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total Payé</span>
-                    <span className="font-medium text-green-600">{formatDZD(client.stats.totalPaid)}</span>
+                    <span className="font-medium text-green-600">{formatCFA(client.stats.totalPaid)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Solde Restant</span>
                     <span className="font-medium text-destructive">
-                      {formatDZD(client.stats.totalRevenue - client.stats.totalPaid)}
+                      {formatCFA(client.stats.totalRevenue - client.stats.totalPaid)}
                     </span>
                   </div>
                 </CardContent>
@@ -536,7 +532,7 @@ export default function ClientDetail() {
                             {order.commercial?.name || '-'}
                           </TableCell>
                           <TableCell className="text-right font-medium text-sm">
-                            {formatDZD(order.total)}
+                            {formatCFA(order.total)}
                           </TableCell>
                           <TableCell className="text-right text-sm text-muted-foreground">
                             {order.discount > 0 ? `${order.discount}%` : '-'}
@@ -595,7 +591,7 @@ export default function ClientDetail() {
                             {quote.commercial?.name || '-'}
                           </TableCell>
                           <TableCell className="text-right font-medium text-sm">
-                            {formatDZD(quote.total)}
+                            {formatCFA(quote.total)}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {quote.validUntil ? formatDateShort(quote.validUntil) : '-'}
@@ -655,10 +651,10 @@ export default function ClientDetail() {
                             {invoice.commercial?.name || '-'}
                           </TableCell>
                           <TableCell className="text-right font-medium text-sm">
-                            {formatDZD(invoice.total)}
+                            {formatCFA(invoice.total)}
                           </TableCell>
                           <TableCell className="text-right text-sm text-green-600">
-                            {formatDZD(invoice.paid)}
+                            {formatCFA(invoice.paid)}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {invoice.dueDate ? formatDateShort(invoice.dueDate) : '-'}

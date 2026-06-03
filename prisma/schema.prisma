@@ -30,6 +30,7 @@ model Company {
   visits    Visit[]
   discussions Discussion[]
   payments  Payment[]
+  storeSettings StoreSettings?
 }
 
 // ===== USERS =====
@@ -72,7 +73,7 @@ model Client {
   longitude    Float?
   sector       String?
   type         String   @default("boutique") // boutique, revendeur, supermarche, grossiste
-  status       String   @default("active") // active, inactive, prospect
+  status       String   @default("lead_rouge") // lead_rouge, negociation_orange, client_vert (strategic color system)
   notes        String?
   commercialId String?
   companyId    String
@@ -304,6 +305,20 @@ model Discussion {
   company     Company  @relation(fields: [companyId], references: [id])
   client      Client   @relation(fields: [clientId], references: [id])
   commercial  User?    @relation(fields: [commercialId], references: [id])
+}
+
+// ===== STORE SETTINGS =====
+model StoreSettings {
+  id             String   @id @default(cuid())
+  companyId      String   @unique
+  whatsappNumber String?
+  storeTitle     String   @default("Boutique")
+  currency       String   @default("CFA")
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company        Company  @relation(fields: [companyId], references: [id])
 }
 
 // ===== TARGETS =====
