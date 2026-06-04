@@ -174,7 +174,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch('/api/clients?limit=200')
       const json = await res.json()
-      if (json.data) setClients(json.data)
+      if (json.clients) setClients(json.clients)
     } catch {
       // silent
     }

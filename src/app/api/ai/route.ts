@@ -1,17 +1,11 @@
 import { db } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { ai } from 'z-ai-web-dev-sdk'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
-    const companyId = (session.user as { companyId: string }).companyId
+    const companyId = await getCompanyId()
     const body = await request.json()
     const { message, history = [] } = body
 

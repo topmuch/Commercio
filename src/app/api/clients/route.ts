@@ -1,9 +1,12 @@
+import { getCompanyId } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/clients - List clients with filters and pagination
 export async function GET(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const { searchParams } = request.nextUrl
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || ''
@@ -11,7 +14,6 @@ export async function GET(request: NextRequest) {
     const region = searchParams.get('region') || ''
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = parseInt(searchParams.get('limit') || '20', 10)
-    const companyId = 'comp_1'
 
     const where: Record<string, unknown> = { companyId }
 
@@ -116,8 +118,9 @@ export async function GET(request: NextRequest) {
 // POST /api/clients - Create a new client
 export async function POST(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const body = await request.json()
-    const companyId = 'comp_1'
 
     const {
       companyName,
@@ -167,6 +170,25 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ client }, { status: 201 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+// DELETE /api/clients?id=... - Delete a client
+export async function DELETE(request: NextRequest) {
+  try {
+    const companyId = await getCompanyId()
+    const { searchParams } = request.nextUrl
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+
+    const client = await db.client.findUnique({ where: { id, companyId } })
+    if (!client) return NextResponse.json({ error: 'Client non trouvé' }, { status: 404 })
+
+    await db.client.delete({ where: { id } })
+    return NextResponse.json({ data: { id } })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'
     return NextResponse.json({ error: message }, { status: 500 })

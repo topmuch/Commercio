@@ -1,15 +1,17 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { getCompanyId } from '@/lib/auth'
 
 // GET /api/invoices?status=unpaid&search=&page=1&limit=20
 export async function GET(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || undefined
     const search = searchParams.get('search') || undefined
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')))
-    const companyId = searchParams.get('companyId') || 'comp_1'
 
     const where: Record<string, unknown> = { companyId }
 
@@ -80,6 +82,8 @@ export async function GET(request: NextRequest) {
 // POST /api/invoices — Create invoice
 export async function POST(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const body = await request.json()
     const {
       clientId,
@@ -87,10 +91,9 @@ export async function POST(request: NextRequest) {
       orderId,
       items,
       discount = 0,
-      tax = 19,
+      tax = 18,
       dueDate,
       notes,
-      companyId = 'comp_1',
     } = body
 
     if (!clientId) {
@@ -181,8 +184,10 @@ export async function POST(request: NextRequest) {
 // POST /api/invoices — Record a payment (body with action: 'pay')
 export async function PUT(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const body = await request.json()
-    const { invoiceId, amount, method = 'cash', reference, notes, companyId = 'comp_1' } = body
+    const { invoiceId, amount, method = 'cash', reference, notes } = body
 
     if (!invoiceId || !amount || amount <= 0) {
       return NextResponse.json(

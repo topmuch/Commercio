@@ -1,3 +1,4 @@
+import { getCompanyId } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -7,8 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const companyId = await getCompanyId()
+
     const { id } = await params
-    const companyId = 'comp_1'
 
     const client = await db.client.findUnique({
       where: { id, companyId },
@@ -103,29 +105,42 @@ export async function GET(
   }
 }
 
-// PUT /api/clients/[id] - Update client notes
+// PUT /api/clients/[id] - Update client
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const companyId = await getCompanyId()
+
     const { id } = await params
     const body = await request.json()
-    const companyId = 'comp_1'
 
-    const { notes } = body
+    const client = await db.client.findUnique({ where: { id, companyId } })
+    if (!client) return NextResponse.json({ error: 'Client non trouvé' }, { status: 404 })
 
-    const client = await db.client.update({
-      where: { id, companyId },
-      data: { notes },
-      include: {
-        commercial: {
-          select: { name: true },
-        },
-      },
+    const { companyName, contactName, phone, whatsapp, email, address, city, region, sector, type, status, notes, commercialId } = body
+    const updateData: Record<string, unknown> = {}
+    if (companyName !== undefined) updateData.companyName = companyName
+    if (contactName !== undefined) updateData.contactName = contactName
+    if (phone !== undefined) updateData.phone = phone
+    if (whatsapp !== undefined) updateData.whatsapp = whatsapp || null
+    if (email !== undefined) updateData.email = email || null
+    if (address !== undefined) updateData.address = address || null
+    if (city !== undefined) updateData.city = city || null
+    if (region !== undefined) updateData.region = region || null
+    if (sector !== undefined) updateData.sector = sector || null
+    if (type !== undefined) updateData.type = type
+    if (status !== undefined) updateData.status = status
+    if (notes !== undefined) updateData.notes = notes || null
+    if (commercialId !== undefined) updateData.commercialId = commercialId || null
+
+    const updated = await db.client.update({
+      where: { id },
+      data: updateData,
+      include: { commercial: { select: { name: true } } },
     })
-
-    return NextResponse.json({ client })
+    return NextResponse.json({ client: updated })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'
     return NextResponse.json({ error: message }, { status: 500 })

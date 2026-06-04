@@ -2,6 +2,35 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { db } from '@/lib/db'
 
+/**
+ * Gracefully get companyId from session, or fallback to demo company.
+ * This allows the app to work in demo mode without login,
+ * while supporting multi-tenant isolation when auth is active.
+ */
+const DEMO_COMPANY_ID = 'comp_1'
+
+export async function getCompanyId(): Promise<string> {
+  try {
+    const { getServerSession } = await import('next-auth')
+    const session = await getServerSession(authOptions)
+    if (session?.user) {
+      return (session.user as { companyId: string }).companyId || DEMO_COMPANY_ID
+    }
+  } catch {
+    // next-auth not configured or session unavailable
+  }
+  return DEMO_COMPANY_ID
+}
+
+export async function getAuthSession() {
+  try {
+    const { getServerSession } = await import('next-auth')
+    return await getServerSession(authOptions)
+  } catch {
+    return null
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

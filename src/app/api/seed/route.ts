@@ -57,31 +57,31 @@ export async function POST(request: Request) {
     const users = await Promise.all([
       db.user.create({
         data: {
-          id: 'usr_1', email: 'mamadou@distribusn.com', password: 'hashed', name: 'Mamadou Diallo',
+          id: 'usr_1', email: 'mamadou@distribusn.com', password: 'password123', name: 'Mamadou Diallo',
           phone: '+221 77 100 00 01', role: 'admin', companyId,
         },
       }),
       db.user.create({
         data: {
-          id: 'usr_2', email: 'fatou@distribusn.com', password: 'hashed', name: 'Fatou Sylla',
+          id: 'usr_2', email: 'fatou@distribusn.com', password: 'password123', name: 'Fatou Sylla',
           phone: '+221 77 100 00 02', role: 'director', companyId,
         },
       }),
       db.user.create({
         data: {
-          id: 'usr_3', email: 'ibrahima@distribusn.com', password: 'hashed', name: 'Ibrahima Ndiaye',
+          id: 'usr_3', email: 'ibrahima@distribusn.com', password: 'password123', name: 'Ibrahima Ndiaye',
           phone: '+221 77 100 00 03', role: 'commercial', companyId,
         },
       }),
       db.user.create({
         data: {
-          id: 'usr_4', email: 'aissatou@distribusn.com', password: 'hashed', name: 'Aissatou Ba',
+          id: 'usr_4', email: 'aissatou@distribusn.com', password: 'password123', name: 'Aissatou Ba',
           phone: '+221 77 100 00 04', role: 'commercial', companyId,
         },
       }),
       db.user.create({
         data: {
-          id: 'usr_5', email: 'ousmane@distribusn.com', password: 'hashed', name: 'Ousmane Diop',
+          id: 'usr_5', email: 'ousmane@distribusn.com', password: 'password123', name: 'Ousmane Diop',
           phone: '+221 77 100 00 05', role: 'commercial', companyId,
         },
       }),
@@ -441,15 +441,20 @@ export async function POST(request: Request) {
       categories: categories.length,
       users: users.length,
     })
-  } catch (error: any) {
-    console.error('Seed error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 export async function GET() {
-  const clients = await db.client.count()
-  const products = await db.product.count()
-  const orders = await db.order.count()
-  return NextResponse.json({ clients, products, orders })
+  try {
+    const clients = await db.client.count()
+    const products = await db.product.count()
+    const orders = await db.order.count()
+    return NextResponse.json({ clients, products, orders })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

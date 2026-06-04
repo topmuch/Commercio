@@ -1,9 +1,10 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { getCompanyId } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
 
     // Fetch all commercials with counts and targets
     const commercials = await db.user.findMany({
@@ -68,8 +69,8 @@ export async function GET() {
     commercialsWithRevenue.sort((a, b) => b._revenue - a._revenue)
 
     return NextResponse.json({ data: commercialsWithRevenue, count: commercialsWithRevenue.length })
-  } catch (error: any) {
-    console.error('Commercials API error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

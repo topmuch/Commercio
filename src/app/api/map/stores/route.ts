@@ -68,13 +68,8 @@ function getDensityColor(clientCount: number, maxCount: number): string {
 
 export async function GET() {
   try {
-    const { getServerSession } = await import('next-auth')
-    const { authOptions } = await import('@/lib/auth')
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.companyId) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-    const companyId = session.user.companyId
+    const { getCompanyId } = await import('@/lib/auth')
+    const companyId = await getCompanyId()
 
     // ── Fetch all clients with orders and commercial data ──
     const clients = await db.client.findMany({

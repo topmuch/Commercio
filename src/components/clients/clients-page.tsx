@@ -244,11 +244,10 @@ export default function ClientsPage() {
     if (!editingClient || !newClient.companyName || !newClient.contactName || !newClient.phone) return
     setCreating(true)
     try {
-      const res = await fetch('/api/clients', {
+      const res = await fetch(`/api/clients/${editingClient.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: editingClient.id,
           ...newClient,
           commercialId: newClient.commercialId || null,
         }),
@@ -285,7 +284,7 @@ export default function ClientsPage() {
     if (!deleteClient) return
     setDeleting(true)
     try {
-      const res = await fetch(`/api/clients?id=${deleteClient.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/clients/${deleteClient.id}`, { method: 'DELETE' })
       if (res.ok) {
         toast({ title: 'Succès', description: 'Client supprimé avec succès' })
         setDeleteClient(null)

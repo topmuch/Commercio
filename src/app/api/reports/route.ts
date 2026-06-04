@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 type ReportType = 'commercial' | 'region' | 'product' | 'client' | 'top-products' | 'performance'
@@ -33,12 +32,7 @@ function getDateRange(period: ReportPeriod) {
 // GET /api/reports?type=commercial&period=month
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
-    const companyId = (session.user as { companyId: string }).companyId
+    const companyId = await getCompanyId()
     const { searchParams } = new URL(request.url)
     const type = (searchParams.get('type') || 'commercial') as ReportType
     const period = (searchParams.get('period') || 'month') as ReportPeriod

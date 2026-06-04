@@ -1,3 +1,4 @@
+import { getCompanyId } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -7,10 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const companyId = await getCompanyId()
+
     const { id } = await params
 
     const product = await db.product.findUnique({
-      where: { id },
+      where: { id, companyId },
       include: {
         category: { select: { name: true, id: true } },
         stockMovements: {
@@ -21,12 +24,12 @@ export async function GET(
     })
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 })
     }
 
     return NextResponse.json({ data: product })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch product'
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -37,18 +40,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const companyId = await getCompanyId()
+
     const { id } = await params
 
-    const product = await db.product.findUnique({ where: { id } })
+    const product = await db.product.findUnique({ where: { id, companyId } })
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 })
     }
 
     await db.product.delete({ where: { id } })
 
     return NextResponse.json({ data: { id } })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to delete product'
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

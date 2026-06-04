@@ -1,11 +1,12 @@
+import { getCompanyId } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
-
-const COMPANY_ID = 'comp_1'
 
 // GET /api/products?search=...&category=...&status=...&page=1&limit=20
 export async function GET(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const category = searchParams.get('category') || ''
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {
-      companyId: COMPANY_ID,
+      companyId,
     }
 
     if (search) {
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch products'
+    const message = error instanceof Error ? error.message : 'Erreur lors du chargement des produits'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -64,6 +65,8 @@ export async function GET(request: NextRequest) {
 // POST /api/products - Create product
 export async function POST(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const body = await request.json()
     const {
       name,
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     if (!name || !reference || price === undefined) {
       return NextResponse.json(
-        { error: 'Name, reference, and price are required' },
+        { error: 'Nom, référence et prix sont requis' },
         { status: 400 }
       )
     }
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
     })
     if (existing) {
       return NextResponse.json(
-        { error: 'A product with this reference already exists' },
+        { error: 'Un produit avec cette référence existe déjà' },
         { status: 400 }
       )
     }
@@ -109,7 +112,7 @@ export async function POST(request: NextRequest) {
         stock: 0,
         minStock: minStock ? parseInt(minStock) : 5,
         status: status || 'active',
-        companyId: COMPANY_ID,
+        companyId,
       },
       include: {
         category: { select: { name: true } },
@@ -118,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: product }, { status: 201 })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to create product'
+    const message = error instanceof Error ? error.message : 'Erreur lors de la création du produit'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -126,11 +129,13 @@ export async function POST(request: NextRequest) {
 // PUT /api/products - Update product
 export async function PUT(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
+
     const body = await request.json()
     const { id, ...updateData } = body
 
     if (!id) {
-      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+      return NextResponse.json({ error: "L'identifiant du produit est requis" }, { status: 400 })
     }
 
     // Check unique reference if being updated
@@ -143,7 +148,7 @@ export async function PUT(request: NextRequest) {
       })
       if (existing) {
         return NextResponse.json(
-          { error: 'A product with this reference already exists' },
+          { error: 'Un produit avec cette référence existe déjà' },
           { status: 400 }
         )
       }
@@ -172,7 +177,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ data: product })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to update product'
+    const message = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du produit'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

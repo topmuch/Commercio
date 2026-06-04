@@ -1,9 +1,10 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { getCompanyId } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
 
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -264,7 +265,7 @@ export async function GET() {
       recentOrders: recentOrdersFormatted,
     })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Internal server error'
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

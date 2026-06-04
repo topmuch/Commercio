@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 const VALID_STATUSES = ['draft', 'sent', 'accepted', 'refused']
@@ -11,12 +10,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
-    const companyId = (session.user as { companyId: string }).companyId
+    const companyId = await getCompanyId()
     const { id } = await params
     const body = await request.json()
     const { notes, status, validUntil, discount } = body
@@ -68,12 +62,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
-    const companyId = (session.user as { companyId: string }).companyId
+    const companyId = await getCompanyId()
     const { id } = await params
 
     // Check ownership

@@ -1,9 +1,10 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { getCompanyId } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
 
     // Get all clients with their latest discussion
     const clients = await db.client.findMany({
@@ -67,8 +68,8 @@ export async function GET() {
       },
       count: clients.length,
     })
-  } catch (error: any) {
-    console.error('Discussions API error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -1,20 +1,21 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-
-const COMPANY_ID = 'comp_1'
+import { getCompanyId } from '@/lib/auth'
 
 // GET /api/store-settings
 export async function GET() {
   try {
+    const companyId = await getCompanyId()
+
     let settings = await db.storeSettings.findUnique({
-      where: { companyId: COMPANY_ID },
+      where: { companyId },
     })
 
     // Create default settings if not exists
     if (!settings) {
       settings = await db.storeSettings.create({
         data: {
-          companyId: COMPANY_ID,
+          companyId,
           whatsappNumber: '+221770000000',
           storeTitle: 'Boutique DistribuSN',
           currency: 'CFA',
@@ -25,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json({ data: settings })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch store settings'
+    const message = error instanceof Error ? error.message : 'Erreur lors du chargement des paramètres'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -33,13 +34,15 @@ export async function GET() {
 // PUT /api/store-settings
 export async function PUT(request: Request) {
   try {
+    const companyId = await getCompanyId()
+
     const body = await request.json()
     const { whatsappNumber, storeTitle, currency, isActive } = body
 
     const settings = await db.storeSettings.upsert({
-      where: { companyId: COMPANY_ID },
+      where: { companyId },
       create: {
-        companyId: COMPANY_ID,
+        companyId,
         whatsappNumber: whatsappNumber || '+221770000000',
         storeTitle: storeTitle || 'Boutique DistribuSN',
         currency: currency || 'CFA',
@@ -55,7 +58,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ data: settings })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to update store settings'
+    const message = error instanceof Error ? error.message : 'Erreur lors de la mise à jour des paramètres'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
