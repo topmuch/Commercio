@@ -221,3 +221,93 @@ Stage Summary:
 - Settings accessible from sidebar
 - User identity fully Senegal-localized (Mamadou Diallo)
 - 16 API routes total, 15 page components, zero lint errors
+
+---
+Task ID: 3-a
+Agent: Main
+Task: Enhance LeafletMap component with region overlays, animations, and advanced features
+
+Work Log:
+- Rewrote `/src/components/map/leaflet-map.tsx` with full enhancements:
+  - Region circle overlays: Dynamic computation of density circles per region with color coding (red ≥6, orange ≥3, green low)
+  - All 14 Senegal region center coordinates hardcoded as fallback
+  - Animated markers: `@keyframes markerPulse` (expanding ring), `@keyframes markerAppear` (bounce entrance)
+  - Hover effects: markers scale 1.25x with enhanced shadow
+  - Enhanced popups: "Voir la fiche" button, CA trend indicator (TrendingUp/TrendingDown), order count badge, compact itinerary button
+  - Floating map control panel: Client count badge, Zone circles toggle, "Ajuster" zoom-to-fit button
+  - Dark mode popup overrides via styled-jsx CSS
+- Subagent (full-stack-developer) built initial version, Main integrated and verified
+
+Stage Summary:
+- Production-quality LeafletMap with 5 major enhancements
+- Region density circles toggleable from map UI
+- Marker animations visible on load and hover
+- Popups with "Voir la fiche", WhatsApp, and Itinéraire buttons
+
+---
+Task ID: 3-b
+Agent: Main
+Task: Enhance /api/map/stores route with strategic data
+
+Work Log:
+- Rewrote `/src/app/api/map/stores/route.ts` with enriched data:
+  - `regionOverlays`: All 14 Senegal regions with center coords, radius (scaled by density), clientCount, revenue, color intensity
+  - `statusDistribution`: Per-status counts with labels, percentages, colors
+  - Enhanced `byType` with French labels (Boutique, Revendeur, Supermarché, Grossiste)
+  - `topClients`: Top 5 clients by revenue descending
+  - `coverage`: Regions covered / 14, geoLocated count & percentage
+- Fixed percentage calculation bug: `*1000/100` → `*100`
+- Subagent (full-stack-developer) built initial version, Main fixed bugs
+
+Stage Summary:
+- API returns 5 new data sections alongside existing fields
+- Backward compatible with existing map-stores-page
+- 34 clients across 14 regions, 100% geo-located
+
+---
+Task ID: 5
+Agent: Main
+Task: Redesign map-stores-page with premium UI
+
+Work Log:
+- Rewrote `/src/components/map/map-stores-page.tsx` with premium UI:
+  - Hero header with icon, badges for geo-located count, region coverage, filtered CA
+  - Status stats cards (Total, Leads Rouges, Négociations, Clients Verts) with conversion rate subtitle
+  - Pipeline de Conversion: Visual progress bars per status with percentages
+  - Couverture Territoriale: Progress bars for regions covered + geo-located percentage
+  - Top Clients par CA: Ranked list with gold/silver/bronze badges, clickable to client detail
+  - Enhanced filter bar: Region, Status, Type, Commercial, Search (5 filters)
+  - Interactive LeafletMap (dynamically loaded, SSR-safe)
+  - Legend & Actions: Status colors, WhatsApp, Navigation, Zone overlay description
+  - Répartition par Région: 14 region cards in 7-column grid, clickable to filter, showing count + CA
+  - Client list: Scrollable 3-column grid with status dots, type badges, CA, order counts
+- Fixed StatCard variable name bug: `icon` → `Icon` in JSX
+
+Stage Summary:
+- Complete premium map page with 9 distinct sections
+- All 14 Senegalese regions displayed with interactive filter buttons
+- Pipeline visualization and coverage stats
+- Browser-verified: renders correctly, all sections visible, zero errors
+
+---
+Task ID: 2-enhanced
+Agent: Main
+Task: Expand seed data to cover all 14 Senegal regions with 34 clients
+
+Work Log:
+- Added 16 new clients to seed route covering previously missing regions:
+  - Fatick: Alimentation Fatick Provisions, Épicerie du Siné-Saloum (Foundiougne)
+  - Kaffrine: Dépôt Kaffrine Distribution, Mini Market Kaffrine
+  - Sédhiou: Boutique Sédhiou Marketplace, Grossiste Casamance Sud
+  - Kédougou: Épicerie Kédougou Provisions
+  - Matam: Superette Matam Express, Grossiste Ferlo
+  - Extra density: 3 more Dakar, 1 Thiès, 1 Saint-Louis, 1 Kaolack, 1 Ziguinchor
+- All clients have GPS coordinates within Senegal
+- Mix of statuses: client_vert, negociation_orange, lead_rouge
+- Mix of types: boutique, grossiste, supermarche, revendeur
+- Re-seeded database: 34 clients confirmed
+
+Stage Summary:
+- 34 clients covering all 14 Senegal regions (100% coverage)
+- Diverse status/type distribution: 17 verts, 10 orange, 7 rouge
+- Realistic Senegalese company names, cities, phone numbers

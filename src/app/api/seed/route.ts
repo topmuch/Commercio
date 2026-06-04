@@ -152,6 +152,43 @@ export async function POST(request: Request) {
       db.client.create({ data: { id: 'cli_16', companyName: 'Épicerie de Tambacounda', contactName: 'Demba Cissé', phone: '+221 77 200 00 16', address: 'Avenue du 4 Avril', city: 'Tambacounda', region: 'Tambacounda', latitude: 13.7708, longitude: -13.1942, type: 'boutique', status: 'lead_rouge', sector: 'Alimentation', commercialId: 'usr_3', companyId } }),
       db.client.create({ data: { id: 'cli_17', companyName: 'Superette Diourbel', contactName: 'Mariama Ba', phone: '+221 77 200 00 17', whatsapp: '+221 77 200 00 17', address: 'Place de l\'Indépendance', city: 'Diourbel', region: 'Diourbel', latitude: 14.6500, longitude: -16.2364, type: 'boutique', status: 'lead_rouge', sector: 'Alimentation', commercialId: 'usr_4', companyId } }),
       db.client.create({ data: { id: 'cli_18', companyName: 'Grossiste Louga Market', contactName: 'Biram Diop', phone: '+221 77 200 00 18', address: 'Route de Louga', city: 'Louga', region: 'Louga', latitude: 15.6139, longitude: -16.2181, type: 'grossiste', status: 'lead_rouge', sector: 'Gros', commercialId: 'usr_5', companyId } }),
+
+      // --- Additional clients across ALL 14 regions ---
+      // Fatick (was missing)
+      db.client.create({ data: { id: 'cli_19', companyName: 'Alimentation Fatick Provisions', contactName: 'Moustapha Seck', phone: '+221 77 300 00 01', whatsapp: '+221 77 300 00 01', address: 'Boulevard Jean-Paul Sartre', city: 'Fatick', region: 'Fatick', latitude: 13.9094, longitude: -16.4131, type: 'boutique', status: 'client_vert', sector: 'Alimentation', commercialId: 'usr_3', companyId } }),
+      db.client.create({ data: { id: 'cli_20', companyName: 'Épicerie du Siné-Saloum', contactName: 'Awa Ndong', phone: '+221 77 300 00 02', address: 'Marché central, Foundiougne', city: 'Foundiougne', region: 'Fatick', latitude: 14.1280, longitude: -16.4810, type: 'boutique', status: 'lead_rouge', sector: 'Alimentation', commercialId: 'usr_4', companyId } }),
+
+      // Kaffrine (was missing)
+      db.client.create({ data: { id: 'cli_21', companyName: 'Dépôt Kaffrine Distribution', contactName: 'Pape Mbaye', phone: '+221 77 400 00 01', whatsapp: '+221 77 400 00 01', address: 'Route Nationale 7', city: 'Kaffrine', region: 'Kaffrine', latitude: 14.1069, longitude: -15.5414, type: 'grossiste', status: 'negociation_orange', sector: 'Gros', commercialId: 'usr_5', companyId } }),
+      db.client.create({ data: { id: 'cli_22', companyName: 'Mini Market Kaffrine', contactName: 'Khady Diop', phone: '+221 77 400 00 02', address: 'Carrefour Kaffrine', city: 'Kaffrine', region: 'Kaffrine', latitude: 14.1100, longitude: -15.5400, type: 'revendeur', status: 'client_vert', sector: 'Alimentation', commercialId: 'usr_3', companyId } }),
+
+      // Sédhiou (was missing)
+      db.client.create({ data: { id: 'cli_23', companyName: 'Boutique Sédhiou Marketplace', contactName: 'Ibrahima Sagnane', phone: '+221 77 500 00 01', address: 'Avenue du Port', city: 'Sédhiou', region: 'Sédhiou', latitude: 12.7078, longitude: -15.5589, type: 'boutique', status: 'negociation_orange', sector: 'Alimentation', commercialId: 'usr_4', companyId } }),
+      db.client.create({ data: { id: 'cli_24', companyName: 'Grossiste Casamance Sud', contactName: 'Abdoulaye Badji', phone: '+221 77 500 00 02', whatsapp: '+221 77 500 00 02', address: 'Route de Kolda', city: 'Sédhiou', region: 'Sédhiou', latitude: 12.7100, longitude: -15.5560, type: 'grossiste', status: 'lead_rouge', sector: 'Gros', commercialId: 'usr_5', companyId } }),
+
+      // Kédougou (was missing)
+      db.client.create({ data: { id: 'cli_25', companyName: 'Épicerie Kédougou Provisions', contactName: 'Mamadou Camara', phone: '+221 77 600 00 01', address: 'Centre-ville', city: 'Kédougou', region: 'Kédougou', latitude: 12.5564, longitude: -12.1733, type: 'boutique', status: 'lead_rouge', sector: 'Alimentation', commercialId: 'usr_3', companyId } }),
+
+      // Matam (was missing)
+      db.client.create({ data: { id: 'cli_26', companyName: 'Superette Matam Express', contactName: 'Doudou Sow', phone: '+221 77 700 00 01', whatsapp: '+221 77 700 00 01', address: 'Route du Fleuve', city: 'Matam', region: 'Matam', latitude: 15.6581, longitude: -13.2978, type: 'supermarche', status: 'negociation_orange', sector: 'Grande distribution', commercialId: 'usr_4', companyId } }),
+      db.client.create({ data: { id: 'cli_27', companyName: 'Grossiste Ferlo', contactName: 'Samba Ba', phone: '+221 77 700 00 02', address: 'Route de Louga', city: 'Matam', region: 'Matam', latitude: 15.6600, longitude: -13.3000, type: 'grossiste', status: 'client_vert', sector: 'Gros', commercialId: 'usr_5', companyId } }),
+
+      // Extra Dakar clients for density
+      db.client.create({ data: { id: 'cli_28', companyName: 'Supermarché Auchan Plateau', contactName: 'Rama Ndiaye', phone: '+221 77 800 00 01', whatsapp: '+221 77 800 00 01', email: 'auchan.plateau@sn.com', address: 'Boulevard de la République', city: 'Dakar', region: 'Dakar', latitude: 14.6680, longitude: -17.4320, type: 'supermarche', status: 'client_vert', sector: 'Grande distribution', commercialId: 'usr_3', companyId } }),
+      db.client.create({ data: { id: 'cli_29', companyName: 'Épicerie Mermoz Alimentation', contactName: 'Cheikh Anta Diop', phone: '+221 77 800 00 02', address: 'Avenue Pasteur, Mermoz', city: 'Dakar', region: 'Dakar', latitude: 14.6950, longitude: -17.4650, type: 'boutique', status: 'client_vert', sector: 'Alimentation', commercialId: 'usr_4', companyId } }),
+      db.client.create({ data: { id: 'cli_30', companyName: 'Dakar Distribution Services', contactName: 'Souleymane Diallo', phone: '+221 77 800 00 03', whatsapp: '+221 77 800 00 03', address: 'Zone Industrielle, Bargny', city: 'Rufisque', region: 'Dakar', latitude: 14.7400, longitude: -17.2400, type: 'grossiste', status: 'client_vert', sector: 'Gros', commercialId: 'usr_5', companyId } }),
+
+      // Extra Thiès clients
+      db.client.create({ data: { id: 'cli_31', companyName: 'Boutique Tivaouane Services', contactName: 'Moussa Thiam', phone: '+221 77 900 00 01', address: 'Place du Marché, Tivaouane', city: 'Tivaouane', region: 'Thiès', latitude: 14.7794, longitude: -16.9467, type: 'boutique', status: 'negociation_orange', sector: 'Alimentation', commercialId: 'usr_3', companyId } }),
+
+      // Extra Saint-Louis clients
+      db.client.create({ data: { id: 'cli_32', companyName: 'Supermarché Ndioum du Nord', contactName: 'Aminata Sow', phone: '+221 77 100 01 01', whatsapp: '+221 77 100 01 01', address: 'Avenue André Gide', city: 'Saint-Louis', region: 'Saint-Louis', latitude: 16.4530, longitude: -16.4630, type: 'supermarche', status: 'client_vert', sector: 'Grande distribution', commercialId: 'usr_4', companyId } }),
+
+      // Extra Kaolack clients
+      db.client.create({ data: { id: 'cli_33', companyName: 'Grossiste Saloum King', contactName: 'Omar Ndiaye', phone: '+221 77 100 02 01', address: 'Route Nationale 4', city: 'Kaolack', region: 'Kaolack', latitude: 14.1820, longitude: -16.0850, type: 'grossiste', status: 'client_vert', sector: 'Gros', commercialId: 'usr_5', companyId } }),
+
+      // Extra Ziguinchor clients
+      db.client.create({ data: { id: 'cli_34', companyName: 'Boutique Casamance Provisions', contactName: 'Jean Mendy', phone: '+221 77 100 03 01', whatsapp: '+221 77 100 03 01', address: 'Avenue de la Resistance', city: 'Ziguinchor', region: 'Ziguinchor', latitude: 12.5800, longitude: -16.2300, type: 'boutique', status: 'negociation_orange', sector: 'Alimentation', commercialId: 'usr_3', companyId } }),
     ])
 
     // =====================================================
