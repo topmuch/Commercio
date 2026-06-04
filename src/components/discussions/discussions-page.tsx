@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   MessageSquare,
   Phone,
@@ -22,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
 
 interface ClientDiscussion {
   id: string
@@ -207,9 +208,9 @@ function ClientListItem({
             {getTimeAgo(client.lastMessageAt)}
           </span>
         )}
-        {client.status === 'prospect' && (
+        {client.status === 'lead_rouge' && (
           <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-amber-600 border-amber-300">
-            Prospect
+            Lead Rouge
           </Badge>
         )}
       </div>
@@ -252,7 +253,9 @@ export default function DiscussionsPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [newMessage, setNewMessage] = useState('')
+  const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery<{
     data: {
@@ -281,6 +284,34 @@ export default function DiscussionsPage() {
 
   // Get selected client
   const selectedClient = clients.find((c) => c.id === effectiveSelectedClient)
+
+  // ── Send message ──
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !effectiveSelectedClient || sending) return
+    setSending(true)
+    try {
+      const res = await fetch('/api/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: effectiveSelectedClient,
+          type: 'message',
+          content: newMessage.trim(),
+          direction: 'outgoing',
+        }),
+      })
+      if (res.ok) {
+        setNewMessage('')
+        queryClient.invalidateQueries({ queryKey: ['discussions'] })
+      } else {
+        toast({ title: 'Erreur', description: 'Impossible d\'envoyer le message', variant: 'destructive' })
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de l\'envoi', variant: 'destructive' })
+    } finally {
+      setSending(false)
+    }
+  }
 
   // Get messages for selected client
   const clientMessages = discussions.filter((d) => d.clientId === effectiveSelectedClient)
@@ -440,7 +471,7 @@ export default function DiscussionsPage() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && newMessage.trim()) {
-                        setNewMessage('')
+                        sendMessage()
                       }
                     }}
                     className="flex-1 h-10 text-sm"
@@ -448,7 +479,8 @@ export default function DiscussionsPage() {
                   <Button
                     size="icon"
                     className="h-10 w-10 bg-erp-orange hover:bg-erp-orange/90 text-white shrink-0"
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() || sending}
+                    onClick={sendMessage}
                   >
                     <Send className="h-4 w-4" />
                   </Button>

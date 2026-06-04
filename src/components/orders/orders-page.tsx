@@ -26,6 +26,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -102,6 +112,8 @@ export default function OrdersPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+  const [deleteOrder, setDeleteOrder] = useState<Order | null>(null)
 
   // Form
   const [formClientId, setFormClientId] = useState('')
@@ -193,7 +205,7 @@ export default function OrdersPage() {
   // ── Form calculations ──
   const subtotal = formItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0)
   const discountAmount = (subtotal * formDiscount) / 100
-  const taxAmount = ((subtotal - discountAmount) * 19) / 100
+  const taxAmount = ((subtotal - discountAmount) * 18) / 100
   const total = subtotal - discountAmount + taxAmount
 
   // ── Item management ──
@@ -223,7 +235,7 @@ export default function OrdersPage() {
     setFormItems(updated)
   }
 
-  // ── Submit order ──
+  // ── Submit order (create or update) ──
   const handleSubmit = async () => {
     if (!formClientId) {
       toast({ title: 'Erreur', description: 'Veuillez sélectionner un client', variant: 'destructive' })
@@ -235,34 +247,42 @@ export default function OrdersPage() {
       return
     }
 
+    const body = {
+      clientId: formClientId,
+      items: validItems.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+      })),
+      discount: formDiscount,
+      tax: 18,
+      notes: formNotes || undefined,
+    }
+
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId: formClientId,
-          items: validItems.map((i) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-          })),
-          discount: formDiscount,
-          tax: 19,
-          notes: formNotes || undefined,
-        }),
-      })
+      const res = editingOrder
+        ? await fetch(`/api/orders/${editingOrder.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+        : await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
       const json = await res.json()
       if (json.error) {
         toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
       } else {
-        toast({ title: 'Succès', description: 'Commande créée avec succès' })
+        toast({ title: 'Succès', description: editingOrder ? 'Commande modifiée avec succès' : 'Commande créée avec succès' })
         setDialogOpen(false)
         resetForm()
         fetchOrders()
         fetchCounts()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la création', variant: 'destructive' })
+      toast({ title: 'Erreur', description: 'Erreur lors de l\'enregistrement', variant: 'destructive' })
     }
   }
 
@@ -272,6 +292,43 @@ export default function OrdersPage() {
     setFormDiscount(0)
     setFormItems([{ productId: '', productName: '', quantity: 1, unitPrice: 0 }])
     setClientSearch('')
+    setEditingOrder(null)
+  }
+
+  // ── Edit order ──
+  const handleEditOrder = (order: Order) => {
+    setEditingOrder(order)
+    setFormClientId(order.clientId)
+    setFormNotes(order.notes || '')
+    setFormDiscount(order.discount || 0)
+    setFormItems(
+      (order.items || []).map((item) => ({
+        productId: item.productId,
+        productName: item.product?.name || '',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      }))
+    )
+    setDialogOpen(true)
+  }
+
+  // ── Delete order ──
+  const handleDeleteOrder = async () => {
+    if (!deleteOrder) return
+    try {
+      const res = await fetch(`/api/orders/${deleteOrder.id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.error) {
+        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+      } else {
+        toast({ title: 'Succès', description: 'Commande supprimée avec succès' })
+        setDeleteOrder(null)
+        fetchOrders()
+        fetchCounts()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+    }
   }
 
   // ── Filtered clients for dialog ──
@@ -418,10 +475,10 @@ export default function OrdersPage() {
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditOrder(order)}>
                               <Edit className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteOrder(order)}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -469,7 +526,7 @@ export default function OrdersPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Nouvelle commande
+              {editingOrder ? 'Modifier la commande' : 'Nouvelle commande'}
             </DialogTitle>
           </DialogHeader>
 
@@ -594,7 +651,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">TVA (19%)</span>
+                  <span className="text-muted-foreground">TVA (18%)</span>
                   <span className="font-medium">{formatDA(taxAmount)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold">
@@ -621,7 +678,7 @@ export default function OrdersPage() {
               Annuler
             </Button>
             <Button onClick={handleSubmit} className="min-w-32">
-              Créer la commande
+              {editingOrder ? 'Modifier la commande' : 'Créer la commande'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -709,6 +766,28 @@ export default function OrdersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog open={!!deleteOrder} onOpenChange={(open) => { if (!open) setDeleteOrder(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer la commande ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment supprimer la commande <strong>{deleteOrder?.number}</strong> ?
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteOrder}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

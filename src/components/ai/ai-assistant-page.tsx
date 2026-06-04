@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 import {
   Bot,
   Send,
@@ -36,137 +37,6 @@ const suggestions = [
   { id: 's4', label: 'Prévisions de ventes', icon: TrendingUp, color: 'text-erp-success' },
   { id: 's5', label: 'Recommandations produits', icon: Lightbulb, color: 'text-chart-4' },
 ]
-
-// ── Mock AI responses ──────────────────────────────────────────────────
-
-const mockResponses: Record<string, string> = {
-  'Analyse des ventes du mois': `📊 **Analyse des ventes - ${new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}**
-
-Voici le résumé de vos performances ce mois-ci :
-
-1. **Chiffre d'affaires total** : 42,03 M CFA (+12.5% vs mois dernier)
-2. **Nombre de commandes** : 156 commandes traitées
-3. **Panier moyen** : 269 400 CFA
-4. **Taux de conversion** : 68% (en hausse de 3 points)
-
-**Points clés :**
-- Les **boissons** représentent 42% du CA total
-- La région de **Dakar** génère 38% des ventes
-- **Abdoulaye S.** est le meilleur commercial avec 12,48 M CFA
-- **12 nouveaux clients** ont été acquis ce mois
-
-**Recommandations :**
-- Augmenter le stock de Coca-Cola et Yaourt Danone (demande en hausse)
-- Renforcer la couverture dans la région de Thiès (+8% de croissance)`,
-
-  'Produits en alerte stock': `⚠️ **Alertes de stock - Produits critiques**
-
-**Produits en rupture (stock = 0) :**
-1. 🔴 Jus d'Orange Al Hamra 1L (BOI-002) — 0 unités
-2. 🔴 Savon de Marseille 500g (ENT-004) — 0 unités
-
-**Produits avec stock limité (< seuil minimum) :**
-1. 🟡 Eau Javel 1L (ENT-002) — 15 unités (seuil: 30)
-2. 🟡 Crème Nivea 200ml (COS-003) — 12 unités (seuil: 20)
-3. 🟡 Gel Douche Palmolive (COS-004) — 8 unités (seuil: 25)
-4. 🟡 Shampoo Dove 400ml (COS-001) — 18 unités (seuil: 25)
-
-**Actions recommandées :**
-- Passer commande urgente pour les produits en rupture
-- Programmer un réapprovisionnement automatique pour les seuils bas
-- Contacter les fournisseurs pour les délais de livraison`,
-
-  'Performance des commerciaux': `👥 **Performance des commerciaux - Rapport mensuel**
-
-**Classement par chiffre d'affaires :**
-
-| # | Commercial | CA | Objectif | Atteinte |
-|---|-----------|-----|----------|----------|
-| 1 | Abdoulaye S. | 12,48 M CFA | 12 M CFA | ✅ 104% |
-| 2 | Ibrahima F. | 11,12 M CFA | 10 M CFA | ✅ 111% |
-| 3 | Mamadou D. | 9,85 M CFA | 12 M CFA | ⚠️ 82% |
-| 4 | Ousmane B. | 8,84 M CFA | 10 M CFA | ⚠️ 88% |
-| 5 | Fatou N. | 7,56 M CFA | 10 M CFA | ⚠️ 76% |
-| 6 | Aminata D. | 6,24 M CFA | 8 M CFA | ⚠️ 78% |
-
-**Insights :**
-- **2 commerciaux** ont dépassé leur objectif
-- La **progression moyenne** est de +15% vs Q3
-- **Sara L.** montre la plus forte progression (+28%)
-- **Formation recommandée** pour Amina D. (techniques de vente)`,
-
-  'Prévisions de ventes': `📈 **Prévisions de ventes - Prochain trimestre**
-
-Basé sur l'historique et les tendances actuelles :
-
-**Mois prochain (projection) :**
-- **CA estimé** : 47,4 M CFA (+12% de croissance)
-- **Commandes prévues** : 175-190
-- **Nouveaux clients** : ~22
-
-**Tendances saisonnières :**
-1. **Boissons** : Hausse attendue de +25% (été)
-2. **Cosmétiques** : Stable avec légère hausse (+5%)
-3. **Entretien** : Baisse saisonnière (-10%)
-4. **Alimentation** : Stable (+2%)
-
-**Recommandations stratégiques :**
-- Augmenter le stock de boissons de 40%
-- Préparer des promotions sur les cosmétiques
-- Négocier de meilleurs tarifs avec les fournisseurs d'entretien
-- Recruter 1 commercial supplémentaire pour la couverture Dakar`,
-
-  'Recommandations produits': `💡 **Recommandations produits - Intelligence de marché**
-
-**Produits à ajouter au catalogue :**
-1. **Huile de table 5L** — Forte demande détectée (+35% de recherche)
-2. **Café moulu 250g** — Catégorie en croissance
-3. **Moutarde 500g** — Produit complémentaire à la gamme entretien
-
-**Produits à promouvoir :**
-1. ⭐ Coca-Cola 33cl — Meilleur vendeur, potentiel cross-selling
-2. ⭐ Semoule 5kg — Marge élevée (32%)
-3. ⭐ Harissa CPL — Tendance montante
-
-**Stratégie de prix :**
-- **Ajuster les prix** de 5 produits face à la concurrence
-- **Offres groupées** pour augmenter le panier moyen
-- **Remise fidélité** pour les clients gros volumes
-
-**Analyse concurrentielle :**
-- Votre prix moyen est **8% en dessous** du marché
-- Opportunité d'augmentation sur les marques premium
-- 3 produits identifiés comme "price fighters"`,
-
-  default: `🤖 **DistribuAI - Assistant intelligent**
-
-Merci pour votre question. Voici ce que je peux vous dire :
-
-1. J'ai analysé vos données récentes
-2. Les tendances indiquent une **croissance positive** de votre activité
-3. Je vous recommande de consulter le tableau de bord pour plus de détails
-
-**Ce que je peux faire pour vous :**
-- 📊 Analyse des ventes et performance
-- 📦 Gestion du stock et alertes
-- 👥 Suivi des commerciaux
-- 📈 Prévisions et tendances
-- 💡 Recommandations stratégiques
-
-N'hésitez pas à me poser une question plus spécifique !`,
-}
-
-function getMockResponse(message: string): string {
-  // Find the closest matching suggestion
-  for (const [key, value] of Object.entries(mockResponses)) {
-    if (key === 'default') continue
-    if (message.toLowerCase().includes(key.toLowerCase().split(' ')[0].toLowerCase()) ||
-        message.toLowerCase().includes(key.toLowerCase())) {
-      return value
-    }
-  }
-  return mockResponses['default']
-}
 
 // ── Markdown-like renderer ────────────────────────────────────────────
 
@@ -307,7 +177,7 @@ Cliquez sur une suggestion ci-dessous ou tapez votre question pour commencer.`,
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  const handleSend = useCallback((text: string) => {
+  const handleSend = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return
 
     const userMessage: ChatMessage = {
@@ -321,19 +191,49 @@ Cliquez sur une suggestion ci-dessous ou tapez votre question pour commencer.`,
     setInputValue('')
     setIsLoading(true)
 
-    // Simulate AI response after delay
-    const delay = 1000 + Math.random() * 1000
-    setTimeout(() => {
+    try {
+      // Build history: last 10 messages for context
+      const history = messages
+        .filter((m) => m.id !== 'welcome')
+        .slice(-10)
+        .map((m) => ({ role: m.role, content: m.content }))
+
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text.trim(), history }),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Erreur lors de la communication avec l\'assistant')
+      }
+
+      const json = await res.json()
+
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
-        content: getMockResponse(text.trim()),
+        content: json.response,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, aiMessage])
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue'
+      toast.error('Erreur DistribuAI', { description: msg })
+
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: `⚠️ **Erreur**\n\nDésolé, une erreur est survenue : ${msg}\n\nVeuillez réessayer dans un instant.`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, delay)
-  }, [isLoading])
+      inputRef.current?.focus()
+    }
+  }, [isLoading, messages])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

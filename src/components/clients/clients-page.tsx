@@ -44,6 +44,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAppStore } from '@/lib/store'
@@ -102,6 +113,9 @@ export default function ClientsPage() {
   // Dialog state
   const [showNewClient, setShowNewClient] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [deleteClient, setDeleteClient] = useState<Client | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [commercials, setCommercials] = useState<Commercial[]>([])
   const [newClient, setNewClient] = useState({
     companyName: '',
@@ -180,6 +194,7 @@ export default function ClientsPage() {
         }),
       })
       if (res.ok) {
+        toast({ title: 'Succès', description: 'Client créé avec succès' })
         setShowNewClient(false)
         setNewClient({
           companyName: '',
@@ -199,9 +214,87 @@ export default function ClientsPage() {
         fetchClients()
       }
     } catch {
-      // Error handled silently
+      toast({ title: 'Erreur', description: 'Erreur lors de la création', variant: 'destructive' })
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client)
+    setNewClient({
+      companyName: client.companyName,
+      contactName: client.contactName,
+      phone: client.phone,
+      whatsapp: client.whatsapp || '',
+      email: client.email || '',
+      address: client.address || '',
+      city: client.city || '',
+      region: client.region || '',
+      sector: client.sector || '',
+      type: client.type,
+      status: client.status,
+      notes: client.notes || '',
+      commercialId: client.commercialId || '',
+    })
+    setShowNewClient(true)
+  }
+
+  const handleUpdateClient = async () => {
+    if (!editingClient || !newClient.companyName || !newClient.contactName || !newClient.phone) return
+    setCreating(true)
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingClient.id,
+          ...newClient,
+          commercialId: newClient.commercialId || null,
+        }),
+      })
+      if (res.ok) {
+        toast({ title: 'Succès', description: 'Client modifié avec succès' })
+        setShowNewClient(false)
+        setEditingClient(null)
+        setNewClient({
+          companyName: '',
+          contactName: '',
+          phone: '',
+          whatsapp: '',
+          email: '',
+          address: '',
+          city: '',
+          region: '',
+          sector: '',
+          type: 'boutique',
+          status: 'client_vert',
+          notes: '',
+          commercialId: '',
+        })
+        fetchClients()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleDeleteClient = async () => {
+    if (!deleteClient) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/clients?id=${deleteClient.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast({ title: 'Succès', description: 'Client supprimé avec succès' })
+        setDeleteClient(null)
+        fetchClients()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -483,7 +576,10 @@ export default function ClientsPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditClient(client)
+                              }}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -491,7 +587,10 @@ export default function ClientsPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setDeleteClient(client)
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -625,7 +724,7 @@ export default function ClientsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-erp-orange" />
-              Nouveau Client
+              {editingClient ? 'Modifier le Client' : 'Nouveau Client'}
             </DialogTitle>
           </DialogHeader>
 
@@ -785,7 +884,7 @@ export default function ClientsPage() {
               Annuler
             </Button>
             <Button
-              onClick={handleCreateClient}
+              onClick={editingClient ? handleUpdateClient : handleCreateClient}
               disabled={
                 creating ||
                 !newClient.companyName ||
@@ -795,11 +894,35 @@ export default function ClientsPage() {
               className="bg-erp-orange hover:bg-erp-orange/90 text-white"
             >
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Créer le client
+              {editingClient ? 'Modifier le client' : 'Créer le client'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteClient} onOpenChange={(open) => { if (!open) setDeleteClient(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le client ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment supprimer <strong>{deleteClient?.companyName}</strong> ?
+              Cette action est irréversible et supprimera toutes les données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClient}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -162,24 +162,15 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-erp-orange" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-                <span className="text-sm font-medium">Nouvelle commande #CMD-2024-0021</span>
-                <span className="text-xs text-muted-foreground">Supermarché Sobatex · Il y a 5 min</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-                <span className="text-sm font-medium">Stock faible : Jus d&apos;Orange Youki</span>
-                <span className="text-xs text-muted-foreground">Il y a 15 minutes</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-                <span className="text-sm font-medium">Client Lead rouge : Marché Kermel</span>
-                <span className="text-xs text-muted-foreground">Il y a 1 heure</span>
-              </DropdownMenuItem>
+              <div className="p-4 text-center">
+                <Bell className="h-8 w-8 mx-auto mb-2 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">Aucune nouvelle notification</p>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 

@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
 import {
   BarChart3,
   Download,
@@ -19,6 +21,7 @@ import {
   Trophy,
   ArrowUpRight,
   ArrowDownRight,
+  AlertCircle,
 } from 'lucide-react'
 import {
   BarChart,
@@ -91,113 +94,20 @@ const reportTypes: ReportTypeConfig[] = [
   { id: 'performance', label: 'Performance commerciaux', description: 'Tendance de performance mensuelle', icon: TrendingUp, chartType: 'line' },
 ]
 
-// ── Mock Data ──────────────────────────────────────────────────────────
+// ── API Response Types ────────────────────────────────────────────────
 
-const commercialData = [
-  { name: 'Mamadou D.', ventes: 9850000, objectif: 12000000 },
-  { name: 'Abdoulaye S.', ventes: 12480000, objectif: 12000000 },
-  { name: 'Fatou N.', ventes: 7560000, objectif: 10000000 },
-  { name: 'Ibrahima F.', ventes: 11120000, objectif: 10000000 },
-  { name: 'Aminata D.', ventes: 6240000, objectif: 8000000 },
-  { name: 'Ousmane B.', ventes: 8840000, objectif: 10000000 },
-]
+interface SummaryCard {
+  label: string
+  value: string
+  change: string
+  up: boolean
+}
 
-const regionData = [
-  { name: 'Dakar', value: 38 },
-  { name: 'Thiès', value: 18 },
-  { name: 'Saint-Louis', value: 12 },
-  { name: 'Kaolack', value: 10 },
-  { name: 'Ziguinchor', value: 9 },
-  { name: 'Tambacounda', value: 7 },
-  { name: 'Autres', value: 6 },
-]
-
-const productData = [
-  { name: 'Coca-Cola 33cl', ventes: 7400000 },
-  { name: 'Yaourt Danone', ventes: 6480000 },
-  { name: 'Semoule 5kg', ventes: 5920000 },
-  { name: 'Harissa CPL', ventes: 4960000 },
-  { name: 'Détergent Tide', ventes: 3920000 },
-  { name: 'Eau Minérale', ventes: 3560000 },
-]
-
-const clientData = [
-  { name: 'Supermarché Central', ventes: 12800000 },
-  { name: 'Boutique du Port', ventes: 7400000 },
-  { name: 'Épicerie Médina', ventes: 5680000 },
-  { name: 'Grossiste Sandaga', ventes: 8400000 },
-  { name: 'Mini-Market Liberté', ventes: 3920000 },
-]
-
-const topProductsData = [
-  { name: 'Coca-Cola 33cl', quantité: 45000, CA: 9000000 },
-  { name: 'Yaourt Danone 12p', quantité: 28000, CA: 7280000 },
-  { name: 'Semoule 5kg', quantité: 32000, CA: 5760000 },
-  { name: 'Eau Minérale 1.5L', quantité: 38000, CA: 4560000 },
-  { name: 'Harissa CPL 70g', quantité: 18000, CA: 5040000 },
-]
-
-const performanceData = [
-  { mois: 'Jan', abdoulaye: 280, mamadou: 220, fatou: 180 },
-  { mois: 'Fév', abdoulaye: 310, mamadou: 245, fatou: 195 },
-  { mois: 'Mar', abdoulaye: 290, mamadou: 260, fatou: 210 },
-  { mois: 'Avr', abdoulaye: 340, mamadou: 255, fatou: 175 },
-  { mois: 'Mai', abdoulaye: 320, mamadou: 270, fatou: 200 },
-  { mois: 'Jun', abdoulaye: 380, mamadou: 290, fatou: 220 },
-  { mois: 'Jul', abdoulaye: 350, mamadou: 310, fatou: 240 },
-  { mois: 'Aoû', abdoulaye: 400, mamadou: 285, fatou: 215 },
-  { mois: 'Sep', abdoulaye: 370, mamadou: 320, fatou: 250 },
-  { mois: 'Oct', abdoulaye: 410, mamadou: 330, fatou: 230 },
-  { mois: 'Nov', abdoulaye: 390, mamadou: 345, fatou: 260 },
-  { mois: 'Déc', abdoulaye: 450, mamadou: 360, fatou: 280 },
-]
-
-// ── Summary cards generator ───────────────────────────────────────────
-
-function getSummaryCards(reportType: ReportType) {
-  switch (reportType) {
-    case 'commercial':
-      return [
-        { label: 'Total Ventes', value: '56.09M CFA', change: '+12.5%', up: true },
-        { label: 'Objectif Global', value: '62M CFA', change: '90.4%', up: true },
-        { label: 'Meilleur Commercial', value: 'Abdoulaye S.', change: '12.48M CFA', up: true },
-        { label: 'Commerciaux Actifs', value: '6', change: '6/6', up: true },
-      ]
-    case 'region':
-      return [
-        { label: 'Région Dominante', value: 'Dakar', change: '38%', up: true },
-        { label: 'Couverture', value: '7 régions', change: '+2', up: true },
-        { label: 'Croissance Thiès', value: '+18%', change: 'vs mois dernier', up: true },
-        { label: 'Nouvelle Zone', value: 'Kaffrine', change: 'Prospect', up: false },
-      ]
-    case 'product':
-      return [
-        { label: 'CA Produits', value: '32.24M CFA', change: '+8.3%', up: true },
-        { label: 'Produit #1', value: 'Coca-Cola', change: '7.4M CFA', up: true },
-        { label: 'Catégorie Top', value: 'Boissons', change: '42% du CA', up: true },
-        { label: 'Produits Actifs', value: '248', change: '+12', up: true },
-      ]
-    case 'client':
-      return [
-        { label: 'Total Clients', value: '156', change: '+18', up: true },
-        { label: 'Meilleur Client', value: 'Superm. Central', change: '12.8M CFA', up: true },
-        { label: 'CA Moyen/Client', value: '380K CFA', change: '+5.2%', up: true },
-        { label: 'Nouveaux Clients', value: '18', change: 'ce mois', up: true },
-      ]
-    case 'top-products':
-      return [
-        { label: 'Ventes Totales', value: '31.64M CFA', change: '+15.2%', up: true },
-        { label: 'Unités Vendues', value: '161,000', change: '+12%', up: true },
-        { label: 'Meilleur Produit', value: 'Coca-Cola', change: '45,000 unités', up: true },
-        { label: 'Marge Moyenne', value: '28%', change: '+2.1%', up: true },
-      ]
-    case 'performance':
-      return [
-        { label: 'Score Moyen', value: '305 pts', change: '+15%', up: true },
-        { label: 'Top Performeur', value: 'Abdoulaye S.', change: '410 pts/mois', up: true },
-        { label: 'Progression Team', value: '+18%', change: 'vs Q3', up: true },
-        { label: 'Objectif Atteint', value: '83%', change: '4/6', up: true },
-      ]
+interface ReportsApiResponse {
+  chartData: Record<string, unknown>[]
+  seriesKeys?: { key: string; name: string }[]
+  summary: {
+    cards: SummaryCard[]
   }
 }
 
@@ -221,10 +131,10 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 // ── Chart Renderers ────────────────────────────────────────────────────
 
-function CommercialChart() {
+function CommercialBarChart({ data }: { data: Record<string, unknown>[] }) {
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={commercialData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
         <XAxis dataKey="name" tick={{ fontSize: 12 }} className="text-muted-foreground" />
         <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
@@ -237,12 +147,12 @@ function CommercialChart() {
   )
 }
 
-function RegionChart() {
+function RegionPieChart({ data }: { data: Record<string, unknown>[] }) {
   return (
     <ResponsiveContainer width="100%" height={400}>
       <PieChart>
         <Pie
-          data={regionData}
+          data={data}
           cx="50%"
           cy="50%"
           innerRadius={80}
@@ -252,7 +162,7 @@ function RegionChart() {
           label={({ name, value }) => `${name} (${value}%)`}
           labelLine={true}
         >
-          {regionData.map((_, index) => (
+          {data.map((_, index) => (
             <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
           ))}
         </Pie>
@@ -265,10 +175,10 @@ function RegionChart() {
   )
 }
 
-function ProductChart() {
+function ProductBarChart({ data }: { data: Record<string, unknown>[] }) {
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={productData} layout="vertical" margin={{ top: 10, right: 10, left: 80, bottom: 0 }}>
+      <BarChart data={data} layout="vertical" margin={{ top: 10, right: 10, left: 80, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
         <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
         <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
@@ -279,10 +189,10 @@ function ProductChart() {
   )
 }
 
-function ClientChart() {
+function ClientBarChart({ data }: { data: Record<string, unknown>[] }) {
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={clientData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
         <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={60} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
@@ -293,10 +203,10 @@ function ClientChart() {
   )
 }
 
-function TopProductsChart() {
+function TopProductsBarChart({ data }: { data: Record<string, unknown>[] }) {
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={topProductsData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
         <XAxis dataKey="name" tick={{ fontSize: 10 }} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
@@ -309,30 +219,66 @@ function TopProductsChart() {
   )
 }
 
-function PerformanceChart() {
+function PerformanceLineChart({ data, seriesKeys }: { data: Record<string, unknown>[]; seriesKeys?: { key: string; name: string }[] }) {
+  const keys = seriesKeys || []
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <LineChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
         <XAxis dataKey="mois" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
-        <Line type="monotone" dataKey="abdoulaye" name="Abdoulaye S." stroke={COLORS[1]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        <Line type="monotone" dataKey="mamadou" name="Mamadou D." stroke={COLORS[0]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        <Line type="monotone" dataKey="fatou" name="Fatou N." stroke={COLORS[3]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+        {keys.map((s, i) => (
+          <Line
+            key={s.key}
+            type="monotone"
+            dataKey={s.key}
+            name={s.name}
+            stroke={COLORS[i % COLORS.length]}
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+          />
+        ))}
       </LineChart>
     </ResponsiveContainer>
   )
 }
 
-const chartRenderers: Record<ReportType, React.FC> = {
-  commercial: CommercialChart,
-  region: RegionChart,
-  product: ProductChart,
-  client: ClientChart,
-  'top-products': TopProductsChart,
-  performance: PerformanceChart,
+// ── Loading Skeletons ──────────────────────────────────────────────────
+
+function SummaryCardsSkeleton() {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i}>
+          <CardContent className="p-4 space-y-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-3 w-20" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function ChartSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-64" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[400px] w-full" />
+      </CardContent>
+    </Card>
+  )
 }
 
 // ── Main component ────────────────────────────────────────────────────
@@ -340,10 +286,68 @@ const chartRenderers: Record<ReportType, React.FC> = {
 export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<ReportType>('commercial')
   const [period, setPeriod] = useState('month')
+  const [reportData, setReportData] = useState<ReportsApiResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const summaryCards = useMemo(() => getSummaryCards(selectedReport), [selectedReport])
+  const fetchReportData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/reports?type=${selectedReport}&period=${period}`)
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Erreur lors du chargement')
+      }
+      const json: ReportsApiResponse = await res.json()
+      setReportData(json)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(msg)
+      toast.error('Erreur', { description: msg })
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedReport, period])
 
-  const ChartComponent = chartRenderers[selectedReport]
+  useEffect(() => {
+    fetchReportData()
+  }, [fetchReportData])
+
+  const handleExportPDF = () => {
+    window.print()
+  }
+
+  const handleExportExcel = () => {
+    toast.info('Export en cours...', { description: 'Le fichier Excel est en cours de préparation.' })
+  }
+
+  const renderChart = () => {
+    if (!reportData || !reportData.chartData.length) {
+      return (
+        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <p>Aucune donnée disponible pour cette période</p>
+        </div>
+      )
+    }
+
+    switch (selectedReport) {
+      case 'commercial':
+        return <CommercialBarChart data={reportData.chartData} />
+      case 'region':
+        return <RegionPieChart data={reportData.chartData} />
+      case 'product':
+        return <ProductBarChart data={reportData.chartData} />
+      case 'client':
+        return <ClientBarChart data={reportData.chartData} />
+      case 'top-products':
+        return <TopProductsBarChart data={reportData.chartData} />
+      case 'performance':
+        return <PerformanceLineChart data={reportData.chartData} seriesKeys={reportData.seriesKeys} />
+      default:
+        return null
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -385,52 +389,65 @@ export default function ReportsPage() {
       </div>
 
       {/* ── Summary Cards ───────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {summaryCards.map((card, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground font-medium">{card.label}</p>
-              <p className="text-xl font-bold text-foreground mt-1">{card.value}</p>
-              <div className={`flex items-center gap-1 mt-1 text-xs font-medium ${
-                card.up ? 'text-erp-success' : 'text-muted-foreground'
-              }`}>
-                {card.up ? (
-                  <ArrowUpRight className="h-3 w-3" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3" />
-                )}
-                <span>{card.change}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {loading ? (
+        <SummaryCardsSkeleton />
+      ) : error ? (
+        <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 text-destructive text-sm">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : reportData ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {reportData.summary.cards.map((card, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground font-medium">{card.label}</p>
+                <p className="text-xl font-bold text-foreground mt-1">{card.value}</p>
+                <div className={`flex items-center gap-1 mt-1 text-xs font-medium ${
+                  card.up ? 'text-erp-success' : 'text-muted-foreground'
+                }`}>
+                  {card.up ? (
+                    <ArrowUpRight className="h-3 w-3" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3" />
+                  )}
+                  <span>{card.change}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : null}
 
       {/* ── Chart Area ──────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base">
-              {reportTypes.find((r) => r.id === selectedReport)?.label}
-            </CardTitle>
-            <Badge variant="secondary" className="text-xs">
-              Données réelles
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            <Tabs value={period} onValueChange={setPeriod}>
-              <TabsList className="h-8">
-                <TabsTrigger value="week" className="text-xs px-3 h-6">Semaine</TabsTrigger>
-                <TabsTrigger value="month" className="text-xs px-3 h-6">Mois</TabsTrigger>
-                <TabsTrigger value="year" className="text-xs px-3 h-6">Année</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ChartComponent />
-        </CardContent>
-      </Card>
+      {loading ? (
+        <ChartSkeleton />
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">
+                {reportTypes.find((r) => r.id === selectedReport)?.label}
+              </CardTitle>
+              <Badge variant="secondary" className="text-xs">
+                Données réelles
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tabs value={period} onValueChange={(v) => setPeriod(v)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="week" className="text-xs px-3 h-6">Semaine</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs px-3 h-6">Mois</TabsTrigger>
+                  <TabsTrigger value="year" className="text-xs px-3 h-6">Année</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {renderChart()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Export Buttons ───────────────────────────────────── */}
       <Card>
@@ -442,11 +459,11 @@ export default function ReportsPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleExportPDF}>
               <FileText className="h-4 w-4" />
               Exporter PDF
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleExportExcel}>
               <Download className="h-4 w-4" />
               Exporter Excel
             </Button>

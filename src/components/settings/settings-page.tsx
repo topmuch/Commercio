@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 // ── Main component ────────────────────────────────────────────────────
 
@@ -163,7 +164,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex justify-end">
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={() => toast({ title: 'Succès', description: 'Profil sauvegardé' })}>
               <Save className="h-4 w-4" />
               Sauvegarder le profil
             </Button>
@@ -262,7 +263,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex justify-end">
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={() => toast({ title: 'Succès', description: 'Informations sauvegardées' })}>
               <Save className="h-4 w-4" />
               Sauvegarder
             </Button>

@@ -26,6 +26,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -99,6 +109,8 @@ export default function QuotesPage() {
   // Dialog
   const [dialogOpen, setDialogOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteQuote, setDeleteQuote] = useState<Quote | null>(null)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
 
   // Form
@@ -110,6 +122,11 @@ export default function QuotesPage() {
     { productId: '', productName: '', quantity: 1, unitPrice: 0 },
   ])
   const [clientSearch, setClientSearch] = useState('')
+
+  // Edit quote form
+  const [editNotes, setEditNotes] = useState('')
+  const [editValidUntil, setEditValidUntil] = useState('')
+  const [editStatus, setEditStatus] = useState('')
 
   // ── Fetch quotes ──
   const fetchQuotes = useCallback(async () => {
@@ -191,7 +208,7 @@ export default function QuotesPage() {
   // ── Form calculations ──
   const subtotal = formItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0)
   const discountAmount = (subtotal * formDiscount) / 100
-  const taxAmount = ((subtotal - discountAmount) * 19) / 100
+  const taxAmount = ((subtotal - discountAmount) * 18) / 100
   const total = subtotal - discountAmount + taxAmount
 
   // ── Item management ──
@@ -245,7 +262,7 @@ export default function QuotesPage() {
             unitPrice: i.unitPrice,
           })),
           discount: formDiscount,
-          tax: 19,
+          tax: 18,
           validUntil: formValidUntil || undefined,
           notes: formNotes || undefined,
         }),
@@ -272,6 +289,60 @@ export default function QuotesPage() {
     setFormValidUntil('')
     setFormItems([{ productId: '', productName: '', quantity: 1, unitPrice: 0 }])
     setClientSearch('')
+  }
+
+  // ── Edit quote ──
+  const openEditDialog = (quote: Quote) => {
+    setSelectedQuote(quote)
+    setEditNotes(quote.notes || '')
+    setEditValidUntil(quote.validUntil ? quote.validUntil.split('T')[0] : '')
+    setEditStatus(quote.status)
+    setEditOpen(true)
+  }
+
+  const handleEditQuote = async () => {
+    if (!selectedQuote) return
+    try {
+      const res = await fetch(`/api/quotes/${selectedQuote.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: editNotes || undefined,
+          validUntil: editValidUntil || undefined,
+          status: editStatus,
+        }),
+      })
+      const json = await res.json()
+      if (json.error) {
+        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+      } else {
+        toast({ title: 'Succès', description: 'Devis modifié avec succès' })
+        setEditOpen(false)
+        fetchQuotes()
+        fetchCounts()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
+    }
+  }
+
+  // ── Delete quote ──
+  const handleDeleteQuote = async () => {
+    if (!deleteQuote) return
+    try {
+      const res = await fetch(`/api/quotes/${deleteQuote.id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.error) {
+        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+      } else {
+        toast({ title: 'Succès', description: 'Devis supprimé avec succès' })
+        setDeleteQuote(null)
+        fetchQuotes()
+        fetchCounts()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+    }
   }
 
   // ── Filtered clients for dialog ──
@@ -425,10 +496,10 @@ export default function QuotesPage() {
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(quote)}>
                               <Edit className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteQuote(quote)}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -615,7 +686,7 @@ export default function QuotesPage() {
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">TVA (19%)</span>
+                  <span className="text-muted-foreground">TVA (18%)</span>
                   <span className="font-medium">{formatDA(taxAmount)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold">
@@ -647,6 +718,83 @@ export default function QuotesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Edit Quote Dialog ── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Modifier le devis
+            </DialogTitle>
+          </DialogHeader>
+          {selectedQuote && (
+            <div className="space-y-4">
+              <div className="text-sm font-medium font-mono">{selectedQuote.number}</div>
+              <div className="space-y-2">
+                <Label>Statut</Label>
+                <Select value={editStatus} onValueChange={setEditStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Brouillon</SelectItem>
+                    <SelectItem value="sent">Envoyé</SelectItem>
+                    <SelectItem value="accepted">Accepté</SelectItem>
+                    <SelectItem value="refused">Refusé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Date de validité
+                </Label>
+                <Input
+                  type="date"
+                  value={editValidUntil}
+                  onChange={(e) => setEditValidUntil(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  placeholder="Notes sur le devis..."
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Annuler</Button>
+            <Button onClick={handleEditQuote} className="min-w-32">Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog open={!!deleteQuote} onOpenChange={(open) => { if (!open) setDeleteQuote(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le devis ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment supprimer le devis <strong>{deleteQuote?.number}</strong> ?
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteQuote}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Quote Detail Dialog ── */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>

@@ -33,6 +33,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -115,6 +125,8 @@ export default function InvoicesPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteInvoice, setDeleteInvoice] = useState<Invoice | null>(null)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
 
   // Create form
@@ -132,6 +144,10 @@ export default function InvoicesPage() {
   const [payMethod, setPayMethod] = useState('cash')
   const [payReference, setPayReference] = useState('')
   const [payNotes, setPayNotes] = useState('')
+
+  // Edit invoice form
+  const [editNotes, setEditNotes] = useState('')
+  const [editDueDate, setEditDueDate] = useState('')
 
   // ── Fetch invoices ──
   const fetchInvoices = useCallback(async () => {
@@ -216,7 +232,7 @@ export default function InvoicesPage() {
   // ── Form calculations ──
   const subtotal = formItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0)
   const discountAmount = (subtotal * formDiscount) / 100
-  const taxAmount = ((subtotal - discountAmount) * 19) / 100
+  const taxAmount = ((subtotal - discountAmount) * 18) / 100
   const total = subtotal - discountAmount + taxAmount
 
   // ── Item management ──
@@ -270,7 +286,7 @@ export default function InvoicesPage() {
             unitPrice: i.unitPrice,
           })),
           discount: formDiscount,
-          tax: 19,
+          tax: 18,
           dueDate: formDueDate || undefined,
           notes: formNotes || undefined,
         }),
@@ -354,6 +370,58 @@ export default function InvoicesPage() {
     setSelectedInvoice(invoice)
     setPaymentOpen(true)
     resetPaymentForm()
+  }
+
+  // ── Edit invoice ──
+  const openEditDialog = (invoice: Invoice) => {
+    setSelectedInvoice(invoice)
+    setEditNotes(invoice.notes || '')
+    setEditDueDate(invoice.dueDate ? invoice.dueDate.split('T')[0] : '')
+    setEditOpen(true)
+  }
+
+  const handleEditInvoice = async () => {
+    if (!selectedInvoice) return
+    try {
+      const res = await fetch(`/api/invoices/${selectedInvoice.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: editNotes || undefined,
+          dueDate: editDueDate || undefined,
+        }),
+      })
+      const json = await res.json()
+      if (json.error) {
+        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+      } else {
+        toast({ title: 'Succès', description: 'Facture modifiée avec succès' })
+        setEditOpen(false)
+        fetchInvoices()
+        fetchCounts()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
+    }
+  }
+
+  // ── Delete invoice ──
+  const handleDeleteInvoice = async () => {
+    if (!deleteInvoice) return
+    try {
+      const res = await fetch(`/api/invoices/${deleteInvoice.id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.error) {
+        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+      } else {
+        toast({ title: 'Succès', description: 'Facture supprimée avec succès' })
+        setDeleteInvoice(null)
+        fetchInvoices()
+        fetchCounts()
+      }
+    } catch {
+      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+    }
   }
 
   // ── Filtered clients for dialog ──
@@ -595,10 +663,10 @@ export default function InvoicesPage() {
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(invoice)}>
                               <Edit className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteInvoice(invoice)}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -785,7 +853,7 @@ export default function InvoicesPage() {
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">TVA (19%)</span>
+                  <span className="text-muted-foreground">TVA (18%)</span>
                   <span className="font-medium">{formatDA(taxAmount)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold">
@@ -941,6 +1009,69 @@ export default function InvoicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Edit Invoice Dialog ── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Modifier la facture
+            </DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4">
+              <div className="text-sm font-medium font-mono">{selectedInvoice.number}</div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Date d'échéance
+                </Label>
+                <Input
+                  type="date"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  placeholder="Notes sur la facture..."
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Annuler</Button>
+            <Button onClick={handleEditInvoice} className="min-w-32">Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog open={!!deleteInvoice} onOpenChange={(open) => { if (!open) setDeleteInvoice(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer la facture ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous vraiment supprimer la facture <strong>{deleteInvoice?.number}</strong> ?
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteInvoice}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Invoice Detail Dialog ── */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
