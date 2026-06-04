@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
 import {
   MapPin,
@@ -9,18 +10,16 @@ import {
   Store,
   Building2,
   Search,
-  Phone,
-  ChevronRight,
   X,
   Layers,
+  MessageCircle,
+  Navigation,
+  Loader2,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
   SelectContent,
@@ -28,9 +27,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { useAppStore } from '@/lib/store'
 
-interface ClientStore {
+// ─── Leaflet Map Component (CDN-only, no leaflet npm import) ─────
+// This component dynamically loads Leaflet from CDN to avoid
+// SSR/bundling issues with the leaflet package which requires `window`.
+const LeafletMap = dynamic(
+  () => import('./leaflet-map').then((m) => m.default),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[600px] lg:h-[650px] flex items-center justify-center rounded-xl bg-muted/50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Chargement de la carte...</span>
+        </div>
+      </div>
+    ),
+  }
+)
+
+// ─── Types ─────────────────────────────────────────────────────────────
+
+interface MapClient {
   id: string
   companyName: string
   contactName: string
@@ -54,16 +74,10 @@ interface RegionData {
   name: string
   clientCount: number
   revenue: number
-  stores: ClientStore[]
 }
 
 interface ByType {
   type: string
-  count: number
-}
-
-interface CityData {
-  name: string
   count: number
 }
 
@@ -72,8 +86,16 @@ interface Commercial {
   name: string
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────
+
 function formatCFA(amount: number): string {
   return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' CFA'
+}
+
+function formatShortCFA(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M CFA`
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K CFA`
+  return `${amount} CFA`
 }
 
 function getTypeLabel(type: string): string {
@@ -86,169 +108,111 @@ function getTypeLabel(type: string): string {
   }
 }
 
+function getTypeIcon(type: string) {
+  switch (type) {
+    case 'supermarche': return <Building2 className="h-4 w-4" />
+    case 'grossiste': return <Store className="h-4 w-4" />
+    default: return <Store className="h-4 w-4" />
+  }
+}
+
 function getTypeColor(type: string): string {
   switch (type) {
     case 'supermarche': return 'bg-violet-500'
-    case 'grossiste': return 'bg-orange-500'
-    case 'revendeur': return 'bg-emerald-600'
+    case 'grossiste': return 'bg-amber-500'
+    case 'revendeur': return 'bg-teal-500'
     case 'boutique': return 'bg-erp-orange'
     default: return 'bg-gray-500'
   }
 }
 
-function getStatusColor(status: string): string {
-  switch (status) {
-    case 'active': return 'bg-emerald-500'
-    case 'prospect': return 'bg-amber-500'
-    case 'inactive': return 'bg-gray-400'
-    default: return 'bg-gray-400'
-  }
+// ─── Status colors ────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<string, { label: string; emoji: string; dotClass: string; bgClass: string; textClass: string; color: string }> = {
+  lead_rouge: {
+    label: 'Leads Rouges',
+    emoji: '🔴',
+    dotClass: 'bg-red-500',
+    bgClass: 'bg-red-500/10',
+    textClass: 'text-red-500',
+    color: '#ef4444',
+  },
+  negociation_orange: {
+    label: 'Négociations',
+    emoji: '🟠',
+    dotClass: 'bg-orange-500',
+    bgClass: 'bg-orange-500/10',
+    textClass: 'text-orange-500',
+    color: '#f97316',
+  },
+  client_vert: {
+    label: 'Clients Verts',
+    emoji: '🟢',
+    dotClass: 'bg-green-500',
+    bgClass: 'bg-green-500/10',
+    textClass: 'text-green-500',
+    color: '#22c55e',
+  },
 }
 
-function getRegionHeatColor(revenue: number, maxRevenue: number): string {
-  if (maxRevenue === 0) return 'bg-gray-100 dark:bg-gray-800'
-  const ratio = revenue / maxRevenue
-  if (ratio > 0.6) return 'bg-emerald-600'
-  if (ratio > 0.3) return 'bg-emerald-400'
-  if (ratio > 0.1) return 'bg-emerald-200 dark:bg-emerald-800'
-  return 'bg-gray-200 dark:bg-gray-700'
-}
+// ─── Stat Card ────────────────────────────────────────────────────────
 
-function getRegionHeatTextColor(revenue: number, maxRevenue: number): string {
-  if (maxRevenue === 0) return 'text-muted-foreground'
-  const ratio = revenue / maxRevenue
-  if (ratio > 0.3) return 'text-white'
-  return 'text-foreground'
-}
-
-// ====== REGION CARD ON MAP ======
-function RegionMapCard({
-  region,
-  maxRevenue,
-  isSelected,
-  onClick,
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  dotClass,
+  bgClass,
+  textClass,
+  subtitle,
 }: {
-  region: RegionData
-  maxRevenue: number
-  isSelected: boolean
-  onClick: () => void
+  label: string
+  value: number | string
+  icon?: React.ElementType
+  dotClass?: string
+  bgClass?: string
+  textClass?: string
+  subtitle?: string
 }) {
   return (
-    <button
-      className={`relative rounded-xl p-3 sm:p-4 transition-all duration-200 border-2 cursor-pointer text-left w-full ${
-        getRegionHeatColor(region.revenue, maxRevenue)
-      } ${isSelected ? 'ring-2 ring-orange-400 ring-offset-2 scale-105 shadow-lg' : 'hover:scale-102 hover:shadow-md'}`}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <MapPin className={`h-4 w-4 ${getRegionHeatTextColor(region.revenue, maxRevenue)}`} />
-          <h3 className={`text-sm font-bold ${getRegionHeatTextColor(region.revenue, maxRevenue)}`}>
-            {region.name}
-          </h3>
-        </div>
-        <div className={`flex items-center gap-1 text-xs font-bold ${getRegionHeatTextColor(region.revenue, maxRevenue)}`}>
-          <MapPin className="h-3 w-3" />
-          {region.clientCount}
-        </div>
-      </div>
-      <p className={`text-xs ${getRegionHeatTextColor(region.revenue, maxRevenue)} opacity-80`}>
-        {formatCFA(region.revenue)}
-      </p>
-    </button>
-  )
-}
-
-// ====== STATS SIDEBAR ======
-function StatsSidebar({
-  totalClients,
-  regions,
-  byType,
-}: {
-  totalClients: number
-  regions: RegionData[]
-  byType: ByType[]
-}) {
-  return (
-    <div className="space-y-4">
-      {/* Total */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30">
-              <Store className="h-5 w-5 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Points de Vente</p>
-              <p className="text-xl font-bold text-foreground">{totalClients}</p>
-            </div>
+    <Card className="border-border/60">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-medium">{label}</p>
+            <p className={`text-2xl font-bold ${textClass || 'text-foreground'}`}>{value}</p>
+            {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* By Type */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2 px-4 pt-4">
-          <CardTitle className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-            <Layers className="h-3.5 w-3.5" />
-            Par Type
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4 space-y-2">
-          {byType.map((t) => (
-            <div key={t.type} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`h-3 w-3 rounded-full ${getTypeColor(t.type)}`} />
-                <span className="text-sm text-foreground">{getTypeLabel(t.type)}</span>
-              </div>
-              <Badge variant="secondary" className="text-[10px] font-semibold">
-                {t.count}
-              </Badge>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* By Region */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2 px-4 pt-4">
-          <CardTitle className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-            <Map className="h-3.5 w-3.5" />
-            Par Région
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4 space-y-2">
-          {regions.slice(0, 8).map((r) => (
-            <div key={r.name} className="flex items-center justify-between">
-              <span className="text-sm text-foreground truncate mr-2">{r.name}</span>
-              <Badge variant="secondary" className="text-[10px] font-semibold shrink-0">
-                {r.clientCount}
-              </Badge>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${bgClass || 'bg-muted'}`}>
+            {icon ? (
+              <Icon className={`h-5 w-5 ${textClass || 'text-muted-foreground'}`} />
+            ) : (
+              <div className={`h-6 w-6 rounded-full ${dotClass || 'bg-muted-foreground'}`} />
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
-// ====== MAIN PAGE ======
+// ─── Main Page ────────────────────────────────────────────────────────
+
 export default function MapStoresPage() {
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
-  const [filterRegion, setFilterRegion] = useState<string>('all')
-  const [filterType, setFilterType] = useState<string>('all')
-  const [filterCommercial, setFilterCommercial] = useState<string>('all')
+  const [filterRegion, setFilterRegion] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterType, setFilterType] = useState('all')
+  const [filterCommercial, setFilterCommercial] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
   const setCurrentPage = useAppStore((s) => s.setCurrentPage)
   const setSelectedClient = useAppStore((s) => s.setSelectedClient)
 
   const { data, isLoading } = useQuery<{
     data: {
-      clients: ClientStore[]
+      clients: MapClient[]
       regions: RegionData[]
       byType: ByType[]
-      cities: CityData[]
       commercials: Commercial[]
       totalClients: number
       totalRevenue: number
@@ -263,41 +227,65 @@ export default function MapStoresPage() {
   const regions = data?.data?.regions || []
   const byType = data?.data?.byType || []
   const commercials = data?.data?.commercials || []
-  const totalClients = data?.data?.totalClients || 0
-
-  const maxRegionRevenue = Math.max(...regions.map((r) => r.revenue), 1)
 
   // Filter clients
-  const filteredClients = clients.filter((c) => {
-    if (filterRegion !== 'all' && c.region !== filterRegion) return false
-    if (filterType !== 'all' && c.type !== filterType) return false
-    if (filterCommercial !== 'all' && c.commercialId !== filterCommercial) return false
-    if (searchQuery && !c.companyName.toLowerCase().includes(searchQuery.toLowerCase()) && !(c.city && c.city.toLowerCase().includes(searchQuery.toLowerCase()))) return false
-    if (selectedRegion && c.region !== selectedRegion) return false
-    return true
-  })
+  const filteredClients = useMemo(
+    () =>
+      clients.filter((c) => {
+        if (filterRegion !== 'all' && c.region !== filterRegion) return false
+        if (filterStatus !== 'all' && c.status !== filterStatus) return false
+        if (filterType !== 'all' && c.type !== filterType) return false
+        if (filterCommercial !== 'all' && c.commercialId !== filterCommercial) return false
+        if (
+          searchQuery &&
+          !c.companyName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !(c.city && c.city.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          !c.contactName.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+          return false
+        return true
+      }),
+    [clients, filterRegion, filterStatus, filterType, filterCommercial, searchQuery]
+  )
 
-  const handleClientClick = (clientId: string) => {
+  // Stats per status
+  const stats = useMemo(() => {
+    const rouge = filteredClients.filter((c) => c.status === 'lead_rouge').length
+    const orange = filteredClients.filter((c) => c.status === 'negociation_orange').length
+    const vert = filteredClients.filter((c) => c.status === 'client_vert').length
+    const geoCount = filteredClients.filter((c) => c.latitude && c.longitude).length
+    const total = filteredClients.length
+    const revenue = filteredClients.reduce((sum, c) => sum + c._revenue, 0)
+    return { total, rouge, orange, vert, geoCount, revenue }
+  }, [filteredClients])
+
+  const handleClientSelect = useCallback((clientId: string) => {
     setSelectedClient(clientId)
     setCurrentPage('client-detail')
-  }
+  }, [setCurrentPage, setSelectedClient])
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-6">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <MapPin className="h-6 w-6 text-erp-orange" />
-            Carte des Commerces
+            Carte Stratégique des Commerces
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Visualisez vos points de vente sur le territoire
+            Visualisez vos points de vente sur le territoire sénégalais
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400 text-xs">
-            {totalClients} points de vente
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="secondary" className="bg-erp-orange/10 text-erp-orange text-xs font-medium">
+            <MapPin className="h-3 w-3 mr-1" />
+            {stats.geoCount} géolocalisés / {stats.total} total
+          </Badge>
+          <Badge variant="secondary" className="text-xs font-medium">
+            <Navigation className="h-3 w-3 mr-1" />
+            {formatShortCFA(stats.revenue)} CA filtré
           </Badge>
           <Button
             variant="outline"
@@ -312,13 +300,49 @@ export default function MapStoresPage() {
         </div>
       </div>
 
-      {/* Filter Panel */}
+      {/* ── Status Stats ────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard
+          label="Total Points de Vente"
+          value={stats.total}
+          icon={Store}
+          bgClass="bg-muted"
+          textClass="text-foreground"
+          subtitle={`${stats.geoCount} géolocalisés`}
+        />
+        <StatCard
+          label="Leads Rouges"
+          value={stats.rouge}
+          dotClass="bg-red-500"
+          bgClass="bg-red-500/10"
+          textClass="text-red-500"
+        />
+        <StatCard
+          label="Négociations"
+          value={stats.orange}
+          dotClass="bg-orange-500"
+          bgClass="bg-orange-500/10"
+          textClass="text-orange-500"
+        />
+        <StatCard
+          label="Clients Verts"
+          value={stats.vert}
+          dotClass="bg-green-500"
+          bgClass="bg-green-500/10"
+          textClass="text-green-500"
+        />
+      </div>
+
+      {/* ── Filters ─────────────────────────────────────────── */}
       {showFilters && (
-        <Card className="border-0 shadow-sm">
+        <Card className="border-border/60">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Région</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">
+                  <MapPin className="h-3 w-3 inline mr-1" />
+                  Région
+                </label>
                 <Select value={filterRegion} onValueChange={setFilterRegion}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Toutes les régions" />
@@ -326,13 +350,33 @@ export default function MapStoresPage() {
                   <SelectContent>
                     <SelectItem value="all">Toutes les régions</SelectItem>
                     {regions.map((r) => (
-                      <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
+                      <SelectItem key={r.name} value={r.name}>
+                        {r.name} ({r.clientCount})
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Type</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">
+                  Statut
+                </label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Tous les statuts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="lead_rouge">🔴 Leads Rouges</SelectItem>
+                    <SelectItem value="negociation_orange">🟠 Négociations</SelectItem>
+                    <SelectItem value="client_vert">🟢 Clients Verts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">
+                  Type
+                </label>
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Tous les types" />
@@ -340,13 +384,17 @@ export default function MapStoresPage() {
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
                     {byType.map((t) => (
-                      <SelectItem key={t.type} value={t.type}>{getTypeLabel(t.type)}</SelectItem>
+                      <SelectItem key={t.type} value={t.type}>
+                        {getTypeLabel(t.type)} ({t.count})
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Commercial</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">
+                  Commercial
+                </label>
                 <Select value={filterCommercial} onValueChange={setFilterCommercial}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Tous" />
@@ -354,17 +402,22 @@ export default function MapStoresPage() {
                   <SelectContent>
                     <SelectItem value="all">Tous les commerciaux</SelectItem>
                     {commercials.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Recherche</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">
+                  <Search className="h-3 w-3 inline mr-1" />
+                  Recherche
+                </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Nom, ville..."
+                    placeholder="Nom, ville, contact..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 h-9 text-sm"
@@ -376,168 +429,135 @@ export default function MapStoresPage() {
         </Card>
       )}
 
-      {/* Main Content: Map + Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Map Area */}
-        <div className="lg:col-span-3">
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Map className="h-4 w-4 text-muted-foreground" />
-                  Cartographie — {selectedRegion || 'Toutes les régions'}
-                </h3>
-                {selectedRegion && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedRegion(null)}
-                    className="text-xs h-7"
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Voir tout
-                  </Button>
-                )}
+      {/* ── Interactive Leaflet Map ────────────────────────── */}
+      <Card className="border-border/60 overflow-hidden">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="h-[600px] lg:h-[650px] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">Chargement des données...</span>
               </div>
+            </div>
+          ) : (
+            <LeafletMap clients={filteredClients} onClientSelect={handleClientSelect} />
+          )}
+        </CardContent>
+      </Card>
 
-              {/* Visual Map Representation */}
-              {isLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 rounded-xl" />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {regions.map((region) => (
-                    <RegionMapCard
-                      key={region.name}
-                      region={region}
-                      maxRevenue={maxRegionRevenue}
-                      isSelected={selectedRegion === region.name}
-                      onClick={() =>
-                        setSelectedRegion(selectedRegion === region.name ? null : region.name)
-                      }
-                    />
-                  ))}
-                </div>
-              )}
+      {/* ── Legend ──────────────────────────────────────────── */}
+      <Card className="border-border/60">
+        <CardContent className="p-4">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Layers className="h-4 w-4 text-muted-foreground" />
+            Légende & Actions
+          </h3>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded-full bg-red-500 border-2 border-white shadow-sm" />
+              <span className="text-sm text-muted-foreground">Lead (Prospect)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded-full bg-orange-500 border-2 border-white shadow-sm" />
+              <span className="text-sm text-muted-foreground">Négociation en cours</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded-full bg-green-500 border-2 border-white shadow-sm" />
+              <span className="text-sm text-muted-foreground">Client actif</span>
+            </div>
+            <Separator orientation="vertical" className="h-5 hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-green-500" />
+              <span className="text-sm text-muted-foreground">WhatsApp direct</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Navigation className="h-4 w-4 text-blue-500" />
+              <span className="text-sm text-muted-foreground">Itinéraire Google Maps</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* Heatmap Legend */}
-              <div className="flex items-center gap-4 mt-4 pt-4 border-t">
-                <span className="text-xs text-muted-foreground">Légende:</span>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-8 rounded bg-emerald-600" />
-                  <span className="text-[10px] text-muted-foreground">Élevé</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-8 rounded bg-emerald-400" />
-                  <span className="text-[10px] text-muted-foreground">Moyen</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-8 rounded bg-emerald-200 dark:bg-emerald-800" />
-                  <span className="text-[10px] text-muted-foreground">Faible</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-8 rounded bg-gray-200 dark:bg-gray-700" />
-                  <span className="text-[10px] text-muted-foreground">Nul</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* ── Client List ────────────────────────────────────── */}
+      <Card className="border-border/60">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Store className="h-4 w-4 text-muted-foreground" />
+              Points de vente filtrés ({filteredClients.length})
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Cliquez sur un point pour voir sa fiche client
+            </p>
+          </div>
 
-          {/* Client Markers List */}
-          <Card className="border-0 shadow-sm mt-4">
-            <CardHeader className="px-4 sm:px-6 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Store className="h-4 w-4 text-muted-foreground" />
-                  Points de vente ({filteredClients.length})
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4">
-              <ScrollArea className="max-h-96">
-                <div className="space-y-2">
-                  {filteredClients.map((client) => (
-                    <button
-                      key={client.id}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/50 transition-all duration-150 text-left"
-                      onClick={() => handleClientClick(client.id)}
-                    >
-                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${getTypeColor(client.type)}`}>
-                        {client.type === 'supermarche' ? (
-                          <Building2 className="h-5 w-5 text-white" />
-                        ) : (
-                          <Store className="h-5 w-5 text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-foreground truncate">{client.companyName}</span>
-                          <div className={`h-2 w-2 rounded-full shrink-0 ${getStatusColor(client.status)}`} />
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                          <span>{client.contactName}</span>
-                          {client.city && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-0.5">
-                                <MapPin className="h-3 w-3" />
-                                {client.city}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge
-                            variant="secondary"
-                            className={`text-[9px] h-4 px-1.5 ${getTypeColor(client.type)} text-white`}
-                          >
-                            {getTypeLabel(client.type)}
-                          </Badge>
-                          <span className="text-[10px] text-emerald-600 font-medium">
-                            {formatCFA(client._revenue)}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            ({client.orderCount} cmd)
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                    </button>
-                  ))}
-                  {filteredClients.length === 0 && (
-                    <div className="py-8 text-center">
-                      <Store className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                      <p className="text-sm text-muted-foreground">Aucun point de vente trouvé</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-1">
+            {filteredClients.map((client) => {
+              const statusCfg = STATUS_CONFIG[client.status] || {
+                label: client.status,
+                dotClass: 'bg-gray-500',
+              }
+              const hasGeo = client.latitude && client.longitude
+
+              return (
+                <button
+                  key={client.id}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-erp-orange/30 hover:bg-muted/50 transition-all duration-150 text-left group"
+                  onClick={() => handleClientSelect(client.id)}
+                >
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 text-white ${getTypeColor(client.type)}`}>
+                    {getTypeIcon(client.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground truncate group-hover:text-erp-orange transition-colors">
+                        {client.companyName}
+                      </span>
+                      <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${statusCfg.dotClass}`} />
                     </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                      <span>{client.contactName}</span>
+                      {client.city && (
+                        <>
+                          <span>·</span>
+                          <span className="flex items-center gap-0.5">
+                            <MapPin className="h-3 w-3" />
+                            {client.city}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className={`text-[9px] h-4 px-1.5 ${getTypeColor(client.type)} text-white`}>
+                        {getTypeLabel(client.type)}
+                      </Badge>
+                      {client._revenue > 0 && (
+                        <span className="text-[10px] text-emerald-600 font-medium">{formatCFA(client._revenue)}</span>
+                      )}
+                      {client.orderCount > 0 && (
+                        <span className="text-[10px] text-muted-foreground">({client.orderCount} cmd)</span>
+                      )}
+                      {!hasGeo && (
+                        <span className="text-[9px] text-red-400 font-medium ml-auto">Non géolocalisé</span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
 
-        {/* Stats Sidebar */}
-        <div className="hidden lg:block">
-          <div className="sticky top-4">
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-20 rounded-xl" />
-                <Skeleton className="h-48 rounded-xl" />
-                <Skeleton className="h-48 rounded-xl" />
+            {filteredClients.length === 0 && (
+              <div className="col-span-full py-12 text-center">
+                <MapPin className="h-10 w-10 mx-auto mb-2 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">Aucun point de vente trouvé</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => { setFilterRegion('all'); setFilterStatus('all'); setFilterType('all'); setFilterCommercial('all'); setSearchQuery('') }}>
+                  Réinitialiser les filtres
+                </Button>
               </div>
-            ) : (
-              <StatsSidebar
-                totalClients={totalClients}
-                regions={regions}
-                byType={byType}
-              />
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

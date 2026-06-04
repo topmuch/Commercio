@@ -164,3 +164,24 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.04 255);
 }
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  line-height: 1.5 !important;
+}
+.leaflet-popup-tip {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Custom marker icon fix */
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+}

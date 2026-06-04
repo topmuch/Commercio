@@ -50,7 +50,7 @@ interface AppActions {
 }
 
 export const useAppStore = create<AppState & AppActions>((set) => ({
-  currentPage: 'dashboard',
+  currentPage: 'map-stores',
   selectedClientId: null,
   selectedOrderId: null,
   selectedQuoteId: null,

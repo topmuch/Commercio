@@ -50,7 +50,7 @@ const DiscussionsPage = dynamic(
 )
 const MapStoresPage = dynamic(
   () => import('@/components/map/map-stores-page').then((m) => m.default),
-  { loading: () => <PageLoader /> }
+  { loading: () => <PageLoader />, ssr: false }
 )
 const MapSalesPage = dynamic(
   () => import('@/components/map/map-sales-page').then((m) => m.default),
