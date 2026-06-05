@@ -156,7 +156,6 @@ function CompanySection({
             <div className="shrink-0">
               {data.companyLogo ? (
                 <div className="h-20 w-20 rounded-xl border border-border overflow-hidden shadow-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={data.companyLogo}
                     alt="Logo"

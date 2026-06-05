@@ -82,7 +82,6 @@ export function ImageUpload({
 
       {value ? (
         <div className={cn('relative group rounded-xl border border-border overflow-hidden', previewClassName)}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
             alt="Aperçu"
