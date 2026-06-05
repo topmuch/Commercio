@@ -22,6 +22,7 @@ import {
   Boxes,
   Target,
   Briefcase,
+  Smartphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -40,6 +41,7 @@ interface NavGroup {
     label: string
     icon: React.ElementType
     badge?: string
+    external?: boolean
   }[]
 }
 
@@ -92,6 +94,12 @@ const navGroups: NavGroup[] = [
     label: 'Système',
     items: [
       { id: 'settings', label: 'Paramètres', icon: Settings },
+    ],
+  },
+  {
+    label: 'Application Mobile',
+    items: [
+      { id: 'dashboard', label: 'Installer l\'App', icon: Smartphone, badge: 'PWA', external: true },
     ],
   },
 ]
@@ -154,7 +162,13 @@ export function AppSidebar() {
                     return (
                       <button
                         key={item.id}
-                        onClick={() => setCurrentPage(item.id)}
+                        onClick={() => {
+                          if (item.external) {
+                            window.location.href = '/install-app'
+                          } else {
+                            setCurrentPage(item.id)
+                          }
+                        }}
                         className={cn(
                           'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                           isActive
@@ -180,7 +194,13 @@ export function AppSidebar() {
                     <Tooltip key={item.id} delayDuration={0}>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setCurrentPage(item.id)}
+                          onClick={() => {
+                            if (item.external) {
+                              window.location.href = '/install-app'
+                            } else {
+                              setCurrentPage(item.id)
+                            }
+                          }}
                           className={cn(
                             'flex w-full items-center justify-center rounded-lg p-2.5 transition-all duration-150 relative',
                             isActive

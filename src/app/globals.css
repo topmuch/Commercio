@@ -188,3 +188,24 @@
   background: transparent !important;
   border: none !important;
 }
+
+/* ─── Print styles for install-app page ─── */
+@media print {
+  /* Reset dark background to white for printing */
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure QR code and text render with colors */
+  svg rect {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  svg path {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
