@@ -58,12 +58,12 @@ export default function Navbar() {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <button className="text-sm text-slate-300 hover:text-white transition-colors duration-200 px-4 py-2">
+            <a href="/dashboard" className="text-sm text-slate-300 hover:text-white transition-colors duration-200 px-4 py-2">
               Se connecter
-            </button>
-            <button className="text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition-colors duration-200">
+            </a>
+            <a href="/dashboard" className="text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition-colors duration-200">
               Démarrer gratuitement
-            </button>
+            </a>
           </div>
 
           {/* Mobile Hamburger */}
@@ -98,12 +98,12 @@ export default function Navbar() {
                 </button>
               ))}
               <div className="pt-4 space-y-3 border-t border-slate-800 mt-4">
-                <button className="block w-full text-center text-sm text-slate-300 hover:text-white px-4 py-2.5 rounded-lg border border-slate-700 transition-colors duration-200">
+                <a href="/dashboard" className="block w-full text-center text-sm text-slate-300 hover:text-white px-4 py-2.5 rounded-lg border border-slate-700 transition-colors duration-200">
                   Se connecter
-                </button>
-                <button className="block w-full text-center text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition-colors duration-200">
+                </a>
+                <a href="/dashboard" className="block w-full text-center text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition-colors duration-200">
                   Démarrer gratuitement
-                </button>
+                </a>
               </div>
             </div>
           </motion.div>
