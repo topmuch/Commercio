@@ -18,7 +18,7 @@ export async function GET() {
           companyId,
           whatsappNumber: '+221770000000',
           storeTitle: 'Boutique DistribuSN',
-          currency: 'CFA',
+          currency: 'XOF',
           isActive: true,
         },
       })
@@ -37,7 +37,30 @@ export async function PUT(request: Request) {
     const companyId = await getCompanyId()
 
     const body = await request.json()
-    const { whatsappNumber, storeTitle, storeDescription, currency, isActive, publicSlug } = body
+    const {
+      // Boutique
+      whatsappNumber,
+      storeTitle,
+      storeDescription,
+      currency,
+      isActive,
+      publicSlug,
+      // Entreprise
+      companyLogo,
+      companyName,
+      companyAddress,
+      // SEO
+      seoTitle,
+      seoDescription,
+      seoImage,
+      // Email
+      smtpHost,
+      smtpPort,
+      smtpUser,
+      smtpPass,
+      emailFrom,
+      emailSignature,
+    } = body
 
     // Validate slug format
     if (publicSlug !== undefined && publicSlug !== null && publicSlug !== '') {
@@ -73,14 +96,34 @@ export async function PUT(request: Request) {
       }
     }
 
-    // Build update data
+    // Build update data — only include fields that are explicitly provided
     const updateData: Record<string, unknown> = {}
+
+    // Boutique
     if (whatsappNumber !== undefined) updateData.whatsappNumber = whatsappNumber
     if (storeTitle !== undefined) updateData.storeTitle = storeTitle
     if (storeDescription !== undefined) updateData.storeDescription = storeDescription
     if (currency !== undefined) updateData.currency = currency
     if (isActive !== undefined) updateData.isActive = isActive
     if (publicSlug !== undefined) updateData.publicSlug = publicSlug || null
+
+    // Entreprise
+    if (companyLogo !== undefined) updateData.companyLogo = companyLogo
+    if (companyName !== undefined) updateData.companyName = companyName
+    if (companyAddress !== undefined) updateData.companyAddress = companyAddress
+
+    // SEO
+    if (seoTitle !== undefined) updateData.seoTitle = seoTitle
+    if (seoDescription !== undefined) updateData.seoDescription = seoDescription
+    if (seoImage !== undefined) updateData.seoImage = seoImage
+
+    // Email
+    if (smtpHost !== undefined) updateData.smtpHost = smtpHost
+    if (smtpPort !== undefined) updateData.smtpPort = smtpPort ? parseInt(smtpPort, 10) : null
+    if (smtpUser !== undefined) updateData.smtpUser = smtpUser
+    if (smtpPass !== undefined) updateData.smtpPass = smtpPass
+    if (emailFrom !== undefined) updateData.emailFrom = emailFrom
+    if (emailSignature !== undefined) updateData.emailSignature = emailSignature
 
     const settings = await db.storeSettings.upsert({
       where: { companyId },
@@ -89,9 +132,24 @@ export async function PUT(request: Request) {
         whatsappNumber: String(whatsappNumber || '+221770000000'),
         storeTitle: String(storeTitle || 'Boutique DistribuSN'),
         storeDescription: storeDescription ? String(storeDescription) : null,
-        currency: String(currency || 'CFA'),
+        currency: String(currency || 'XOF'),
         isActive: isActive !== undefined ? Boolean(isActive) : true,
         publicSlug: publicSlug ? String(publicSlug) : null,
+        // Entreprise
+        companyLogo: companyLogo || null,
+        companyName: companyName || null,
+        companyAddress: companyAddress || null,
+        // SEO
+        seoTitle: seoTitle || null,
+        seoDescription: seoDescription || null,
+        seoImage: seoImage || null,
+        // Email
+        smtpHost: smtpHost || null,
+        smtpPort: smtpPort ? parseInt(smtpPort, 10) : null,
+        smtpUser: smtpUser || null,
+        smtpPass: smtpPass || null,
+        emailFrom: emailFrom || null,
+        emailSignature: emailSignature || null,
       },
       update: updateData,
     })
