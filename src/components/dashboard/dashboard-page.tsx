@@ -80,11 +80,11 @@ interface DashboardData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function formatDA(value: number): string {
+function formatCFA(value: number): string {
   return new Intl.NumberFormat('fr-FR').format(Math.round(value)) + ' CFA'
 }
 
-function formatShortDA(value: number): string {
+function formatShortCFA(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace('.', ',')}M CFA`
   if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K CFA`
   return `${value} CFA`
@@ -113,7 +113,7 @@ function ChartTooltipContent({ active, payload, label }: any) {
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-xl">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="text-sm font-bold text-foreground">{formatDA(payload[0].value)}</p>
+      <p className="text-sm font-bold text-foreground">{formatCFA(payload[0].value)}</p>
     </div>
   )
 }
@@ -126,7 +126,7 @@ function KPICard({
   growth,
   icon: Icon,
   iconBg,
-  formatValue = formatDA,
+  formatValue = formatCFA,
 }: {
   title: string
   value: number
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                   tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(v) => formatShortDA(v)}
+                  tickFormatter={(v) => formatShortCFA(v)}
                   dx={-4}
                   width={72}
                 />
@@ -377,7 +377,7 @@ export default function DashboardPage() {
                               Quantité : <span className="font-medium text-foreground">{d.quantity}</span>
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Revenu : <span className="font-medium text-foreground">{formatDA(d.revenue)}</span>
+                              Revenu : <span className="font-medium text-foreground">{formatCFA(d.revenue)}</span>
                             </p>
                           </div>
                         )
@@ -450,7 +450,7 @@ export default function DashboardPage() {
 
                     {/* Revenue + Target */}
                     <div className="hidden sm:flex flex-col items-end gap-1.5 shrink-0">
-                      <p className="text-sm font-bold">{formatShortDA(comm.revenue)}</p>
+                      <p className="text-sm font-bold">{formatShortCFA(comm.revenue)}</p>
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
                           <div
@@ -522,7 +522,7 @@ export default function DashboardPage() {
                     <TableCell className="hidden md:table-cell text-muted-foreground">
                       {order.commercial || '—'}
                     </TableCell>
-                    <TableCell className="text-right font-semibold">{formatDA(order.total)}</TableCell>
+                    <TableCell className="text-right font-semibold">{formatCFA(order.total)}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className={statusInfo.className}>
                         {statusInfo.label}

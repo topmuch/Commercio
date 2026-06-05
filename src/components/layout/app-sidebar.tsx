@@ -56,7 +56,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Ventes',
     items: [
-      { id: 'orders', label: 'Commandes', icon: ShoppingCart, badge: '3' },
+      { id: 'orders', label: 'Commandes', icon: ShoppingCart },
       { id: 'quotes', label: 'Devis', icon: FileText },
       { id: 'invoices', label: 'Facturation', icon: Receipt },
       { id: 'stock', label: 'Stock', icon: Warehouse },
@@ -65,7 +65,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Communication',
     items: [
-      { id: 'discussions', label: 'Discussions', icon: MessageSquare, badge: '5' },
+      { id: 'discussions', label: 'Discussions', icon: MessageSquare },
     ],
   },
   {
@@ -129,7 +129,7 @@ export function AppSidebar() {
               DistribuERP
             </span>
             <span className="text-[10px] text-sidebar-foreground/60 uppercase tracking-widest">
-              Distribution Platform
+              Plateforme de Distribution
             </span>
           </div>
         )}

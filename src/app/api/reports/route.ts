@@ -118,9 +118,6 @@ export async function GET(request: NextRequest) {
 
         const orders = await db.order.findMany({
           where: { companyId, createdAt: { gte: start, lte: end } },
-          include: {
-            client: { select: { region: true } },
-          },
           select: { total: true, client: { select: { region: true } } },
         })
 
@@ -319,10 +316,45 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Type de rapport invalide' }, { status: 400 })
     }
 
+    const periodLabels: Record<string, string> = {
+      week: 'cette semaine',
+      month: 'ce mois',
+      year: 'cette année',
+      '12months': '12 derniers mois',
+    }
+
     return NextResponse.json({
       type,
       period,
-      summary,
+      summary: {
+        ...summary,
+        cards: [
+          {
+            label: 'Commandes',
+            value: new Intl.NumberFormat('fr-FR').format(totalOrders),
+            change: periodLabels[period] || period,
+            up: totalOrders > 0,
+          },
+          {
+            label: 'Chiffre d\'affaires',
+            value: `${new Intl.NumberFormat('fr-FR').format(Math.round(totalRevenue._sum.total || 0))} CFA`,
+            change: periodLabels[period] || period,
+            up: (totalRevenue._sum.total || 0) > 0,
+          },
+          {
+            label: 'Clients actifs',
+            value: new Intl.NumberFormat('fr-FR').format(totalClients),
+            change: `${totalClients} total`,
+            up: totalClients > 0,
+          },
+          {
+            label: 'Produits actifs',
+            value: new Intl.NumberFormat('fr-FR').format(totalProducts),
+            change: 'en catalogue',
+            up: true,
+          },
+        ],
+      },
       ...data,
     })
   } catch (error: unknown) {

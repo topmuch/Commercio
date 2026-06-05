@@ -276,7 +276,7 @@ export async function GET() {
     })
   } catch (error: unknown) {
     const message =
-      error instanceof Error ? error.message : 'Internal server error'
+      error instanceof Error ? error.message : 'Erreur serveur interne'
     console.error('Map Stores API error:', error)
     return NextResponse.json({ error: message }, { status: 500 })
   }

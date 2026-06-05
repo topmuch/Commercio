@@ -323,7 +323,7 @@ export default function ReportsPage() {
   }
 
   const renderChart = () => {
-    if (!reportData || !reportData.chartData.length) {
+    if (!reportData || !reportData.chartData?.length) {
       return (
         <div className="flex items-center justify-center h-[300px] text-muted-foreground">
           <p>Aucune donnée disponible pour cette période</p>
@@ -396,7 +396,7 @@ export default function ReportsPage() {
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
-      ) : reportData ? (
+      ) : reportData?.summary?.cards?.length ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {reportData.summary.cards.map((card, i) => (
             <Card key={i}>

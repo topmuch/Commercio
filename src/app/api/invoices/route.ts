@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
 
     // If no items provided but orderId is given, derive from order
     if ((!items || items.length === 0) && orderId) {
-      const order = await db.order.findUnique({
-        where: { id: orderId },
+      const order = await db.order.findFirst({
+        where: { id: orderId, companyId },
         include: { items: { include: { product: true } } },
       })
       if (!order) {
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Generate invoice number
     const count = await db.invoice.count({ where: { companyId } })
-    const number = `FAC-2024-${String(count + 1).padStart(4, '0')}`
+    const number = `FAC-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
     const invoice = await db.invoice.create({
       data: {
@@ -181,64 +181,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// POST /api/invoices — Record a payment (body with action: 'pay')
-export async function PUT(request: NextRequest) {
-  try {
-    const companyId = await getCompanyId()
 
-    const body = await request.json()
-    const { invoiceId, amount, method = 'cash', reference, notes } = body
-
-    if (!invoiceId || !amount || amount <= 0) {
-      return NextResponse.json(
-        { error: 'La facture et un montant valide sont requis' },
-        { status: 400 }
-      )
-    }
-
-    const invoice = await db.invoice.findUnique({
-      where: { id: invoiceId, companyId },
-    })
-    if (!invoice) {
-      return NextResponse.json({ error: 'Facture introuvable' }, { status: 404 })
-    }
-
-    const newPaid = invoice.paid + amount
-
-    // Create payment record
-    const payment = await db.payment.create({
-      data: {
-        amount,
-        method,
-        reference,
-        notes,
-        status: 'completed',
-        invoiceId,
-        clientId: invoice.clientId,
-        companyId,
-      },
-    })
-
-    // Determine new status
-    let newStatus = 'partially_paid'
-    if (newPaid >= invoice.total) {
-      newStatus = 'paid'
-    }
-
-    // Update invoice
-    const updated = await db.invoice.update({
-      where: { id: invoiceId },
-      data: { paid: Math.min(newPaid, invoice.total), status: newStatus },
-      include: {
-        client: { select: { companyName: true, contactName: true } },
-        commercial: { select: { name: true } },
-        payments: true,
-      },
-    })
-
-    return NextResponse.json({ data: { invoice: updated, payment } })
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erreur serveur'
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
-}

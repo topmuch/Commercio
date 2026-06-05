@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const product = await db.product.findUnique({
-      where: { id: productId },
+    const product = await db.product.findFirst({
+      where: { id: productId, companyId },
     })
 
     if (!product) {

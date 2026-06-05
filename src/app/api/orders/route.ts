@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Generate order number
     const count = await db.order.count({ where: { companyId } })
-    const number = `CMD-2024-${String(count + 1).padStart(4, '0')}`
+    const number = `CMD-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
     const order = await db.order.create({
       data: {

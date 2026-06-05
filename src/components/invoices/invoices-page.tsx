@@ -62,7 +62,7 @@ import { toast } from 'sonner'
 import type { Invoice, Client, Product, Payment } from '@/lib/types'
 
 // ── Helpers ──────────────────────────────────────────────
-function formatDA(value: number): string {
+function formatCFA(value: number): string {
   return new Intl.NumberFormat('fr-FR').format(Math.round(value)) + ' CFA'
 }
 
@@ -201,7 +201,7 @@ export default function InvoicesPage() {
     try {
       const res = await fetch('/api/clients?limit=200')
       const json = await res.json()
-      if (json.data) setClients(json.data)
+      if (json.clients) setClients(json.clients)
     } catch {
       // silent
     }
@@ -326,18 +326,17 @@ export default function InvoicesPage() {
     if (parseFloat(payAmount) > remaining) {
       toast({
         title: 'Erreur',
-        description: `Le montant dépasse le restant dû (${formatDA(remaining)})`,
+        description: `Le montant dépasse le restant dû (${formatCFA(remaining)})`,
         variant: 'destructive',
       })
       return
     }
 
     try {
-      const res = await fetch('/api/invoices', {
+      const res = await fetch(`/api/invoices/${selectedInvoice.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          invoiceId: selectedInvoice.id,
           amount: parseFloat(payAmount),
           method: payMethod,
           reference: payReference || undefined,
@@ -462,7 +461,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Total facturé</p>
-                <p className="text-lg font-bold">{formatDA(kpi.totalBilled)}</p>
+                <p className="text-lg font-bold">{formatCFA(kpi.totalBilled)}</p>
               </div>
             </div>
           </CardContent>
@@ -475,7 +474,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Total payé</p>
-                <p className="text-lg font-bold text-green-600">{formatDA(kpi.totalPaid)}</p>
+                <p className="text-lg font-bold text-green-600">{formatCFA(kpi.totalPaid)}</p>
               </div>
             </div>
           </CardContent>
@@ -488,7 +487,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Total impayé</p>
-                <p className="text-lg font-bold text-orange-600">{formatDA(kpi.totalUnpaid)}</p>
+                <p className="text-lg font-bold text-orange-600">{formatCFA(kpi.totalUnpaid)}</p>
               </div>
             </div>
           </CardContent>
@@ -601,13 +600,13 @@ export default function InvoicesPage() {
                           {invoice.commercial?.name || '—'}
                         </TableCell>
                         <TableCell className="text-right font-medium text-sm">
-                          {formatDA(invoice.total)}
+                          {formatCFA(invoice.total)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="min-w-28">
                             <div className="flex justify-between text-xs mb-1">
                               <span className="text-muted-foreground">{paidPercent}%</span>
-                              <span className="font-medium">{formatDA(invoice.paid)}</span>
+                              <span className="font-medium">{formatCFA(invoice.paid)}</span>
                             </div>
                             <Progress
                               value={paidPercent}
@@ -780,7 +779,7 @@ export default function InvoicesPage() {
                             <SelectItem key={p.id} value={p.id}>
                               <span className="font-medium">{p.name}</span>
                               <span className="text-muted-foreground ml-2 text-xs">
-                                ({p.reference}) — {formatDA(p.resellerPrice || p.price)}
+                                ({p.reference}) — {formatCFA(p.resellerPrice || p.price)}
                               </span>
                             </SelectItem>
                           ))}
@@ -810,7 +809,7 @@ export default function InvoicesPage() {
                       />
                     </div>
                     <div className="w-28 text-right font-medium text-sm py-2">
-                      {formatDA(item.quantity * item.unitPrice)}
+                      {formatCFA(item.quantity * item.unitPrice)}
                     </div>
                     <Button
                       variant="ghost"
@@ -835,7 +834,7 @@ export default function InvoicesPage() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
-                  <span className="font-medium">{formatDA(subtotal)}</span>
+                  <span className="font-medium">{formatCFA(subtotal)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm gap-2">
                   <span className="text-muted-foreground">Remise</span>
@@ -849,16 +848,16 @@ export default function InvoicesPage() {
                       className="w-16 h-7 text-center text-xs"
                     />
                     <span className="text-xs text-muted-foreground">%</span>
-                    <span className="font-medium ml-2 text-red-500">-{formatDA(discountAmount)}</span>
+                    <span className="font-medium ml-2 text-red-500">-{formatCFA(discountAmount)}</span>
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">TVA (18%)</span>
-                  <span className="font-medium">{formatDA(taxAmount)}</span>
+                  <span className="font-medium">{formatCFA(taxAmount)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold">
                   <span>Total TTC</span>
-                  <span className="text-primary">{formatDA(total)}</span>
+                  <span className="text-primary">{formatCFA(total)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -911,12 +910,12 @@ export default function InvoicesPage() {
                   </div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-muted-foreground">Total</span>
-                    <span className="font-bold">{formatDA(selectedInvoice.total)}</span>
+                    <span className="font-bold">{formatCFA(selectedInvoice.total)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Reste à payer</span>
                     <span className="font-bold text-orange-600">
-                      {formatDA(selectedInvoice.total - selectedInvoice.paid)}
+                      {formatCFA(selectedInvoice.total - selectedInvoice.paid)}
                     </span>
                   </div>
                   <Progress
@@ -951,7 +950,7 @@ export default function InvoicesPage() {
                   <p className="text-xs text-muted-foreground">
                     Reste après paiement:{' '}
                     <span className="font-medium">
-                      {formatDA(
+                      {formatCFA(
                         Math.max(0, selectedInvoice.total - selectedInvoice.paid - parseFloat(payAmount))
                       )}
                     </span>
@@ -1120,7 +1119,7 @@ export default function InvoicesPage() {
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">Paiement</span>
                   <span className="font-medium">
-                    {formatDA(selectedInvoice.paid)} / {formatDA(selectedInvoice.total)}
+                    {formatCFA(selectedInvoice.paid)} / {formatCFA(selectedInvoice.total)}
                   </span>
                 </div>
                 <Progress
@@ -1145,7 +1144,7 @@ export default function InvoicesPage() {
                       >
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                          <span className="font-medium">{formatDA(payment.amount)}</span>
+                          <span className="font-medium">{formatCFA(payment.amount)}</span>
                           <Badge variant="outline" className="text-[10px]">
                             {payment.method === 'cash'
                               ? 'Espèces'

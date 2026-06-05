@@ -2,7 +2,8 @@ import { db } from '@/lib/db'
 import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
-// PUT /api/invoices/[id] - Update invoice notes
+// PUT /api/invoices/[id] - Update invoice or record payment
+// If body contains `amount`, it records a payment; otherwise it updates notes/dueDate.
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +12,6 @@ export async function PUT(
     const companyId = await getCompanyId()
     const { id } = await params
     const body = await request.json()
-    const { notes } = body
 
     // Check ownership
     const existing = await db.invoice.findUnique({ where: { id } })
@@ -19,9 +19,64 @@ export async function PUT(
       return NextResponse.json({ error: 'Facture non trouvée' }, { status: 404 })
     }
 
+    // ── Payment recording (body has `amount`) ──
+    if (body.amount !== undefined) {
+      const { amount, method = 'cash', reference, notes } = body
+
+      if (!amount || amount <= 0) {
+        return NextResponse.json(
+          { error: 'Un montant valide est requis' },
+          { status: 400 }
+        )
+      }
+
+      const newPaid = existing.paid + amount
+
+      // Create payment record
+      const payment = await db.payment.create({
+        data: {
+          amount,
+          method,
+          reference,
+          notes,
+          status: 'completed',
+          invoiceId: id,
+          clientId: existing.clientId,
+          companyId,
+        },
+      })
+
+      // Determine new status
+      let newStatus = 'partially_paid'
+      if (newPaid >= existing.total) {
+        newStatus = 'paid'
+      }
+
+      // Update invoice
+      const updated = await db.invoice.update({
+        where: { id },
+        data: { paid: Math.min(newPaid, existing.total), status: newStatus },
+        include: {
+          client: { select: { companyName: true, contactName: true } },
+          commercial: { select: { name: true } },
+          payments: {
+            select: { id: true, amount: true, method: true, reference: true, createdAt: true },
+          },
+        },
+      })
+
+      return NextResponse.json({ data: { invoice: updated, payment } })
+    }
+
+    // ── Invoice update (notes / dueDate) ──
+    const { notes, dueDate } = body
+    const data: Record<string, unknown> = {}
+    if (notes !== undefined) data.notes = notes
+    if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null
+
     const invoice = await db.invoice.update({
       where: { id },
-      data: { notes },
+      data,
       include: {
         client: { select: { companyName: true, contactName: true } },
         commercial: { select: { name: true } },

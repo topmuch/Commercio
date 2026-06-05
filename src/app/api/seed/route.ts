@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (!force) {
       const existingClients = await db.client.count({ where: { companyId } })
       if (existingClients > 0) {
-        return NextResponse.json({ message: 'Data already seeded', count: existingClients })
+        return NextResponse.json({ message: 'Données déjà insérées', count: existingClients })
       }
     } else {
       // Clean existing data when force=true
@@ -435,7 +435,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({
-      message: 'Database seeded successfully (Senegal)',
+      message: 'Base de données peuplée avec succès (Sénégal)',
       clients: clients.length,
       products: products.length,
       categories: categories.length,

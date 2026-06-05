@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     // Generate quote number
     const count = await db.quote.count({ where: { companyId } })
-    const number = `DEV-2024-${String(count + 1).padStart(4, '0')}`
+    const number = `DEV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
     const quote = await db.quote.create({
       data: {

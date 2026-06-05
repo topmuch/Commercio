@@ -88,9 +88,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check unique reference
-    const existing = await db.product.findUnique({
-      where: { reference },
+    // Check unique reference (per-company)
+    const existing = await db.product.findFirst({
+      where: { reference, companyId },
     })
     if (existing) {
       return NextResponse.json(
@@ -138,15 +138,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "L'identifiant du produit est requis" }, { status: 400 })
     }
 
-    // Check unique reference if being updated
+    // Verify product belongs to the current company
+    const existing = await db.product.findFirst({
+      where: { id, companyId },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 })
+    }
+
+    // Check unique reference if being updated (per-company)
     if (updateData.reference) {
-      const existing = await db.product.findFirst({
-        where: {
-          reference: updateData.reference,
-          id: { not: id },
-        },
+      const refExists = await db.product.findFirst({
+        where: { reference: updateData.reference, companyId },
       })
-      if (existing) {
+      if (refExists) {
         return NextResponse.json(
           { error: 'Un produit avec cette référence existe déjà' },
           { status: 400 }

@@ -55,7 +55,7 @@ import { toast } from 'sonner'
 import type { Quote, Client, Product } from '@/lib/types'
 
 // ── Helpers ──────────────────────────────────────────────
-function formatDA(value: number): string {
+function formatCFA(value: number): string {
   return new Intl.NumberFormat('fr-FR').format(Math.round(value)) + ' CFA'
 }
 
@@ -177,7 +177,7 @@ export default function QuotesPage() {
     try {
       const res = await fetch('/api/clients?limit=200')
       const json = await res.json()
-      if (json.data) setClients(json.data)
+      if (json.clients) setClients(json.clients)
     } catch {
       // silent
     }
@@ -463,10 +463,10 @@ export default function QuotesPage() {
                           {quote.commercial?.name || '—'}
                         </TableCell>
                         <TableCell className="text-right font-medium text-sm">
-                          {formatDA(quote.total)}
+                          {formatCFA(quote.total)}
                         </TableCell>
                         <TableCell className="text-right hidden lg:table-cell text-sm text-muted-foreground">
-                          {formatDA(quote.tax)}
+                          {formatCFA(quote.tax)}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="secondary" className={statusInfo.className}>
@@ -613,7 +613,7 @@ export default function QuotesPage() {
                             <SelectItem key={p.id} value={p.id}>
                               <span className="font-medium">{p.name}</span>
                               <span className="text-muted-foreground ml-2 text-xs">
-                                ({p.reference}) — {formatDA(p.resellerPrice || p.price)}
+                                ({p.reference}) — {formatCFA(p.resellerPrice || p.price)}
                               </span>
                             </SelectItem>
                           ))}
@@ -643,7 +643,7 @@ export default function QuotesPage() {
                       />
                     </div>
                     <div className="w-28 text-right font-medium text-sm py-2">
-                      {formatDA(item.quantity * item.unitPrice)}
+                      {formatCFA(item.quantity * item.unitPrice)}
                     </div>
                     <Button
                       variant="ghost"
@@ -668,7 +668,7 @@ export default function QuotesPage() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
-                  <span className="font-medium">{formatDA(subtotal)}</span>
+                  <span className="font-medium">{formatCFA(subtotal)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm gap-2">
                   <span className="text-muted-foreground">Remise</span>
@@ -682,16 +682,16 @@ export default function QuotesPage() {
                       className="w-16 h-7 text-center text-xs"
                     />
                     <span className="text-xs text-muted-foreground">%</span>
-                    <span className="font-medium ml-2 text-red-500">-{formatDA(discountAmount)}</span>
+                    <span className="font-medium ml-2 text-red-500">-{formatCFA(discountAmount)}</span>
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">TVA (18%)</span>
-                  <span className="font-medium">{formatDA(taxAmount)}</span>
+                  <span className="font-medium">{formatCFA(taxAmount)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-primary">{formatDA(total)}</span>
+                  <span className="text-primary">{formatCFA(total)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -838,11 +838,11 @@ export default function QuotesPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Total HT</p>
-                  <p className="font-medium">{formatDA(selectedQuote.total - selectedQuote.tax)}</p>
+                  <p className="font-medium">{formatCFA(selectedQuote.total - selectedQuote.tax)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Total TTC</p>
-                  <p className="font-bold text-primary">{formatDA(selectedQuote.total)}</p>
+                  <p className="font-bold text-primary">{formatCFA(selectedQuote.total)}</p>
                 </div>
               </div>
               {selectedQuote.items && selectedQuote.items.length > 0 && (
@@ -866,10 +866,10 @@ export default function QuotesPage() {
                             </TableCell>
                             <TableCell className="text-xs text-center">{item.quantity}</TableCell>
                             <TableCell className="text-xs text-right">
-                              {formatDA(item.unitPrice)}
+                              {formatCFA(item.unitPrice)}
                             </TableCell>
                             <TableCell className="text-xs text-right font-medium">
-                              {formatDA(item.totalPrice)}
+                              {formatCFA(item.totalPrice)}
                             </TableCell>
                           </TableRow>
                         ))}
