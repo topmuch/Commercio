@@ -313,8 +313,10 @@ model StoreSettings {
   companyId      String   @unique
   whatsappNumber String?
   storeTitle     String   @default("Boutique")
+  storeDescription String?
   currency       String   @default("CFA")
   isActive       Boolean  @default(true)
+  publicSlug     String?  @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
