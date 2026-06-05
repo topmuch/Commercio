@@ -1,4 +1,39 @@
 ---
+Task ID: 8
+Agent: Main Agent
+Task: Add PDF generation system for invoices and quotes
+
+Work Log:
+- Installed jspdf@4.2.1 + jspdf-autotable@5.0.8
+- Created `src/lib/pdf-generator.ts` — Professional PDF template with Teranga Biz branding:
+  - A4 format, emerald/charcoal color scheme
+  - Company header (name, address, phone, email)
+  - Client info box + date/info boxes side by side
+  - Items table via autoTable: dark header, alternating rows, #/Réf/Désignation/Qté/Prix/Total columns
+  - Totals section: sous-total, remise (%), TVA (18%), total TTC (emerald bold)
+  - Invoice payment info: montant payé + reste à payer
+  - Notes section with word-wrap
+  - Footer: company info, registration number, terangabiz.sn branding
+  - Status color badges (emerald/green, blue, red, gray)
+  - Convenience functions: generateInvoicePDF(), generateQuotePDF()
+- Created `src/app/api/invoices/[id]/pdf/route.ts` — GET returns PDF binary (application/pdf)
+- Created `src/app/api/quotes/[id]/pdf/route.ts` — GET returns PDF binary (application/pdf)
+- Updated `src/components/invoices/invoices-page.tsx`:
+  - Added downloadPDF() function (fetch blob → createObjectURL → trigger download)
+  - Added shareInvoice() function (WhatsApp message template in French)
+  - Added emerald Download + green Mail buttons before existing action buttons
+- Updated `src/components/quotes/quotes-page.tsx`:
+  - Added downloadPDF() and shareQuote() functions
+  - Added emerald Download + green Mail buttons before existing action buttons
+- Verified: both APIs return 200, invoice PDF 10KB, quote PDF 10KB
+
+Stage Summary:
+- 3 new files: pdf-generator.ts, 2 PDF API routes
+- 2 modified files: invoices-page.tsx, quotes-page.tsx (download + share buttons)
+- Lint: 0 errors, 0 warnings
+- Pushed: ee268d9..13dac60
+
+---
 Task ID: 7
 Agent: Main Agent
 Task: Create /install-app page for PWA QR code sharing
