@@ -15,10 +15,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DistribuERP - Plateforme de Distribution Intelligente",
-  description: "SaaS ERP moderne pour les entreprises de distribution, grossistes et fabricants",
+  title: "Teranga Biz — L'ERP qui comprend votre commerce",
+  description:
+    "Le premier ERP SaaS conçu pour les distributeurs africains. CRM intelligent, carte territoriale, commandes WhatsApp. Gérez votre distribution au Sénégal, Côte d'Ivoire, Mali et plus.",
+  keywords: [
+    "ERP Afrique",
+    "ERP Sénégal",
+    "logiciel distribution",
+    "CRM distributeur",
+    "gestion commerciale Afrique",
+    "WhatsApp Business",
+    "carte clients",
+    "Teranga Biz",
+    "FCFA",
+  ],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+  },
+  openGraph: {
+    title: "Teranga Biz — L'ERP qui comprend votre commerce",
+    description:
+      "CRM intelligent, carte territoriale, commandes WhatsApp. Le premier ERP conçu pour les distributeurs africains.",
+    type: "website",
+    locale: "fr_SN",
   },
 };
 
@@ -30,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-900 text-slate-50`}
       >
         <ThemeProvider
           attribute="class"
