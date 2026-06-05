@@ -1,7 +1,9 @@
 import { db } from '@/lib/db'
 import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { ai } from 'z-ai-web-dev-sdk'
+import ZAI from 'z-ai-web-dev-sdk'
+
+const ai = new ZAI()
 
 export async function POST(request: NextRequest) {
   try {
