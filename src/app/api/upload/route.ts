@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { getToken } from 'next-auth/jwt'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_MIME_TYPES = [
@@ -9,11 +10,21 @@ const ALLOWED_MIME_TYPES = [
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
+  // SVG removed — can contain malicious scripts (stored XSS)
 ]
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const token = await getToken({
+      req: request as unknown as Parameters<typeof getToken>[0],
+      secret: process.env.NEXTAUTH_SECRET,
+    })
+    // In demo mode (no NEXTAUTH_SECRET), allow upload
+    if (!token && process.env.NEXTAUTH_SECRET) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const type = (formData.get('type') as string) || 'general' // logos, seo, general
@@ -33,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Validate MIME type
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Type de fichier non autorisé (JPG, PNG, GIF, WebP, SVG)' },
+        { error: 'Type de fichier non autorisé (JPG, PNG, GIF, WebP)' },
         { status: 400 }
       )
     }

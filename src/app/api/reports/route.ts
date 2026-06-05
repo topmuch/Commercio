@@ -71,40 +71,61 @@ export async function GET(request: NextRequest) {
           select: { id: true, name: true, avatar: true },
         })
 
-        const commercialData = await Promise.all(
-          commercials.map(async (c) => {
-            const orders = await db.order.findMany({
-              where: {
-                commercialId: c.id,
-                companyId,
-                createdAt: { gte: start, lte: end },
-              },
-              select: { total: true },
-            })
-            const revenue = orders.reduce((sum, o) => sum + o.total, 0)
-            const count = orders.length
+        // Batch: fetch all orders and targets in 2 queries instead of 2N
+        const commercialIds = commercials.map((c) => c.id)
 
-            // Get target for comparison
-            const target = await db.target.findFirst({
-              where: { userId: c.id, type: 'revenue' },
-              orderBy: { createdAt: 'desc' },
-            })
-            const targetValue = target?.value || 0
-            const achieved = target?.achieved || revenue
-            const targetPercent = targetValue > 0 ? Math.min((achieved / targetValue) * 100, 100) : 0
+        const [allOrders, allTargets] = await Promise.all([
+          db.order.findMany({
+            where: {
+              commercialId: { in: commercialIds },
+              companyId,
+              createdAt: { gte: start, lte: end },
+            },
+            select: { commercialId: true, total: true },
+          }),
+          db.target.findMany({
+            where: { userId: { in: commercialIds }, type: 'revenue' },
+            orderBy: { createdAt: 'desc' },
+          }),
+        ])
 
-            return {
-              id: c.id,
-              name: c.name,
-              avatar: c.avatar,
-              revenue: Math.round(revenue),
-              orderCount: count,
-              targetValue: Math.round(targetValue),
-              targetAchieved: Math.round(achieved),
-              targetPercent: Math.round(targetPercent * 10) / 10,
-            }
-          })
-        )
+        // Build Maps for O(1) lookup
+        const ordersByCommercial = new Map<string, number[]>()
+        for (const order of allOrders) {
+          if (!ordersByCommercial.has(order.commercialId)) {
+            ordersByCommercial.set(order.commercialId, [])
+          }
+          ordersByCommercial.get(order.commercialId)!.push(order.total)
+        }
+
+        const targetsByUser = new Map<string, { value: number; achieved: number }>()
+        for (const target of allTargets) {
+          if (!targetsByUser.has(target.userId)) {
+            targetsByUser.set(target.userId, { value: target.value, achieved: target.achieved })
+          }
+        }
+
+        const commercialData = commercials.map((c) => {
+          const orderTotals = ordersByCommercial.get(c.id) || []
+          const revenue = orderTotals.reduce((sum, t) => sum + t, 0)
+          const count = orderTotals.length
+
+          const target = targetsByUser.get(c.id)
+          const targetValue = target?.value || 0
+          const achieved = target?.achieved || revenue
+          const targetPercent = targetValue > 0 ? Math.min((achieved / targetValue) * 100, 100) : 0
+
+          return {
+            id: c.id,
+            name: c.name,
+            avatar: c.avatar,
+            revenue: Math.round(revenue),
+            orderCount: count,
+            targetValue: Math.round(targetValue),
+            targetAchieved: Math.round(achieved),
+            targetPercent: Math.round(targetPercent * 10) / 10,
+          }
+        })
 
         data = { commercials: commercialData.sort((a, b) => b.revenue - a.revenue) }
         break
@@ -170,22 +191,26 @@ export async function GET(request: NextRequest) {
           orderBy: { _sum: { totalPrice: 'desc' } },
         })
 
-        const productData = await Promise.all(
-          orderItems.map(async (item) => {
-            const product = await db.product.findUnique({
-              where: { id: item.productId },
-              select: { name: true, reference: true, category: { select: { name: true } } },
-            })
-            return {
-              id: item.productId,
-              name: product?.name || 'Inconnu',
-              reference: product?.reference || '',
-              category: product?.category?.name || '',
-              quantitySold: item._sum.quantity || 0,
-              revenue: Math.round(item._sum.totalPrice || 0),
-            }
-          })
-        )
+        // Batch: fetch all products in 1 query instead of N
+        const productIds = orderItems.map((item) => item.productId)
+        const products = await db.product.findMany({
+          where: { id: { in: productIds } },
+          select: { id: true, name: true, reference: true, category: { select: { name: true } } },
+        })
+
+        const productMap = new Map(products.map((p) => [p.id, p]))
+
+        const productData = orderItems.map((item) => {
+          const product = productMap.get(item.productId)
+          return {
+            id: item.productId,
+            name: product?.name || 'Inconnu',
+            reference: product?.reference || '',
+            category: product?.category?.name || '',
+            quantitySold: item._sum.quantity || 0,
+            revenue: Math.round(item._sum.totalPrice || 0),
+          }
+        })
 
         data = { products: productData }
         break
@@ -237,23 +262,27 @@ export async function GET(request: NextRequest) {
           take: 10,
         })
 
-        const topProducts = await Promise.all(
-          orderItems.map(async (item) => {
-            const product = await db.product.findUnique({
-              where: { id: item.productId },
-              select: { name: true, reference: true, stock: true, price: true },
-            })
-            return {
-              id: item.productId,
-              name: product?.name || 'Inconnu',
-              reference: product?.reference || '',
-              quantitySold: item._sum.quantity || 0,
-              revenue: Math.round(item._sum.totalPrice || 0),
-              stock: product?.stock || 0,
-              unitPrice: product?.price || 0,
-            }
-          })
-        )
+        // Batch: fetch all products in 1 query instead of N
+        const productIds = orderItems.map((item) => item.productId)
+        const products = await db.product.findMany({
+          where: { id: { in: productIds } },
+          select: { id: true, name: true, reference: true, stock: true, price: true },
+        })
+
+        const productMap = new Map(products.map((p) => [p.id, p]))
+
+        const topProducts = orderItems.map((item) => {
+          const product = productMap.get(item.productId)
+          return {
+            id: item.productId,
+            name: product?.name || 'Inconnu',
+            reference: product?.reference || '',
+            quantitySold: item._sum.quantity || 0,
+            revenue: Math.round(item._sum.totalPrice || 0),
+            stock: product?.stock || 0,
+            unitPrice: product?.price || 0,
+          }
+        })
 
         data = { topProducts }
         break
@@ -261,13 +290,18 @@ export async function GET(request: NextRequest) {
 
       case 'performance': {
         const now = new Date()
-        const monthlyData: { month: string; revenue: number; orderCount: number }[] = []
 
-        for (let i = 11; i >= 0; i--) {
-          const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1)
-          const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
+        // Batch: fire all 24 queries (12 months x 2) in parallel via Promise.all
+        const monthNames = [
+          'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+          'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+        ]
 
-          const [orders, count] = await Promise.all([
+        const monthQueries = Array.from({ length: 12 }, (_, i) => {
+          const mStart = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1)
+          const mEnd = new Date(now.getFullYear(), now.getMonth() - (11 - i) + 1, 1)
+          const label = `${monthNames[mStart.getMonth()]} ${mStart.getFullYear()}`
+          return Promise.all([
             db.order.aggregate({
               _sum: { total: true },
               where: { companyId, createdAt: { gte: mStart, lt: mEnd } },
@@ -275,19 +309,14 @@ export async function GET(request: NextRequest) {
             db.order.count({
               where: { companyId, createdAt: { gte: mStart, lt: mEnd } },
             }),
-          ])
-
-          const monthNames = [
-            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-          ]
-
-          monthlyData.push({
-            month: `${monthNames[mStart.getMonth()]} ${mStart.getFullYear()}`,
+          ]).then(([orders, count]) => ({
+            month: label,
             revenue: Math.round(orders._sum.total || 0),
             orderCount: count,
-          })
-        }
+          }))
+        })
+
+        const monthlyData = await Promise.all(monthQueries)
 
         // Compute growth
         const thisMonthRevenue = monthlyData[monthlyData.length - 1]?.revenue || 0

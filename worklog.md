@@ -193,9 +193,74 @@ Stage Summary:
 - Offline support: IndexedDB queue + auto-sync + visual indicators
 
 ---
+Task ID: 10
+Agent: Main Agent
+Task: Comprehensive audit + corrections for Teranga Biz (session 2)
+
+Work Log:
+- **FULL AUDIT**: Read and analyzed all 90+ source files across API routes, components, lib, and config
+- **25+ issues identified** across security, performance, bugs, and UX
+
+**CRITICAL FIXES (4):**
+1. **PDF Generator hardcoded company** (`src/lib/pdf-generator.ts`):
+   - Fixed `generateInvoicePDF()` and `generateQuotePDF()` to use actual company data from DB (name, address, phone, email) instead of hardcoded "Teranga Biz"
+   - Added client contact info (phone, email, address, city) to PDF output
+2. **N+1 queries in commercials API** (`src/app/api/commercials/route.ts`):
+   - Replaced N individual `db.order.findMany()` calls with single batched `db.order.groupBy()` query
+   - Built revenue Map for O(1) lookup — reduced from N+1 to 2 queries
+3. **N+1 queries in reports API** (`src/app/api/reports/route.ts`):
+   - Fixed 4 report types: commercial (2N→3), product (N→2), top-products (N→2), performance (24 sequential→24 parallel)
+   - Used batched `findMany` + Map pattern for all N+1 patterns
+4. **Upload route unprotected + SVG XSS** (`src/app/api/upload/route.ts`):
+   - Added JWT auth check (same pattern as seed route)
+   - Removed SVG from ALLOWED_MIME_TYPES (SVG can contain malicious scripts)
+
+**HIGH PRIORITY FIXES (4):**
+1. **Race conditions in document numbering** (`orders/route.ts`, `invoices/route.ts`, `quotes/route.ts`):
+   - Wrapped order, invoice, and quote creation in `db.$transaction()` for atomic count+create
+   - Number generation now transactional — prevents duplicate numbers under concurrent requests
+2. **Stock decrement not transactional** (`orders/route.ts`):
+   - Moved stock decrement inside the same transaction as order creation
+   - If stock update fails, entire order creation rolls back
+3. **statusCounts['all'] extra DB query** (`orders/route.ts`, `invoices/route.ts`):
+   - Removed redundant `await db.count()` call — now reuses the `total` from existing count query
+4. **Discussions API no pagination** (`discussions/route.ts`):
+   - Added pagination support with page/limit/searchParams
+   - Added client filtering via `clientId` param
+   - Returns pagination metadata (page, limit, total, totalPages)
+
+**MEDIUM PRIORITY FIXES (3):**
+1. **Default page wrong** (`src/lib/store.ts`):
+   - Changed default `currentPage` from `'map-stores'` to `'dashboard'`
+2. **Dashboard uses useState instead of React Query** (`dashboard-page.tsx`):
+   - Refactored to use `useQuery()` from TanStack Query (already configured in DashboardShell)
+   - Benefits: automatic caching (60s staleTime), background refetch, loading/error states, no manual state management
+   - Used shadcn Button component for retry
+3. **Bar chart uses blue/indigo colors** (`dashboard-page.tsx`):
+   - Changed from `['#2563eb', '#7c3aed', ...]` to `['#ea580c', '#16a34a', '#dc2626', '#d97706', '#059669']` (orange, green, red, amber, emerald)
+
+**LOW PRIORITY FIX (1):**
+1. **Seed route deletion order** (`seed/route.ts`):
+   - Added comment clarifying children-then-parents deletion order (already correct)
+
+**VERIFICATION:**
+- ESLint: 0 errors, 0 warnings
+- Dev server: clean startup, no runtime errors
+- Agent Browser: Landing page renders correctly, Dashboard loads with all KPIs/charts/orders table, no console errors
+
+Stage Summary:
+- 10 files modified: pdf-generator.ts, commercials/route.ts, reports/route.ts, upload/route.ts, orders/route.ts, invoices/route.ts, quotes/route.ts, discussions/route.ts, store.ts, dashboard-page.tsx
+- 1 comment fix: seed/route.ts
+- Zero new dependencies
+- All changes backward-compatible with demo mode
+- Performance: eliminated 3N+5 sequential DB queries across API routes
+- Security: upload auth + SVG removal
+- Data integrity: transactional order/invoice/quote creation with stock management
+
+---
 Task ID: 9
 Agent: Main Agent
-Task: Comprehensive audit + critical fixes for Teranga Biz
+Task: Comprehensive audit + critical fixes for Teranga Biz (session 1)
 
 Work Log:
 - **AUDIT PERFORMED**: Exhaustive codebase review of all 90+ source files

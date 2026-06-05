@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'Données déjà insérées', count: existingClients })
       }
     } else {
-      // Clean existing data when force=true
+      // Clean existing data when force=true — delete children before parents
       await db.payment.deleteMany({})
       await db.invoiceItem.deleteMany({})
       await db.invoice.deleteMany({})

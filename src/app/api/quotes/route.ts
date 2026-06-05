@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/quotes — Create quote with items
+// POST /api/quotes — Create quote with items (transactional)
 export async function POST(request: NextRequest) {
   try {
     const companyId = await getCompanyId()
@@ -102,42 +102,44 @@ export async function POST(request: NextRequest) {
     const taxAmount = ((subtotal - discountAmount) * tax) / 100
     const total = subtotal - discountAmount + taxAmount
 
-    // Generate quote number
-    const count = await db.quote.count({ where: { companyId } })
-    const number = `DEV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
+    // Use transaction for atomic quote creation + numbering
+    const quote = await db.$transaction(async (tx) => {
+      const count = await tx.quote.count({ where: { companyId } })
+      const number = `DEV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
-    const quote = await db.quote.create({
-      data: {
-        number,
-        status: 'draft',
-        total,
-        discount,
-        tax: taxAmount,
-        validUntil: validUntil ? new Date(validUntil) : null,
-        notes,
-        clientId,
-        commercialId,
-        companyId,
-        items: {
-          create: items.map(
-            (item: { productId: string; quantity: number; unitPrice: number }) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.quantity * item.unitPrice,
-            })
-          ),
-        },
-      },
-      include: {
-        client: { select: { companyName: true, contactName: true } },
-        commercial: { select: { name: true } },
-        items: {
-          include: {
-            product: { select: { name: true, reference: true } },
+      return tx.quote.create({
+        data: {
+          number,
+          status: 'draft',
+          total,
+          discount,
+          tax: taxAmount,
+          validUntil: validUntil ? new Date(validUntil) : null,
+          notes,
+          clientId,
+          commercialId,
+          companyId,
+          items: {
+            create: items.map(
+              (item: { productId: string; quantity: number; unitPrice: number }) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.quantity * item.unitPrice,
+              })
+            ),
           },
         },
-      },
+        include: {
+          client: { select: { companyName: true, contactName: true } },
+          commercial: { select: { name: true } },
+          items: {
+            include: {
+              product: { select: { name: true, reference: true } },
+            },
+          },
+        },
+      })
     })
 
     return NextResponse.json({ data: quote }, { status: 201 })

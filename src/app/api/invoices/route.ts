@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     const statusCounts = Object.fromEntries(
       statusCountsResult.map((r) => [r.status, r._count.status])
     )
-    statusCounts['all'] = await db.invoice.count({ where: { companyId } })
+    statusCounts['all'] = total
 
     // Compute KPIs
     const [totalBilled, totalPaid, unpaidTotal, overdueCount] = await Promise.all([
@@ -157,33 +157,35 @@ export async function POST(request: NextRequest) {
     const taxAmount = ((subtotal - discountAmount) * tax) / 100
     const total = subtotal - discountAmount + taxAmount
 
-    // Generate invoice number
-    const count = await db.invoice.count({ where: { companyId } })
-    const number = `FAC-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
+    // Use transaction for atomic invoice creation + numbering
+    const invoice = await db.$transaction(async (tx) => {
+      const count = await tx.invoice.count({ where: { companyId } })
+      const number = `FAC-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
-    const invoice = await db.invoice.create({
-      data: {
-        number,
-        status: 'unpaid',
-        total,
-        paid: 0,
-        discount,
-        tax: taxAmount,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        notes,
-        orderId,
-        clientId,
-        commercialId,
-        companyId,
-        items: {
-          create: orderItems,
+      return tx.invoice.create({
+        data: {
+          number,
+          status: 'unpaid',
+          total,
+          paid: 0,
+          discount,
+          tax: taxAmount,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          notes,
+          orderId,
+          clientId,
+          commercialId,
+          companyId,
+          items: {
+            create: orderItems,
+          },
         },
-      },
-      include: {
-        client: { select: { companyName: true, contactName: true } },
-        commercial: { select: { name: true } },
-        payments: true,
-      },
+        include: {
+          client: { select: { companyName: true, contactName: true } },
+          commercial: { select: { name: true } },
+          payments: true,
+        },
+      })
     })
 
     return NextResponse.json({ data: invoice }, { status: 201 })

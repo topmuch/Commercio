@@ -391,7 +391,7 @@ export function generateDocumentPDF(data: DocumentData): jsPDF {
 
 // ─── Invoice PDF Convenience ─────────────────────────────────────────────
 
-export function generateInvoicePDF(invoice: Invoice): jsPDF {
+export function generateInvoicePDF(invoice: Invoice & { company?: { name: string; address?: string; phone?: string; email?: string } }): jsPDF {
   const items = (invoice.items || []).map((item: InvoiceItem) => ({
     name: item.product?.name || 'Produit',
     reference: item.product?.reference || '—',
@@ -412,11 +412,18 @@ export function generateInvoicePDF(invoice: Invoice): jsPDF {
     dueDate: invoice.dueDate,
     status: invoice.status,
     company: {
-      name: 'Teranga Biz',
+      name: invoice.company?.name || 'Teranga Biz',
+      address: invoice.company?.address,
+      phone: invoice.company?.phone,
+      email: invoice.company?.email,
     },
     client: {
       companyName: invoice.client?.companyName || 'Client',
       contactName: invoice.client?.contactName || '',
+      phone: (invoice.client as { phone?: string })?.phone,
+      email: (invoice.client as { email?: string })?.email,
+      address: (invoice.client as { address?: string })?.address,
+      city: (invoice.client as { city?: string })?.city,
     },
     commercial: invoice.commercial?.name,
     items,
@@ -434,7 +441,7 @@ export function generateInvoicePDF(invoice: Invoice): jsPDF {
 
 // ─── Quote PDF Convenience ─────────────────────────────────────────────────
 
-export function generateQuotePDF(quote: Quote): jsPDF {
+export function generateQuotePDF(quote: Quote & { company?: { name: string; address?: string; phone?: string; email?: string } }): jsPDF {
   const items = (quote.items || []).map((item: QuoteItem) => ({
     name: item.product?.name || 'Produit',
     reference: item.product?.reference || '—',
@@ -455,11 +462,18 @@ export function generateQuotePDF(quote: Quote): jsPDF {
     validUntil: quote.validUntil,
     status: quote.status,
     company: {
-      name: 'Teranga Biz',
+      name: quote.company?.name || 'Teranga Biz',
+      address: quote.company?.address,
+      phone: quote.company?.phone,
+      email: quote.company?.email,
     },
     client: {
       companyName: quote.client?.companyName || 'Client',
       contactName: quote.client?.contactName || '',
+      phone: (quote.client as { phone?: string })?.phone,
+      email: (quote.client as { email?: string })?.email,
+      address: (quote.client as { address?: string })?.address,
+      city: (quote.client as { city?: string })?.city,
     },
     commercial: quote.commercial?.name,
     items,

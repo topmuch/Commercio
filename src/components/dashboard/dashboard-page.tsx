@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React from 'react'
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   ShoppingCart,
   Users,
@@ -36,6 +35,8 @@ import {
   Cell,
 } from 'recharts'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { useQuery } from '@tanstack/react-query'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,11 @@ interface DashboardData {
     date: string
     commercial?: string
   }[]
+  clientStatusDistribution?: {
+    leadRouge: number
+    negociationOrange: number
+    clientVert: number
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -91,10 +97,10 @@ function formatShortCFA(value: number): string {
 }
 
 const statusMap: Record<string, { label: string; className: string }> = {
-  new: { label: 'Nouvelle', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  new: { label: 'Nouvelle', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' },
   validated: { label: 'Validée', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
-  preparation: { label: 'En préparation', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' },
-  shipped: { label: 'Expédiée', className: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300' },
+  preparation: { label: 'En préparation', className: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300' },
+  shipped: { label: 'Expédiée', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
   delivered: { label: 'Livrée', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
 }
 
@@ -172,32 +178,19 @@ function KPICard({
 // ─── Dashboard Component ──────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchDashboard = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const { data, isLoading, error, refetch } = useQuery<DashboardData>({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
       const res = await fetch('/api/dashboard')
       if (!res.ok) throw new Error('Erreur de chargement')
-      const json = await res.json()
-      setData(json)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erreur inconnue'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchDashboard()
-  }, [fetchDashboard])
+      return res.json()
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  })
 
   // ─── Loading State ───
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -213,19 +206,16 @@ export default function DashboardPage() {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <p className="text-sm text-erp-danger">{error || 'Aucune donnée disponible'}</p>
-          <button
-            onClick={fetchDashboard}
-            className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
+          <p className="text-sm text-erp-danger">{error?.message || 'Aucune donnée disponible'}</p>
+          <Button onClick={() => refetch()} variant="outline">
             Réessayer
-          </button>
+          </Button>
         </div>
       </div>
     )
   }
 
-  const barColors = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a']
+  const barColors = ['#ea580c', '#16a34a', '#dc2626', '#d97706', '#059669']
 
   return (
     <div className="space-y-6">

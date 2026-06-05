@@ -30,40 +30,42 @@ export async function GET() {
       orderBy: { name: 'asc' },
     })
 
-    // Calculate revenue for each commercial
-    const commercialsWithRevenue = await Promise.all(
-      commercials.map(async (c) => {
-        const orders = await db.order.findMany({
-          where: {
-            commercialId: c.id,
-            companyId,
-          },
-          select: { total: true },
+    // Batched revenue query — no N+1
+    const commercialIds = commercials.map((c) => c.id)
+    const commercialRevenues = commercialIds.length > 0
+      ? await db.order.groupBy({
+          by: ['commercialId'],
+          where: { commercialId: { in: commercialIds }, companyId },
+          _sum: { total: true },
         })
-
-        const _revenue = orders.reduce((sum, o) => sum + o.total, 0)
-
-        // Get the revenue target
-        const revenueTarget = c.targets.find((t) => t.type === 'revenue')
-        const targetValue = revenueTarget?.value || 0
-        const targetAchieved = revenueTarget?.achieved || 0
-        const _targetPercent = targetValue > 0 ? Math.round((targetAchieved / targetValue) * 100) : 0
-
-        return {
-          id: c.id,
-          name: c.name,
-          email: c.email,
-          phone: c.phone,
-          avatar: c.avatar,
-          role: c.role,
-          active: c.active,
-          _count: c._count,
-          targets: c.targets,
-          _revenue: Math.round(_revenue * 100) / 100,
-          _targetPercent,
-        }
-      })
+      : []
+    const revenueMap = new Map(
+      commercialRevenues.map((r) => [r.commercialId, r._sum.total || 0])
     )
+
+    const commercialsWithRevenue = commercials.map((c) => {
+      const _revenue = revenueMap.get(c.id) || 0
+
+      // Get the revenue target
+      const revenueTarget = c.targets.find((t) => t.type === 'revenue')
+      const targetValue = revenueTarget?.value || 0
+      const targetAchieved = revenueTarget?.achieved || 0
+      const _targetPercent = targetValue > 0 ? Math.round((targetAchieved / targetValue) * 100) : 0
+
+      return {
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        avatar: c.avatar,
+        role: c.role,
+        active: c.active,
+        _count: c._count,
+        targets: c.targets,
+        _revenue: Math.round(_revenue * 100) / 100,
+        _targetPercent,
+      }
+    })
 
     // Sort by revenue descending
     commercialsWithRevenue.sort((a, b) => b._revenue - a._revenue)
