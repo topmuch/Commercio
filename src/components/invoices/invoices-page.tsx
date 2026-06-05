@@ -9,6 +9,8 @@ import {
   Edit,
   Trash2,
   CreditCard,
+  Download,
+  Mail,
   AlertCircle,
   CheckCircle,
   DollarSign,
@@ -358,6 +360,35 @@ export default function InvoicesPage() {
     }
   }
 
+  // ── Download PDF ──
+  const downloadPDF = async (invoiceId: string, invoiceNumber: string) => {
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}/pdf`)
+      if (!res.ok) throw new Error('Erreur de génération')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Facture-${invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast({ title: 'PDF téléchargé', description: `Facture ${invoiceNumber}` })
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de télécharger le PDF', variant: 'destructive' })
+    }
+  }
+
+  // ── Share via WhatsApp ──
+  const shareInvoice = (invoice: Invoice) => {
+    const clientName = invoice.client?.companyName || 'Client'
+    const total = formatCFA(invoice.total)
+    const text = `Bonjour ${clientName},\n\nVoici votre facture ${invoice.number} d'un montant de ${total}.\n\nMerci de votre confiance.\n— Teranga Biz`
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+    window.open(whatsappUrl, '_blank')
+  }
+
   const resetPaymentForm = () => {
     setPayAmount('')
     setPayMethod('cash')
@@ -638,6 +669,24 @@ export default function InvoicesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-emerald-600"
+                              onClick={() => downloadPDF(invoice.id, invoice.number)}
+                              title="Télécharger PDF"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-green-600"
+                              onClick={() => shareInvoice(invoice)}
+                              title="Envoyer par WhatsApp"
+                            >
+                              <Mail className="h-3.5 w-3.5" />
+                            </Button>
                             {(invoice.status === 'unpaid' ||
                               invoice.status === 'partially_paid' ||
                               invoice.status === 'overdue') && (

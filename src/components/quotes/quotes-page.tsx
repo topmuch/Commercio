@@ -10,6 +10,8 @@ import {
   Trash2,
   X,
   CalendarDays,
+  Download,
+  Mail,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -282,6 +284,35 @@ export default function QuotesPage() {
     }
   }
 
+  // ── Download PDF ──
+  const downloadPDF = async (quoteId: string, quoteNumber: string) => {
+    try {
+      const res = await fetch(`/api/quotes/${quoteId}/pdf`)
+      if (!res.ok) throw new Error('Erreur de génération')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Devis-${quoteNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast({ title: 'PDF téléchargé', description: `Devis ${quoteNumber}` })
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de télécharger le PDF', variant: 'destructive' })
+    }
+  }
+
+  // ── Share via WhatsApp ──
+  const shareQuote = (quote: Quote) => {
+    const clientName = quote.client?.companyName || 'Client'
+    const total = formatCFA(quote.total)
+    const text = `Bonjour ${clientName},\n\nVoici notre devis ${quote.number} d'un montant de ${total}.\n\nN'hésitez pas à nous contacter.\n— Teranga Biz`
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+    window.open(whatsappUrl, '_blank')
+  }
+
   const resetForm = () => {
     setFormClientId('')
     setFormNotes('')
@@ -485,6 +516,24 @@ export default function QuotesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-emerald-600"
+                              onClick={() => downloadPDF(quote.id, quote.number)}
+                              title="Télécharger PDF"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-green-600"
+                              onClick={() => shareQuote(quote)}
+                              title="Envoyer par WhatsApp"
+                            >
+                              <Mail className="h-3.5 w-3.5" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
