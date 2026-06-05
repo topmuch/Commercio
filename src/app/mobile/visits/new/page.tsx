@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   MapPin, Phone, Camera, X, Clock, CheckCircle2, ChevronLeft,
@@ -69,7 +69,7 @@ function formatDuration(ms: number): string {
 }
 
 // ─── Main Component ───
-export default function NewVisitPage() {
+function NewVisitPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user: storeUser } = useAppStore()
@@ -681,5 +681,13 @@ export default function NewVisitPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function NewVisitPage() {
+  return (
+    <Suspense>
+      <NewVisitPageContent />
+    </Suspense>
   )
 }
