@@ -140,6 +140,9 @@ export default function OrdersPage() {
         setOrders(json.data)
         setTotalPages(json.totalPages || 1)
       }
+      if (json.statusCounts) {
+        setStatusCounts(json.statusCounts)
+      }
     } catch {
       toast({ title: 'Erreur', description: 'Impossible de charger les commandes', variant: 'destructive' })
     } finally {
@@ -147,27 +150,7 @@ export default function OrdersPage() {
     }
   }, [activeTab, search, page, toast])
 
-  // ── Fetch status counts ──
-  const fetchCounts = useCallback(async () => {
-    try {
-      const statuses = ['new', 'validated', 'preparation', 'shipped', 'delivered']
-      const countsMap: Record<string, number> = {}
-      await Promise.all(
-        statuses.map(async (s) => {
-          const res = await fetch(`/api/orders?status=${s}&limit=1`)
-          const json = await res.json()
-          countsMap[s] = json.count || 0
-        })
-      )
-      // Get all count
-      const resAll = await fetch('/api/orders?limit=1')
-      const jsonAll = await resAll.json()
-      countsMap['all'] = jsonAll.count || 0
-      setStatusCounts(countsMap)
-    } catch {
-      // silent
-    }
-  }, [])
+  // ── Status counts come from fetchOrders (no separate call needed) ──
 
   // ── Fetch clients ──
   const fetchClients = useCallback(async () => {
@@ -193,10 +176,9 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders()
-    fetchCounts()
     fetchClients()
     fetchProducts()
-  }, [fetchOrders, fetchCounts, fetchClients, fetchProducts])
+  }, [fetchOrders, fetchClients, fetchProducts])
 
   useEffect(() => {
     setPage(1)
@@ -279,7 +261,6 @@ export default function OrdersPage() {
         setDialogOpen(false)
         resetForm()
         fetchOrders()
-        fetchCounts()
       }
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de l\'enregistrement', variant: 'destructive' })
@@ -324,7 +305,6 @@ export default function OrdersPage() {
         toast({ title: 'Succès', description: 'Commande supprimée avec succès' })
         setDeleteOrder(null)
         fetchOrders()
-        fetchCounts()
       }
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })

@@ -19,78 +19,62 @@ export async function GET() {
     const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
     const yesterdayEnd = todayStart
 
-    // ─── Revenue today ───
-    const todayOrders = await db.order.findMany({
-      where: {
-        companyId,
-        createdAt: { gte: todayStart, lt: todayEnd },
-      },
-      select: { total: true },
-    })
-    const revenueToday = todayOrders.reduce((sum, o) => sum + o.total, 0)
+    // ─── Revenue & counts (batched) ───
+    const [
+      todayOrders,
+      yesterdayOrders,
+      monthOrders,
+      prevMonthOrders,
+      orderCount,
+      quoteCount,
+      clientCount,
+      prevMonthOrderCount,
+      currentMonthOrderCount,
+      prevMonthClientCount,
+      currentMonthClientCount,
+      leadRougeCount,
+      negociationOrangeCount,
+      clientVertCount,
+    ] = await Promise.all([
+      // Revenue today
+      db.order.aggregate({
+        _sum: { total: true },
+        where: { companyId, createdAt: { gte: todayStart, lt: todayEnd } },
+      }),
+      // Revenue yesterday
+      db.order.aggregate({
+        _sum: { total: true },
+        where: { companyId, createdAt: { gte: yesterdayStart, lt: yesterdayEnd } },
+      }),
+      // Revenue this month
+      db.order.aggregate({
+        _sum: { total: true },
+        where: { companyId, createdAt: { gte: monthStart, lt: monthEnd } },
+      }),
+      // Revenue prev month
+      db.order.aggregate({
+        _sum: { total: true },
+        where: { companyId, createdAt: { gte: prevMonthStart, lt: prevMonthEnd } },
+      }),
+      // Counts
+      db.order.count({ where: { companyId } }),
+      db.quote.count({ where: { companyId } }),
+      db.client.count({ where: { companyId } }),
+      // Growth counts
+      db.order.count({ where: { companyId, createdAt: { gte: prevMonthStart, lt: prevMonthEnd } } }),
+      db.order.count({ where: { companyId, createdAt: { gte: monthStart, lt: monthEnd } } }),
+      db.client.count({ where: { companyId, createdAt: { gte: prevMonthStart, lt: prevMonthEnd } } }),
+      db.client.count({ where: { companyId, createdAt: { gte: monthStart, lt: monthEnd } } }),
+      // Client status distribution
+      db.client.count({ where: { companyId, status: 'lead_rouge' } }),
+      db.client.count({ where: { companyId, status: 'negociation_orange' } }),
+      db.client.count({ where: { companyId, status: 'client_vert' } }),
+    ])
 
-    // Revenue yesterday for growth
-    const yesterdayOrders = await db.order.findMany({
-      where: {
-        companyId,
-        createdAt: { gte: yesterdayStart, lt: yesterdayEnd },
-      },
-      select: { total: true },
-    })
-    const revenueYesterday = yesterdayOrders.reduce((sum, o) => sum + o.total, 0)
-
-    // ─── Revenue this month ───
-    const monthOrders = await db.order.findMany({
-      where: {
-        companyId,
-        createdAt: { gte: monthStart, lt: monthEnd },
-      },
-      select: { total: true },
-    })
-    const revenueMonth = monthOrders.reduce((sum, o) => sum + o.total, 0)
-
-    // Revenue prev month for growth
-    const prevMonthOrders = await db.order.findMany({
-      where: {
-        companyId,
-        createdAt: { gte: prevMonthStart, lt: prevMonthEnd },
-      },
-      select: { total: true },
-    })
-    const revenuePrevMonth = prevMonthOrders.reduce((sum, o) => sum + o.total, 0)
-
-    // ─── Counts ───
-    const orderCount = await db.order.count({ where: { companyId } })
-    const quoteCount = await db.quote.count({ where: { companyId } })
-    const clientCount = await db.client.count({ where: { companyId } })
-
-    // Orders last month for growth
-    const prevMonthOrderCount = await db.order.count({
-      where: {
-        companyId,
-        createdAt: { gte: prevMonthStart, lt: prevMonthEnd },
-      },
-    })
-    const currentMonthOrderCount = await db.order.count({
-      where: {
-        companyId,
-        createdAt: { gte: monthStart, lt: monthEnd },
-      },
-    })
-
-    // Clients added this month vs prev month for growth
-    const prevMonthClientCount = await db.client.count({
-      where: {
-        companyId,
-        createdAt: { gte: prevMonthStart, lt: prevMonthEnd },
-      },
-    })
-    const currentMonthClientCount = await db.client.count({
-      where: {
-        companyId,
-        createdAt: { gte: monthStart, lt: monthEnd },
-      },
-    })
+    const revenueToday = todayOrders._sum.total || 0
+    const revenueYesterday = yesterdayOrders._sum.total || 0
+    const revenueMonth = monthOrders._sum.total || 0
+    const revenuePrevMonth = prevMonthOrders._sum.total || 0
 
     // ─── Growth percentages ───
     const revenueTodayGrowth =
@@ -121,20 +105,13 @@ export async function GET() {
           ? 100
           : 0
 
-    // ─── Client status distribution ───
-    const [leadRougeCount, negociationOrangeCount, clientVertCount] = await Promise.all([
-      db.client.count({ where: { companyId, status: 'lead_rouge' } }),
-      db.client.count({ where: { companyId, status: 'negociation_orange' } }),
-      db.client.count({ where: { companyId, status: 'client_vert' } }),
-    ])
-
     const clientStatusDistribution = {
       leadRouge: leadRougeCount,
       negociationOrange: negociationOrangeCount,
       clientVert: clientVertCount,
     }
 
-    // ─── Top 5 products by sales ───
+    // ─── Top 5 products (no N+1: use include) ───
     const topProductsRaw = await db.orderItem.groupBy({
       by: ['productId'],
       where: {
@@ -145,24 +122,28 @@ export async function GET() {
       take: 5,
     })
 
-    const topProducts = await Promise.all(
-      topProductsRaw.map(async (item) => {
-        const product = await db.product.findUnique({
-          where: { id: item.productId },
-          select: { name: true, reference: true, image: true },
+    const productIds = topProductsRaw.map((item) => item.productId)
+    const productInfos = productIds.length > 0
+      ? await db.product.findMany({
+          where: { id: { in: productIds } },
+          select: { id: true, name: true, reference: true, image: true },
         })
-        return {
-          id: item.productId,
-          name: product?.name || 'Inconnu',
-          reference: product?.reference || '',
-          totalSold: item._sum.quantity || 0,
-          revenue: item._sum.totalPrice || 0,
-          image: product?.image || undefined,
-        }
-      })
-    )
+      : []
+    const productMap = new Map(productInfos.map((p) => [p.id, p]))
 
-    // ─── Top 5 commercials by revenue ───
+    const topProducts = topProductsRaw.map((item) => {
+      const product = productMap.get(item.productId)
+      return {
+        id: item.productId,
+        name: product?.name || 'Inconnu',
+        reference: product?.reference || '',
+        totalSold: item._sum.quantity || 0,
+        revenue: item._sum.totalPrice || 0,
+        image: product?.image || undefined,
+      }
+    })
+
+    // ─── Top 5 commercials (batched revenue query) ───
     const commercials = await db.user.findMany({
       where: { companyId, role: { in: ['commercial', 'admin'] } },
       select: {
@@ -179,13 +160,22 @@ export async function GET() {
       },
     })
 
-    const topCommercials = await Promise.all(
-      commercials.map(async (user) => {
-        const commercialOrders = await db.order.findMany({
-          where: { commercialId: user.id, companyId },
-          select: { total: true },
+    // Single aggregate query for all commercial revenues
+    const commercialIds = commercials.map((u) => u.id)
+    const commercialRevenues = commercialIds.length > 0
+      ? await db.order.groupBy({
+          by: ['commercialId'],
+          where: { commercialId: { in: commercialIds }, companyId },
+          _sum: { total: true },
         })
-        const revenue = commercialOrders.reduce((sum, o) => sum + o.total, 0)
+      : []
+    const revenueByCommercial = new Map(
+      commercialRevenues.map((r) => [r.commercialId, r._sum.total || 0])
+    )
+
+    const topCommercials = commercials
+      .map((user) => {
+        const revenue = revenueByCommercial.get(user.id) || 0
         const target = user.targets[0]
         const targetAchieved =
           target && target.value > 0 ? (target.achieved / target.value) * 100 : 0
@@ -200,32 +190,31 @@ export async function GET() {
           targetAchieved: Math.min(targetAchieved, 100),
         }
       })
-    )
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5)
 
-    topCommercials.sort((a, b) => b.revenue - a.revenue)
-
-    // ─── Revenue chart data (last 12 months) ───
-    const revenueChartData: { name: string; value: number }[] = []
+    // ─── Revenue chart data (batched 12 months) ───
+    const monthNames = [
+      'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
+      'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
+    ]
+    const monthlyRevenuePromises: Promise<{ month: string; gte: Date; lt: Date }>[] = []
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
-      const monthOrdersData = await db.order.findMany({
-        where: {
-          companyId,
-          createdAt: { gte: d, lt: mEnd },
-        },
-        select: { total: true },
-      })
-      const monthRevenue = monthOrdersData.reduce((sum, o) => sum + o.total, 0)
-      const monthNames = [
-        'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
-        'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
-      ]
-      revenueChartData.push({
-        name: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
-        value: Math.round(monthRevenue),
-      })
+      monthlyRevenuePromises.push(
+        db.order
+          .aggregate({
+            _sum: { total: true },
+            where: { companyId, createdAt: { gte: d, lt: mEnd } },
+          })
+          .then((result) => ({
+            month: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+            value: Math.round(result._sum.total || 0),
+          }))
+      )
     }
+    const revenueChartData = await Promise.all(monthlyRevenuePromises)
 
     // ─── Recent orders (last 5) ───
     const recentOrders = await db.order.findMany({
@@ -260,7 +249,7 @@ export async function GET() {
       clientGrowth: Math.round(clientGrowth * 10) / 10,
       clientStatusDistribution,
       topProducts,
-      topCommercials: topCommercials.slice(0, 5),
+      topCommercials,
       revenueChartData,
       recentOrders: recentOrdersFormatted,
     })

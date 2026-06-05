@@ -24,15 +24,15 @@ export async function middleware(request: NextRequest) {
     // Check for JWT token
     const token = await getToken({
       req: request,
-      secret: process.env.NEXTAUTH_SECRET || 'distribusn-dev-secret-change-in-production',
+      secret: process.env.NEXTAUTH_SECRET,
     })
 
     if (!token) {
-      // In demo mode, allow API requests without auth
-      // When NEXTAUTH_SECRET is properly set and users are logged in,
-      // uncomment below to enforce auth:
-      // return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-      return NextResponse.next()
+      // In demo mode (no NEXTAUTH_SECRET set), allow API requests without auth
+      if (!process.env.NEXTAUTH_SECRET) {
+        return NextResponse.next()
+      }
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
   }
 

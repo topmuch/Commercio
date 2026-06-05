@@ -170,6 +170,9 @@ export default function InvoicesPage() {
       if (json.kpi) {
         setKpi(json.kpi)
       }
+      if (json.statusCounts) {
+        setStatusCounts(json.statusCounts)
+      }
     } catch {
       toast({ title: 'Erreur', description: 'Impossible de charger les factures', variant: 'destructive' })
     } finally {
@@ -177,26 +180,8 @@ export default function InvoicesPage() {
     }
   }, [activeTab, search, page, toast])
 
-  // ── Fetch status counts ──
-  const fetchCounts = useCallback(async () => {
-    try {
-      const statuses = ['paid', 'partially_paid', 'unpaid', 'overdue']
-      const countsMap: Record<string, number> = {}
-      await Promise.all(
-        statuses.map(async (s) => {
-          const res = await fetch(`/api/invoices?status=${s}&limit=1`)
-          const json = await res.json()
-          countsMap[s] = json.count || 0
-        })
-      )
-      const resAll = await fetch('/api/invoices?limit=1')
-      const jsonAll = await resAll.json()
-      countsMap['all'] = jsonAll.count || 0
-      setStatusCounts(countsMap)
-    } catch {
-      // silent
-    }
-  }, [])
+  // ── Status counts come from fetchInvoices (no separate call needed) ──
+  // statusCounts is set in fetchInvoices when data.statusCounts is available
 
   // ── Fetch clients ──
   const fetchClients = useCallback(async () => {
@@ -222,10 +207,9 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices()
-    fetchCounts()
     fetchClients()
     fetchProducts()
-  }, [fetchInvoices, fetchCounts, fetchClients, fetchProducts])
+  }, [fetchInvoices, fetchClients, fetchProducts])
 
   useEffect(() => {
     setPage(1)
@@ -301,7 +285,6 @@ export default function InvoicesPage() {
         setDialogOpen(false)
         resetForm()
         fetchInvoices()
-        fetchCounts()
       }
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de la création', variant: 'destructive' })
@@ -353,7 +336,6 @@ export default function InvoicesPage() {
         setPaymentOpen(false)
         resetPaymentForm()
         fetchInvoices()
-        fetchCounts()
       }
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de l\'enregistrement', variant: 'destructive' })
@@ -428,7 +410,6 @@ export default function InvoicesPage() {
         toast({ title: 'Succès', description: 'Facture modifiée avec succès' })
         setEditOpen(false)
         fetchInvoices()
-        fetchCounts()
       }
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
@@ -447,7 +428,6 @@ export default function InvoicesPage() {
         toast({ title: 'Succès', description: 'Facture supprimée avec succès' })
         setDeleteInvoice(null)
         fetchInvoices()
-        fetchCounts()
       }
     } catch {
       toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })

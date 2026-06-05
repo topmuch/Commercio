@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
-    const [clients, total] = await Promise.all([
+    const [clients, total, statusCountsResult] = await Promise.all([
       db.client.findMany({
         where,
         skip,
@@ -79,7 +79,17 @@ export async function GET(request: NextRequest) {
         },
       }),
       db.client.count({ where }),
+      // Status counts for ALL clients (not just current page)
+      db.client.groupBy({
+        by: ['status'],
+        where: { companyId },
+        _count: { status: true },
+      }),
     ])
+
+    const statusCounts = Object.fromEntries(
+      statusCountsResult.map((r) => [r.status, r._count.status])
+    )
 
     // Calculate revenue (CA) per client from invoices
     const revenues = await db.invoice.groupBy({
@@ -108,6 +118,7 @@ export async function GET(request: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
+      statusCounts,
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'

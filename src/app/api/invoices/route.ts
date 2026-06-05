@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const [invoices, total] = await Promise.all([
+    const [invoices, total, statusCountsResult] = await Promise.all([
       db.invoice.findMany({
         where,
         include: {
@@ -43,7 +43,18 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       db.invoice.count({ where }),
+      // Status counts for ALL invoices
+      db.invoice.groupBy({
+        by: ['status'],
+        where: { companyId },
+        _count: { status: true },
+      }),
     ])
+
+    const statusCounts = Object.fromEntries(
+      statusCountsResult.map((r) => [r.status, r._count.status])
+    )
+    statusCounts['all'] = await db.invoice.count({ where: { companyId } })
 
     // Compute KPIs
     const [totalBilled, totalPaid, unpaidTotal, overdueCount] = await Promise.all([
@@ -66,6 +77,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      statusCounts,
       kpi: {
         totalBilled: totalBilledAmount,
         totalPaid: totalPaidAmount,

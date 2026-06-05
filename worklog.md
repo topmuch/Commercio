@@ -191,3 +191,36 @@ Stage Summary:
 - Routes: /mobile, /mobile/dashboard, /mobile/map, /mobile/orders, /mobile/orders/new, /mobile/visits/new, /mobile/visits/[id], /mobile/profile
 - PWA assets: manifest.json, sw.js, offline.html, SVG icons
 - Offline support: IndexedDB queue + auto-sync + visual indicators
+
+---
+Task ID: 9
+Agent: Main Agent
+Task: Comprehensive audit + critical fixes for Teranga Biz
+
+Work Log:
+- **AUDIT PERFORMED**: Exhaustive codebase review of all 90+ source files
+
+**SECURITY FIXES (3 CRITICAL):**
+1. Middleware auth: Removed hardcoded NEXTAUTH_SECRET fallback. Now enforces 401 when NEXTAUTH_SECRET is set but no token present; allows demo mode only when no secret configured
+2. DB query logging: Changed from `log: ['query']` (all envs) to `log: ['warn', 'error']` in dev, `log: ['error']` in prod
+3. Seed endpoint: Added auth check with getToken — requires NEXTAUTH_SECRET or admin token. In demo mode (no secret), still allows seed
+
+**BUG FIXES (4 HIGH):**
+1. Dashboard N+1 queries: Rewrote entire `/api/dashboard` route — replaced 3 nested loops (topProducts, topCommercials, revenueChart) with batched queries: groupBy+findMany for products, groupBy for commercial revenues, Promise.all for 12-month chart
+2. Product PUT reference check: Added `id: { not: id }` to exclude self when checking unique reference
+3. Stock decrement on order creation: Added `db.product.update({ data: { stock: { decrement } } })` for each item in the order
+4. Client stats cards: Stats cards now use `statusCounts` from API (groupBy on ALL clients) instead of filtering the paginated `clients` array
+
+**PERFORMANCE FIXES (2 HIGH):**
+1. Orders API: Added `statusCounts` to response via groupBy — eliminated 6 separate fetch calls from frontend
+2. Invoices API: Added `statusCounts` to response via groupBy — eliminated 6 separate fetch calls from frontend
+3. Both orders-page.tsx and invoices-page.tsx: Removed `fetchCounts()` function entirely, status counts now come from main data fetch
+
+**UI FIX (1 LOW):**
+1. Sidebar: Fixed "Installer l'App" nav item duplicate pageId — changed from `dashboard` to `install-app`
+
+Stage Summary:
+- 12 files modified: middleware.ts, db.ts, auth.ts concepts, seed/route.ts, dashboard/route.ts (rewrite), products/route.ts, orders/route.ts, invoices/route.ts, clients/route.ts, clients-page.tsx, orders-page.tsx, invoices-page.tsx, store.ts, app-sidebar.tsx
+- Lint: 0 errors, 0 warnings
+- No new dependencies added
+- All changes backward-compatible with demo mode (no NEXTAUTH_SECRET)

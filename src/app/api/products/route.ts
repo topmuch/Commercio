@@ -146,10 +146,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 })
     }
 
-    // Check unique reference if being updated (per-company)
+    // Check unique reference if being updated (per-company), exclude self
     if (updateData.reference) {
       const refExists = await db.product.findFirst({
-        where: { reference: updateData.reference, companyId },
+        where: { reference: updateData.reference, companyId, id: { not: id } },
       })
       if (refExists) {
         return NextResponse.json(

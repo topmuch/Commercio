@@ -108,6 +108,7 @@ export default function ClientsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({})
   const limit = 20
 
   // Dialog state
@@ -149,6 +150,7 @@ export default function ClientsPage() {
       setClients(data.clients || [])
       setTotalPages(data.pagination?.totalPages || 1)
       setTotal(data.pagination?.total || 0)
+      if (data.statusCounts) setStatusCounts(data.statusCounts)
     } catch {
       setClients([])
     } finally {
@@ -421,7 +423,7 @@ export default function ClientsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {clients.filter((c) => c.status === 'client_vert').length}
+                  {statusCounts['client_vert'] || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Clients Verts</p>
               </div>
@@ -436,7 +438,7 @@ export default function ClientsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {clients.filter((c) => c.status === 'lead_rouge').length}
+                  {statusCounts['lead_rouge'] || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Leads Rouges</p>
               </div>
@@ -451,7 +453,7 @@ export default function ClientsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {clients.filter((c) => c.status === 'negociation_orange').length}
+                  {statusCounts['negociation_orange'] || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Négociations</p>
               </div>

@@ -99,7 +99,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Application Mobile',
     items: [
-      { id: 'dashboard', label: 'Installer l\'App', icon: Smartphone, badge: 'PWA', external: true },
+      { id: 'install-app', label: 'Installer l\'App', icon: Smartphone, badge: 'PWA', external: true },
     ],
   },
 ]

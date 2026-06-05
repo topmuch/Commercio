@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const [orders, total] = await Promise.all([
+    const [orders, total, statusCountsResult] = await Promise.all([
       db.order.findMany({
         where,
         include: {
@@ -41,7 +41,18 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       db.order.count({ where }),
+      // Status counts for ALL orders
+      db.order.groupBy({
+        by: ['status'],
+        where: { companyId },
+        _count: { status: true },
+      }),
     ])
+
+    const statusCounts = Object.fromEntries(
+      statusCountsResult.map((r) => [r.status, r._count.status])
+    )
+    statusCounts['all'] = await db.order.count({ where: { companyId } })
 
     return NextResponse.json({
       data: orders,
@@ -49,6 +60,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      statusCounts,
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'
@@ -133,6 +145,16 @@ export async function POST(request: NextRequest) {
         },
       },
     })
+
+    // Decrement stock for each ordered product
+    await Promise.all(
+      items.map((item: { productId: string; quantity: number }) =>
+        db.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        })
+      )
+    )
 
     return NextResponse.json({ data: order }, { status: 201 })
   } catch (error: unknown) {
