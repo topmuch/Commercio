@@ -16,9 +16,12 @@ import {
   MapPin,
   Calendar,
   Clock,
+  Plus,
+  Pencil,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
@@ -30,6 +33,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CommercialFormModal } from './commercial-form-modal'
 import type { Commercial } from '@/lib/types'
 
 function formatCFA(amount: number): string {
@@ -200,10 +204,12 @@ function CommercialCard({
   commercial,
   index,
   onClick,
+  onEdit,
 }: {
   commercial: Commercial
   index: number
   onClick: () => void
+  onEdit: () => void
 }) {
   const targetPercent = commercial._targetPercent || 0
   const revenueTarget = commercial.targets?.find((t) => t.type === 'revenue')
@@ -243,12 +249,24 @@ function CommercialCard({
               </a>
             </div>
           </div>
-          <Badge
-            variant="secondary"
-            className="shrink-0 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[10px] font-semibold"
-          >
-            #{index + 1}
-          </Badge>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Modifier"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <Badge
+              variant="secondary"
+              className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[10px] font-semibold"
+            >
+              #{index + 1}
+            </Badge>
+          </div>
         </div>
 
         {/* Revenue */}
@@ -595,6 +613,8 @@ function CommercialDetailDialog({
 export default function CommercialsPage() {
   const [selectedCommercial, setSelectedCommercial] = useState<Commercial | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingCommercial, setEditingCommercial] = useState<Commercial | null>(null)
 
   const { data, isLoading, error } = useQuery<{ data: Commercial[]; count: number }>({
     queryKey: ['commercials'],
@@ -643,9 +663,21 @@ export default function CommercialsPage() {
             Gérez votre équipe commerciale et suivez les performances
           </p>
         </div>
-        <Badge variant="secondary" className="bg-erp-orange/10 text-erp-orange text-xs">
-          {commercials.length} commerciaux
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => {
+              setEditingCommercial(null)
+              setFormOpen(true)
+            }}
+            className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-md shadow-violet-500/20"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un commercial
+          </Button>
+          <Badge variant="secondary" className="bg-erp-orange/10 text-erp-orange text-xs">
+            {commercials.length} commerciaux
+          </Badge>
+        </div>
       </div>
 
       {/* Ranking Podium */}
@@ -670,6 +702,10 @@ export default function CommercialsPage() {
                 setSelectedCommercial(commercial)
                 setDialogOpen(true)
               }}
+              onEdit={() => {
+                setEditingCommercial(commercial)
+                setFormOpen(true)
+              }}
             />
           ))}
         </div>
@@ -682,6 +718,16 @@ export default function CommercialsPage() {
           </Card>
         )}
       </div>
+
+      {/* Create/Edit Form Modal */}
+      <CommercialFormModal
+        open={formOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) setEditingCommercial(null)
+        }}
+        commercial={editingCommercial}
+      />
 
       {/* Detail Dialog */}
       <CommercialDetailDialog
