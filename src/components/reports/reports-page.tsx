@@ -319,7 +319,37 @@ export default function ReportsPage() {
   }
 
   const handleExportExcel = () => {
-    toast.info('Export en cours...', { description: 'Le fichier Excel est en cours de préparation.' })
+    if (!reportData?.chartData?.length) {
+      toast.error('Aucune donnée à exporter')
+      return
+    }
+    try {
+      const data = reportData.chartData
+      const headers = Object.keys(data[0])
+      const csvRows = [
+        headers.join(','),
+        ...data.map((row) =>
+          headers
+            .map((h) => {
+              const val = row[h]
+              const str = typeof val === 'number' ? val.toLocaleString('fr-FR') : String(val ?? '')
+              return str.includes(',') ? `"${str}"` : str
+            })
+            .join(',')
+        ),
+      ]
+      const csvString = '\uFEFF' + csvRows.join('\n') // BOM for Excel UTF-8
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `rapport-${selectedReport}-${new Date().toISOString().split('T')[0]}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('Export réussi', { description: 'Le fichier CSV a été téléchargé.' })
+    } catch {
+      toast.error('Erreur', { description: 'Impossible de générer le fichier.' })
+    }
   }
 
   const renderChart = () => {

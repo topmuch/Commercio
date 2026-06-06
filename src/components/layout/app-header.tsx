@@ -2,12 +2,14 @@
 
 import React from 'react'
 import { useAppStore } from '@/lib/store'
+import { signOut } from 'next-auth/react'
 import {
   Bell,
   Search,
   Moon,
   Sun,
   Menu,
+  LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -229,9 +231,17 @@ export function AppHeader() {
               <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setCurrentPage('settings')}>Paramètres</DropdownMenuItem>
-              <DropdownMenuItem>Profil</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCurrentPage('settings')}>Profil</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Déconnexion</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut({ callbackUrl: '/login' })
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Déconnexion
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import {
   Settings, Info, LogOut, MessageCircle, RefreshCw, Wifi, WifiOff,
   MapPin, Package, TrendingUp, ClipboardList, ChevronRight, Loader2,
@@ -259,7 +260,9 @@ export default function MobileProfilePage() {
             icon={<LogOut className="h-4 w-4" />}
             label="Déconnexion"
             description=""
-            onClick={() => router.push('/')}
+            onClick={async () => {
+              await signOut({ callbackUrl: '/login' })
+            }}
             showChevron={false}
             iconColor="text-red-400"
             iconBg="bg-red-500/10"

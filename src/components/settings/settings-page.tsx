@@ -843,6 +843,8 @@ export default function SettingsPage() {
   const [profileName, setProfileName] = useState(user?.name || 'Mamadou Diallo')
   const [profileEmail, setProfileEmail] = useState(user?.email || 'mamadou@distribuerp.com')
   const [profilePhone, setProfilePhone] = useState('+221 77 123 45 67')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // Store settings state (loaded from backend)
   const [storeData, setStoreData] = useState<StoreSettingsData>({})
@@ -887,6 +889,55 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchSettings()
   }, [fetchSettings])
+
+  // Save profile
+  const handleProfileSave = async () => {
+    if (!user?.id) {
+      toast.error('Erreur', { description: 'Utilisateur non identifié.' })
+      return
+    }
+    setProfileSaving(true)
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: profileName, phone: profilePhone }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error('Erreur', { description: json.error || 'Impossible de sauvegarder le profil.' })
+      } else {
+        // Update local store
+        useAppStore.getState().setUser({ ...useAppStore.getState().user!, name: profileName, phone: profilePhone })
+        toast.success('Profil sauvegardé', { description: 'Vos informations ont été mises à jour.' })
+      }
+    } catch {
+      toast.error('Erreur réseau')
+    } finally {
+      setProfileSaving(false)
+    }
+  }
+
+  // Handle avatar upload
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Format invalide', { description: 'Veuillez sélectionner une image (JPG, PNG).' })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux', { description: 'Maximum 5 Mo.' })
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      useAppStore.getState().setUser({ ...useAppStore.getState().user!, avatar: dataUrl })
+      toast.success('Photo mise à jour', { description: 'Votre avatar a été changé.' })
+    }
+    reader.readAsDataURL(file)
+  }
 
   // Handle field change
   const handleChange = (field: string, value: string | boolean) => {
@@ -953,16 +1004,26 @@ export default function SettingsPage() {
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <button className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <button
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <Camera className="h-5 w-5 text-white" />
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
             <div>
               <h3 className="font-semibold text-foreground">{profileName}</h3>
               <p className="text-sm text-muted-foreground capitalize">
                 {user?.role?.replace('_', ' ')}
               </p>
-              <Button variant="outline" size="sm" className="mt-2 gap-1.5 text-xs">
+              <Button variant="outline" size="sm" className="mt-2 gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-3 w-3" />
                 Changer la photo
               </Button>
@@ -1034,8 +1095,8 @@ export default function SettingsPage() {
           </div>
 
           <SaveBtn
-            loading={false}
-            onClick={() => toast({ title: 'Succès', description: 'Profil sauvegardé' })}
+            loading={profileSaving}
+            onClick={handleProfileSave}
             label="Sauvegarder le profil"
           />
         </CardContent>

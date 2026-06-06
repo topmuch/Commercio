@@ -4,6 +4,39 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const VALID_STATUSES = ['draft', 'sent', 'accepted', 'refused']
 
+// GET /api/quotes/[id] - Get single quote with details
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const companyId = await getCompanyId()
+    const { id } = await params
+
+    const quote = await db.quote.findUnique({
+      where: { id },
+      include: {
+        client: { select: { companyName: true, contactName: true, phone: true, whatsapp: true, city: true, address: true } },
+        commercial: { select: { name: true } },
+        items: {
+          include: {
+            product: { select: { name: true, reference: true } },
+          },
+        },
+      },
+    })
+
+    if (!quote || quote.companyId !== companyId) {
+      return NextResponse.json({ error: 'Devis non trouvé' }, { status: 404 })
+    }
+
+    return NextResponse.json({ data: quote })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
 // PUT /api/quotes/[id] - Update quote (notes, status, validUntil, discount)
 export async function PUT(
   request: NextRequest,

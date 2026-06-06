@@ -210,7 +210,7 @@ export default function MobileQuotesPage() {
               return (
                 <button
                   key={quote.id}
-                  onClick={() => {}}
+                  onClick={() => router.push(`/mobile/quotes/${quote.id}`)}
                   className="flex w-full items-center gap-3 rounded-xl bg-slate-800/60 border border-slate-700/50 p-3.5 text-left active:bg-slate-700/60 transition-colors"
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-700/50">

@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, X } from 'lucide-react';
+import Link from 'next/link';
 
 const plans = [
   {
@@ -23,6 +24,8 @@ const plans = [
       { text: 'IA Assistant', included: false },
     ],
     buttonLabel: 'Commencer gratuitement',
+    buttonHref: '/login',
+    buttonExternal: false,
     buttonStyle: 'w-full py-2.5 rounded-xl border border-slate-600 text-white hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all',
   },
   {
@@ -42,6 +45,8 @@ const plans = [
       { text: 'Support prioritaire', included: true },
     ],
     buttonLabel: 'Essayer 14 jours',
+    buttonHref: '/login',
+    buttonExternal: false,
     buttonStyle: 'w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-all',
   },
   {
@@ -61,6 +66,8 @@ const plans = [
       { text: 'SLA garanti', included: true },
     ],
     buttonLabel: 'Nous contacter',
+    buttonHref: 'https://wa.me/221781234567',
+    buttonExternal: true,
     buttonStyle: 'w-full py-2.5 rounded-xl border border-slate-600 text-white hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all',
   },
 ];
@@ -160,9 +167,15 @@ export default function PricingSection() {
                   ))}
                 </ul>
 
-                <button className={plan.buttonStyle + ' mt-8'}>
-                  {plan.buttonLabel}
-                </button>
+                {plan.buttonExternal ? (
+                  <a href={plan.buttonHref} target="_blank" rel="noopener noreferrer" className={plan.buttonStyle + ' mt-8'}>
+                    {plan.buttonLabel}
+                  </a>
+                ) : (
+                  <Link href={plan.buttonHref} className={plan.buttonStyle + ' mt-8'}>
+                    {plan.buttonLabel}
+                  </Link>
+                )}
               </div>
             </motion.div>
           ))}

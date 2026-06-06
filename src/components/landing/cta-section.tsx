@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Rocket, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CtaSection() {
   const ref = useRef<HTMLDivElement>(null);
@@ -33,14 +34,14 @@ export default function CtaSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
-            <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all inline-flex items-center justify-center gap-2">
+            <Link href="/login" className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all inline-flex items-center justify-center gap-2">
               <Rocket className="w-5 h-5" />
               Démarrer gratuitement
-            </button>
-            <button className="border border-slate-500 hover:border-emerald-500/50 text-white px-8 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-2">
+            </Link>
+            <a href="https://wa.me/221781234567" target="_blank" rel="noopener noreferrer" className="border border-slate-500 hover:border-emerald-500/50 text-white px-8 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-2">
               <MessageCircle className="w-5 h-5" />
               Parler à un conseiller
-            </button>
+            </a>
           </div>
         </motion.div>
       </div>
