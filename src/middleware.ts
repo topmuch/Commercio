@@ -4,8 +4,7 @@ import { getToken } from 'next-auth/jwt'
 
 // Routes that are publicly accessible without authentication
 const publicApiRoutes = [
-  '/api/auth/',
-  '/api/seed',
+  '/api/auth/',   // NextAuth login/register
   '/api/store/',  // Public boutique API
 ]
 
@@ -21,6 +20,19 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Require NEXTAUTH_SECRET to be set — no more "demo mode bypass"
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error(
+        '[SECURITY] NEXTAUTH_SECRET is not set. ' +
+        'API routes are blocked. Set NEXTAUTH_SECRET in your .env file. ' +
+        'Generate one with: openssl rand -base64 32'
+      )
+      return NextResponse.json(
+        { error: 'Configuration serveur incomplète. Contactez l\'administrateur.' },
+        { status: 503 }
+      )
+    }
+
     // Check for JWT token
     const token = await getToken({
       req: request,
@@ -28,10 +40,6 @@ export async function middleware(request: NextRequest) {
     })
 
     if (!token) {
-      // In demo mode (no NEXTAUTH_SECRET set), allow API requests without auth
-      if (!process.env.NEXTAUTH_SECRET) {
-        return NextResponse.next()
-      }
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
   }

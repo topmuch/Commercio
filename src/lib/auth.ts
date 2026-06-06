@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { db } from '@/lib/db'
+import { verifyPassword, hashPassword } from '@/lib/password'
 
 /**
  * Gracefully get companyId from session, or fallback to demo company.
@@ -68,7 +69,7 @@ export async function ensureDefaultUser(companyId: string): Promise<string> {
     const newUser = await db.user.create({
       data: {
         email: 'admin@distribusn.com',
-        password: 'admin123',
+        password: await hashPassword('admin123'),
         name: 'Administrateur',
         phone: '+221 77 000 00 00',
         role: 'admin',
@@ -140,10 +141,23 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Simple password check (in production, use bcrypt)
-        // For now, compare plaintext since seed data uses plaintext passwords
-        if (credentials.password !== user.password) {
+        // Secure password verification (supports legacy plaintext + bcrypt)
+        const { valid, needsRehash } = await verifyPassword(credentials.password, user.password)
+        if (!valid) {
           return null
+        }
+
+        // Transparent migration: re-hash legacy plaintext passwords on successful login
+        if (needsRehash) {
+          try {
+            await db.user.update({
+              where: { id: user.id },
+              data: { password: await hashPassword(credentials.password) },
+            })
+            console.log(`[auth] Migrated password to bcrypt for user ${user.id}`)
+          } catch (err) {
+            console.error('[auth] Failed to migrate password:', err)
+          }
         }
 
         return {

@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ['leaflet', 'react-leaflet'],
-  /* config options here */
+  /* TypeScript: strict mode — do not ignore build errors */
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   headers: async () => [
     {
       source: '/sw.js',

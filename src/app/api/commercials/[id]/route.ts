@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { getCompanyId } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
 
 // ─── PUT: Update a commercial ──────────────────────────────────────────────
 export async function PUT(
@@ -11,7 +12,7 @@ export async function PUT(
     const companyId = await getCompanyId()
     const { id } = await params
     const body = await request.json()
-    const { name, email, phone, active } = body
+    const { name, email, phone, active, password } = body
 
     // Check the commercial belongs to this company
     const existing = await db.user.findFirst({
@@ -34,14 +35,16 @@ export async function PUT(
       }
     }
 
+    const updateData: Record<string, unknown> = {}
+    if (name) updateData.name = name
+    if (email) updateData.email = email
+    if (phone !== undefined) updateData.phone = phone || null
+    if (active !== undefined) updateData.active = active
+    if (password && password.length >= 6) updateData.password = await hashPassword(password)
+
     const updated = await db.user.update({
       where: { id },
-      data: {
-        ...(name && { name }),
-        ...(email && { email }),
-        ...(phone !== undefined && { phone: phone || null }),
-        ...(active !== undefined && { active }),
-      },
+      data: updateData,
     })
 
     return NextResponse.json({

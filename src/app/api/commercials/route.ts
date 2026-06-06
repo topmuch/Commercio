@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { getCompanyId } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
 
 // ─── GET: List all commercials ─────────────────────────────────────────────
 export async function GET() {
@@ -111,13 +112,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create the commercial user
+    // Create the commercial user (password is hashed)
     const commercial = await db.user.create({
       data: {
         name,
         email,
         phone: phone || null,
-        password,
+        password: await hashPassword(password),
         role: 'commercial',
         active: true,
         companyId,
