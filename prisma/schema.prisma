@@ -60,6 +60,8 @@ model User {
   posts      Post[]
   postReactions PostReaction[]
   postComments   PostComment[]
+
+  @@unique([email, companyId])
 }
 
 // ===== CLIENTS =====

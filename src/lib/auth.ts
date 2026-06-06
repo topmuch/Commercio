@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { db } from '@/lib/db'
-import { verifyPassword, hashPassword } from '@/lib/password'
+import bcrypt from 'bcryptjs'
 
 /**
  * Gracefully get companyId from session, or fallback to demo company.
@@ -69,7 +69,7 @@ export async function ensureDefaultUser(companyId: string): Promise<string> {
     const newUser = await db.user.create({
       data: {
         email: 'admin@distribusn.com',
-        password: await hashPassword('admin123'),
+        password: await bcrypt.hash('admin123', 10),
         name: 'Administrateur',
         phone: '+221 77 000 00 00',
         role: 'admin',
@@ -122,7 +122,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await db.user.findUnique({
+        const user = await db.user.findFirst({
           where: { email: credentials.email },
           select: {
             id: true,
@@ -141,23 +141,10 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Secure password verification (supports legacy plaintext + bcrypt)
-        const { valid, needsRehash } = await verifyPassword(credentials.password, user.password)
-        if (!valid) {
+        // Secure password verification with bcrypt
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+        if (!isPasswordValid) {
           return null
-        }
-
-        // Transparent migration: re-hash legacy plaintext passwords on successful login
-        if (needsRehash) {
-          try {
-            await db.user.update({
-              where: { id: user.id },
-              data: { password: await hashPassword(credentials.password) },
-            })
-            console.log(`[auth] Migrated password to bcrypt for user ${user.id}`)
-          } catch (err) {
-            console.error('[auth] Failed to migrate password:', err)
-          }
         }
 
         return {

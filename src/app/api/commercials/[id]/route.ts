@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { getCompanyId } from '@/lib/auth'
-import { hashPassword } from '@/lib/password'
+import bcrypt from 'bcryptjs'
 
 // ─── PUT: Update a commercial ──────────────────────────────────────────────
 export async function PUT(
@@ -40,7 +40,7 @@ export async function PUT(
     if (email) updateData.email = email
     if (phone !== undefined) updateData.phone = phone || null
     if (active !== undefined) updateData.active = active
-    if (password && password.length >= 6) updateData.password = await hashPassword(password)
+    if (password && password.length >= 6) updateData.password = await bcrypt.hash(password, 10)
 
     const updated = await db.user.update({
       where: { id },

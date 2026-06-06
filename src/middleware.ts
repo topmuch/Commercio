@@ -1,55 +1,33 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Routes that are publicly accessible without authentication
-const publicApiRoutes = [
-  '/api/auth/',   // NextAuth login/register
-  '/api/store/',  // Public boutique API
-]
-
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Only protect /api/* routes (except public ones)
-  if (pathname.startsWith('/api/')) {
-    // Skip public routes
-    for (const publicRoute of publicApiRoutes) {
-      if (pathname.startsWith(publicRoute)) {
-        return NextResponse.next()
-      }
-    }
-
-    // Require NEXTAUTH_SECRET to be set — no more "demo mode bypass"
-    if (!process.env.NEXTAUTH_SECRET) {
-      console.error(
-        '[SECURITY] NEXTAUTH_SECRET is not set. ' +
-        'API routes are blocked. Set NEXTAUTH_SECRET in your .env file. ' +
-        'Generate one with: openssl rand -base64 32'
-      )
-      return NextResponse.json(
-        { error: 'Configuration serveur incomplète. Contactez l\'administrateur.' },
-        { status: 503 }
-      )
-    }
-
-    // Check for JWT token
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    })
-
-    if (!token) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
+export function middleware(request: NextRequest) {
+  // Vérifier que NEXTAUTH_SECRET est défini
+  if (!process.env.NEXTAUTH_SECRET) {
+    console.error('❌ CRITICAL: NEXTAUTH_SECRET is not defined!');
+    return new NextResponse('Server configuration error', { status: 500 });
   }
 
-  return NextResponse.next()
+  // Routes publiques (pas d'auth requise)
+  const publicPaths = ['/login', '/register', '/api/auth', '/boutique', '/_next', '/favicon.ico'];
+  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
+
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
+  // Vérifier le token de session
+  const token = request.cookies.get('next-auth.session-token')?.value;
+
+  if (!token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Match all API routes
-    '/api/:path*',
-  ],
-}
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};
