@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import {
   ArrowLeft, FileText, Clock, Package, ChevronRight,
   Loader2, AlertCircle, Phone, MessageCircle, Building2, MapPin,
+  ShoppingBag, RefreshCw, CalendarClock,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,7 +16,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status'
 interface QuoteItem {
   id: string
   productId: string
-  productName?: string
+  product?: { name: string; reference: string }
   quantity: number
   unitPrice: number
   totalPrice: number
@@ -73,6 +74,7 @@ export default function MobileQuoteDetailPage() {
   const [quote, setQuote] = useState<QuoteDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [converting, setConverting] = useState(false)
 
   const fetchQuote = useCallback(async () => {
     try {
@@ -94,6 +96,48 @@ export default function MobileQuoteDetailPage() {
   useEffect(() => {
     fetchQuote()
   }, [fetchQuote])
+
+  // ── Convert quote to order ──
+  const handleConvertToOrder = async () => {
+    if (!quote || !isOnline) return
+    if (!confirm(`Convertir le devis ${quote.number} en commande ?`)) return
+    setConverting(true)
+    try {
+      const res = await fetch(`/api/quotes/${quoteId}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Erreur')
+      }
+      const json = await res.json()
+      // Navigate to the new order
+      const newOrderId = json.data?.order?.id
+      if (newOrderId) {
+        router.push(`/mobile/orders/${newOrderId}`)
+      } else {
+        router.push('/mobile/orders')
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la conversion'
+      alert(msg)
+    } finally {
+      setConverting(false)
+    }
+  }
+
+  // ── Send via WhatsApp ──
+  const handleSendWhatsApp = () => {
+    if (!quote?.client?.whatsapp) return
+    const itemsText = quote.items
+      ?.map((item) => `• ${item.product?.name || 'Produit'} : ${item.quantity} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.totalPrice)}`)
+      .join('\n') || ''
+    const message = encodeURIComponent(
+      `Bonjour ${quote.client.contactName},\n\nVoici votre devis ${quote.number} :\n\n${itemsText}\n\nTotal : ${formatCurrency(quote.total)}\n\nCe devis est valide jusqu'au ${quote.validUntil ? formatDate(quote.validUntil) : 'date non définie'}.\n\nCordialement.`
+    )
+    window.open(`https://wa.me/${quote.client.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`, '_blank')
+  }
 
   if (loading) return <DetailSkeleton />
 
@@ -162,16 +206,6 @@ export default function MobileQuoteDetailPage() {
               )}
             </div>
           </div>
-          {/* WhatsApp action */}
-          {quote.client?.whatsapp && (
-            <button
-              onClick={() => window.open(`https://wa.me/${quote.client.whatsapp.replace(/[^0-9]/g, '')}`, '_blank')}
-              className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 py-2.5 text-emerald-400 text-sm font-medium active:bg-emerald-500/20 transition-colors"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Envoyer via WhatsApp
-            </button>
-          )}
         </Card>
 
         {/* Quote info */}
@@ -186,8 +220,17 @@ export default function MobileQuoteDetailPage() {
           </div>
           {quote.validUntil && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500">Valide jusqu&apos;au</span>
-              <span className="text-xs text-slate-300 font-medium">{formatDate(quote.validUntil)}</span>
+              <div className="flex items-center gap-1.5">
+                <CalendarClock className="h-3 w-3 text-slate-600" />
+                <span className="text-xs text-slate-500">Valide jusqu&apos;au</span>
+              </div>
+              <span className={cn(
+                'text-xs font-medium',
+                new Date(quote.validUntil) < new Date() ? 'text-red-400' : 'text-slate-300',
+              )}>
+                {formatDate(quote.validUntil)}
+                {new Date(quote.validUntil) < new Date() && ' (expiré)'}
+              </span>
             </div>
           )}
           {quote.notes && (
@@ -207,7 +250,7 @@ export default function MobileQuoteDetailPage() {
             {quote.items?.map((item, idx) => (
               <div key={item.id || idx} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
                 <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-sm text-slate-200 truncate">{item.productName || `Produit #${idx + 1}`}</p>
+                  <p className="text-sm text-slate-200 truncate">{item.product?.name || `Produit #${idx + 1}`}</p>
                   <p className="text-[11px] text-slate-500">
                     {item.quantity} × {formatCurrency(item.unitPrice)}
                   </p>
@@ -243,6 +286,36 @@ export default function MobileQuoteDetailPage() {
             <span className="text-lg font-bold text-emerald-400">{formatCurrency(quote.total)}</span>
           </div>
         </Card>
+
+        {/* Action buttons */}
+        <div className="space-y-3">
+          {/* Convert to order (only when accepted) */}
+          {quote.status === 'accepted' && (
+            <button
+              onClick={handleConvertToOrder}
+              disabled={converting || !isOnline}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 text-white py-3 text-sm font-semibold active:bg-emerald-600 transition-colors disabled:opacity-50"
+            >
+              {converting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {converting ? 'Conversion en cours...' : 'Convertir en commande'}
+            </button>
+          )}
+
+          {/* Send via WhatsApp */}
+          {quote.client?.whatsapp && (
+            <button
+              onClick={handleSendWhatsApp}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 py-3 text-emerald-400 text-sm font-semibold active:bg-emerald-500/20 transition-colors"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Envoyer par WhatsApp
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

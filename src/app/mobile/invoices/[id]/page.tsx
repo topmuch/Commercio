@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import {
   ArrowLeft, FileText, Clock, Package, ChevronRight,
   Loader2, AlertCircle, Phone, MessageCircle, Building2, MapPin,
-  CreditCard, DollarSign, Calendar, Download,
+  CreditCard, DollarSign, Calendar, Download, Printer, Mail,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -17,7 +17,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status'
 interface InvoiceItem {
   id: string
   productId: string
-  productName?: string
+  product?: { name: string; reference: string }
   quantity: number
   unitPrice: number
   totalPrice: number
@@ -146,6 +146,40 @@ export default function MobileInvoiceDetailPage() {
     )
   }
 
+  // ── Action handlers ──
+  const handleDownloadPDF = async () => {
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}/pdf`)
+      if (!res.ok) throw new Error('Erreur lors du téléchargement')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${invoice.number}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('Erreur lors du téléchargement du PDF')
+    }
+  }
+
+  const handleEmail = () => {
+    const subject = encodeURIComponent(`Facture ${invoice.number}`)
+    const body = encodeURIComponent(
+      `Bonjour ${invoice.client?.contactName},\n\nVeuillez trouver ci-joint la facture ${invoice.number} d'un montant de ${formatCurrency(invoice.total)}.\n\nCordialement.`
+    )
+    const mailto = invoice.client?.email
+      ? `mailto:${invoice.client.email}?subject=${subject}&body=${body}`
+      : `mailto:?subject=${subject}&body=${body}`
+    window.open(mailto, '_self')
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
   const config = statusConfig(invoice.status)
   const paidPercent = invoice.total > 0 ? Math.min(100, Math.round((invoice.paid / invoice.total) * 100)) : 0
   const remaining = Math.max(0, invoice.total - invoice.paid)
@@ -167,7 +201,7 @@ export default function MobileInvoiceDetailPage() {
         </Badge>
       </div>
 
-      <div className="flex-1 px-4 pb-4 space-y-3">
+      <div className="flex-1 px-4 pb-24 space-y-3">
         {/* Payment progress */}
         <Card className="bg-slate-800/60 border-slate-700/50 p-4">
           <div className="flex items-center justify-between mb-2">
@@ -270,7 +304,7 @@ export default function MobileInvoiceDetailPage() {
             {invoice.items?.map((item, idx) => (
               <div key={item.id || idx} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
                 <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-sm text-slate-200 truncate">{item.productName || `Produit #${idx + 1}`}</p>
+                  <p className="text-sm text-slate-200 truncate">{item.product?.name || `Produit #${idx + 1}`}</p>
                   <p className="text-[11px] text-slate-500">
                     {item.quantity} x {formatCurrency(item.unitPrice)}
                   </p>
@@ -335,6 +369,32 @@ export default function MobileInvoiceDetailPage() {
           </Card>
         )}
       </div>
+
+      {/* Bottom action bar */}
+      <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 px-4 py-3 flex gap-3 shrink-0">
+        <button
+          onClick={handleDownloadPDF}
+          disabled={!isOnline}
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 text-white py-2.5 text-sm font-medium active:bg-emerald-600 transition-colors disabled:opacity-40"
+        >
+          <Download className="h-4 w-4" />
+          PDF
+        </button>
+        <button
+          onClick={handleEmail}
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-sky-500 text-white py-2.5 text-sm font-medium active:bg-sky-600 transition-colors"
+        >
+          <Mail className="h-4 w-4" />
+          Email
+        </button>
+        <button
+          onClick={handlePrint}
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-700 text-slate-200 py-2.5 text-sm font-medium active:bg-slate-600 transition-colors"
+        >
+          <Printer className="h-4 w-4" />
+          Imprimer
+        </button>
+      </div>
     </div>
   )
 }
@@ -350,7 +410,7 @@ function DetailSkeleton() {
         </div>
         <Skeleton className="h-6 w-16 rounded-full" />
       </div>
-      <div className="flex-1 px-4 pb-4 space-y-3">
+      <div className="flex-1 px-4 pb-24 space-y-3">
         <Skeleton className="h-20 rounded-2xl" />
         <Skeleton className="h-28 rounded-2xl" />
         <Skeleton className="h-24 rounded-2xl" />

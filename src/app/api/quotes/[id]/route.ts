@@ -16,7 +16,7 @@ export async function GET(
     const quote = await db.quote.findUnique({
       where: { id },
       include: {
-        client: { select: { companyName: true, contactName: true, phone: true, whatsapp: true, city: true, address: true } },
+        client: { select: { id: true, companyName: true, contactName: true, phone: true, whatsapp: true, city: true, address: true } },
         commercial: { select: { name: true } },
         items: {
           include: {

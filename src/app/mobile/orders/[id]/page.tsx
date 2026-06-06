@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import {
   ArrowLeft, Package, Clock, ChevronRight,
   Loader2, AlertCircle, Phone, MessageCircle, Building2, MapPin,
-  ShoppingBag, CheckCircle2, Truck,
+  ShoppingBag, CheckCircle2, Truck, PackageCheck,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -17,7 +17,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status'
 interface OrderItem {
   id: string
   productId: string
-  productName?: string
+  product?: { name: string; reference: string }
   quantity: number
   unitPrice: number
   totalPrice: number
@@ -79,6 +79,7 @@ export default function MobileOrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [updating, setUpdating] = useState(false)
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -100,6 +101,31 @@ export default function MobileOrderDetailPage() {
   useEffect(() => {
     fetchOrder()
   }, [fetchOrder])
+
+  // ── Mark as delivered ──
+  const handleMarkDelivered = async () => {
+    if (!order || !isOnline) return
+    if (!confirm('Marquer cette commande comme livrée ?')) return
+    setUpdating(true)
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'delivered' }),
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Erreur')
+      }
+      const json = await res.json()
+      setOrder(json.data || json)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la mise à jour'
+      alert(msg)
+    } finally {
+      setUpdating(false)
+    }
+  }
 
   if (loading) return <DetailSkeleton />
 
@@ -220,7 +246,7 @@ export default function MobileOrderDetailPage() {
               className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 py-2.5 text-emerald-400 text-sm font-medium active:bg-emerald-500/20 transition-colors"
             >
               <MessageCircle className="h-4 w-4" />
-              Envoyer via WhatsApp
+              Contacter via WhatsApp
             </button>
           )}
         </Card>
@@ -256,7 +282,7 @@ export default function MobileOrderDetailPage() {
             {order.items?.map((item, idx) => (
               <div key={item.id || idx} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
                 <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-sm text-slate-200 truncate">{item.productName || `Produit #${idx + 1}`}</p>
+                  <p className="text-sm text-slate-200 truncate">{item.product?.name || `Produit #${idx + 1}`}</p>
                   <p className="text-[11px] text-slate-500">
                     {item.quantity} x {formatCurrency(item.unitPrice)}
                   </p>
@@ -292,6 +318,22 @@ export default function MobileOrderDetailPage() {
             <span className="text-lg font-bold text-emerald-400">{formatCurrency(order.total)}</span>
           </div>
         </Card>
+
+        {/* Mark as delivered button (only when shipped) */}
+        {order.status === 'shipped' && (
+          <button
+            onClick={handleMarkDelivered}
+            disabled={updating || !isOnline}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 text-white py-3 text-sm font-semibold active:bg-emerald-600 transition-colors disabled:opacity-50"
+          >
+            {updating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <PackageCheck className="h-4 w-4" />
+            )}
+            {updating ? 'Mise à jour...' : 'Marquer comme livrée'}
+          </button>
+        )}
       </div>
     </div>
   )
