@@ -131,13 +131,13 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen border-r border-orange-700/50 bg-gradient-to-b from-orange-950 to-amber-950 backdrop-blur-sm transition-all duration-300 flex flex-col',
+        'fixed left-0 top-0 z-40 h-screen border-r border-orange-500 bg-orange-600 transition-all duration-300 flex flex-col',
         sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-orange-700/40 px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-amber-500 text-white font-bold text-sm shadow-lg shadow-orange-500/20">
+      <div className="flex h-16 items-center gap-3 border-b border-orange-500/40 px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-orange-600 font-bold text-sm shadow-lg shadow-black/20">
           T
         </div>
         {sidebarOpen && (
@@ -145,7 +145,7 @@ export function AppSidebar() {
             <span className="text-sm font-bold text-white tracking-tight">
               Teranga Biz
             </span>
-            <span className="text-[10px] text-orange-300/60 uppercase tracking-widest">
+            <span className="text-[10px] text-white/70 uppercase tracking-widest">
               DistribuERP
             </span>
           </div>
@@ -158,7 +158,7 @@ export function AppSidebar() {
           {filteredNavGroups.map((group) => (
             <div key={group.label}>
               {sidebarOpen && (
-                <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-orange-400/50">
+                <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-white/60">
                   {group.label}
                 </h3>
               )}
@@ -181,14 +181,11 @@ export function AppSidebar() {
                         className={cn(
                           'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                           isActive
-                            ? 'bg-orange-500/20 text-white shadow-sm'
-                            : 'text-orange-100/60 hover:bg-orange-500/10 hover:text-orange-100'
+                            ? 'bg-white/20 text-white shadow-sm'
+                            : 'text-white hover:bg-white/10'
                         )}
                       >
-                        <Icon className={cn(
-                          'h-4 w-4 shrink-0',
-                          isActive ? 'text-amber-300' : ''
-                        )} />
+                        <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{item.label}</span>
                         {item.badge && (
                           <Badge
@@ -216,11 +213,11 @@ export function AppSidebar() {
                           className={cn(
                             'flex w-full items-center justify-center rounded-lg p-2.5 transition-all duration-150 relative',
                             isActive
-                              ? 'bg-orange-500/20 text-white'
-                              : 'text-orange-100/60 hover:bg-orange-500/10 hover:text-orange-100'
+                              ? 'bg-white/20 text-white'
+                              : 'text-white hover:bg-white/10'
                           )}
                         >
-                          <Icon className={cn('h-4 w-4', isActive && 'text-amber-300')} />
+                          <Icon className="h-4 w-4" />
                           {item.badge && (
                             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 text-[9px] font-bold text-white">
                               {item.badge}
@@ -241,15 +238,15 @@ export function AppSidebar() {
       </ScrollArea>
 
       {/* User */}
-      <div className="border-t border-orange-700/40 p-3">
+      <div className="border-t border-orange-500/40 p-3">
         <div
           className={cn(
             'flex items-center gap-3 rounded-lg p-2',
             sidebarOpen ? '' : 'justify-center'
           )}
         >
-          <Avatar className="h-8 w-8 shrink-0 border-2 border-orange-400/30">
-            <AvatarFallback className="bg-orange-500 text-white text-xs font-semibold">
+          <Avatar className="h-8 w-8 shrink-0 border-2 border-white/30">
+            <AvatarFallback className="bg-white text-orange-600 text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -258,7 +255,7 @@ export function AppSidebar() {
               <span className="text-sm font-medium text-white truncate">
                 {user?.name}
               </span>
-              <span className="text-[11px] text-orange-300/50 truncate">
+              <span className="text-[11px] text-white/70 truncate">
                 {getRoleLabel(user?.role || 'admin')}
               </span>
             </div>
