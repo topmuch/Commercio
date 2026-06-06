@@ -32,6 +32,7 @@ const adminPages: PageId[] = [
   'reports',
   'ai-assistant',
   'settings',
+  'users',
   'install-app',
 ]
 

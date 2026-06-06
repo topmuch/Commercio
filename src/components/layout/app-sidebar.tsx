@@ -20,6 +20,7 @@ import {
   Settings,
   Target,
   Smartphone,
+  UserCog,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -90,6 +91,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Système',
     items: [
+      { id: 'users', label: 'Utilisateurs', icon: UserCog },
       { id: 'settings', label: 'Paramètres', icon: Settings },
     ],
   },

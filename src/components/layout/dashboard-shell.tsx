@@ -25,6 +25,7 @@ const BoutiquePage = dynamic(() => import('@/components/boutique/boutique-page')
 const ReportsPage = dynamic(() => import('@/components/reports/reports-page').then(m => m.default))
 const AiAssistantPage = dynamic(() => import('@/components/ai/ai-assistant-page').then(m => m.default))
 const SettingsPage = dynamic(() => import('@/components/settings/settings-page').then(m => m.default))
+const UsersPage = dynamic(() => import('@/components/settings/users-management').then(m => m.default))
 
 // Page mapping
 const pageComponents: Partial<Record<PageId, React.ComponentType>> = {
@@ -44,6 +45,7 @@ const pageComponents: Partial<Record<PageId, React.ComponentType>> = {
   reports: ReportsPage,
   'ai-assistant': AiAssistantPage,
   settings: SettingsPage,
+  users: UsersPage,
 }
 
 function PageRenderer() {

@@ -17,6 +17,7 @@ export type PageId =
   | 'reports'
   | 'ai-assistant'
   | 'settings'
+  | 'users'
   | 'install-app'
 
 export type Role = 'super_admin' | 'admin' | 'director' | 'commercial' | 'accountant'

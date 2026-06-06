@@ -60,6 +60,7 @@ const pageLabels: Record<string, string> = {
   reports: 'Rapports',
   'ai-assistant': 'Assistant IA',
   settings: 'Paramètres',
+  users: 'Utilisateurs',
 }
 
 const commandPages = [
