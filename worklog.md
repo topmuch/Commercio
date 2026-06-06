@@ -21,3 +21,25 @@ Stage Summary:
 - The `mode: 'insensitive'` in posts search was causing SQLite errors
 - 12 files modified across API routes and utility functions
 - Build passes cleanly, dev server compiles all routes successfully
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix 4 critical bugs - category creation, posts feed, settings FK errors
+
+Work Log:
+- Read and analyzed all affected API routes (categories, posts, store-settings)
+- Read auth.ts getCompanyId() and identified silent catch returning invalid companyId
+- Checked database state: 1 company, 6 users, 8 categories, 0 posts, 1 settings, 17 products
+- Fixed getCompanyId() to use atomic upsert instead of find+create with silent catch
+- Added ensureDefaultUser() function to auto-create admin user when none exists
+- Fixed store-settings route: replaced upsert with findOrCreate pattern + company existence check
+- Fixed posts route: auto-create default user when no author found (eliminates "Aucun utilisateur")
+- Fixed categories route: added company existence check and parentId validation
+- Tested all 4 API endpoints via curl - all return 200 OK
+- Committed and pushed to origin/main
+
+Stage Summary:
+- All 4 bugs resolved and tested
+- Commit 8b1d2a5 pushed to github.com/topmuch/Commercio
+- Key changes: auth.ts (ensureValidCompanyId with upsert + ensureDefaultUser), store-settings (findOrCreate), posts (auto-user), categories (company check)
