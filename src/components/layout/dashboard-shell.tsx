@@ -45,13 +45,9 @@ const pageComponents: Partial<Record<PageId, React.ComponentType>> = {
   settings: SettingsPage,
 }
 
-// Dashboard uses full dark teal, other pages use white background
-const darkPages: PageId[] = ['dashboard']
-
 function PageRenderer() {
   const currentPage = useAppStore((s) => s.currentPage)
   const PageComponent = pageComponents[currentPage]
-  const isDark = darkPages.includes(currentPage)
 
   if (!PageComponent) {
     return (
@@ -66,7 +62,6 @@ function PageRenderer() {
 
 export function DashboardShell() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen)
-  const currentPage = useAppStore((s) => s.currentPage)
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -77,11 +72,9 @@ export function DashboardShell() {
     },
   }))
 
-  const isDark = darkPages.includes(currentPage)
-
   return (
     <QueryClientProvider client={queryClient}>
-      <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900' : 'bg-slate-50'}`}>
+      <div className="min-h-screen bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900">
         {/* Sidebar */}
         <AppSidebar />
 
