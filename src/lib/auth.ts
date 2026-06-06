@@ -8,15 +8,15 @@ import { db } from '@/lib/db'
  * while supporting multi-tenant isolation when auth is active.
  */
 const DEMO_COMPANY_ID = 'comp_1'
+const DEMO_COMPANY_EMAIL = 'contact@distribusn.com'
 
 /**
- * Ensures a valid companyId exists in the database.
- * If the given companyId doesn't exist, falls back to the first company in the DB,
- * or creates a default company if none exists.
+ * Ensures a valid companyId exists in the database using atomic upsert.
+ * This is safe even under concurrent requests.
  */
 async function ensureValidCompanyId(companyId: string): Promise<string> {
   try {
-    // Check if the company exists
+    // Try to find the requested company first
     const company = await db.company.findUnique({ where: { id: companyId } })
     if (company) return companyId
 
@@ -24,21 +24,63 @@ async function ensureValidCompanyId(companyId: string): Promise<string> {
     const firstCompany = await db.company.findFirst({ select: { id: true } })
     if (firstCompany) return firstCompany.id
 
-    // No company exists — create a default one
-    const newCompany = await db.company.create({
-      data: {
+    // No company exists — atomically create a default one (avoids race conditions)
+    const newCompany = await db.company.upsert({
+      where: { email: DEMO_COMPANY_EMAIL },
+      update: {},
+      create: {
         id: DEMO_COMPANY_ID,
         name: 'DistribuSN – Distribution Générale',
-        email: 'contact@distribusn.com',
+        email: DEMO_COMPANY_EMAIL,
         phone: '+221 33 800 00 01',
         address: 'Dakar, Sénégal',
         plan: 'enterprise',
       },
     })
     return newCompany.id
-  } catch {
-    // DB might not be ready, return the hardcoded fallback
+  } catch (err) {
+    console.error('[ensureValidCompanyId] Error:', err)
+    // Last resort: try to find ANY company
+    try {
+      const anyCompany = await db.company.findFirst({ select: { id: true } })
+      if (anyCompany) return anyCompany.id
+    } catch {
+      // DB completely unavailable
+    }
     return DEMO_COMPANY_ID
+  }
+}
+
+/**
+ * Ensures at least one default user exists for the given company.
+ * Returns the user ID. This is needed for features like posts that require an author.
+ */
+export async function ensureDefaultUser(companyId: string): Promise<string> {
+  try {
+    // Check if any user exists for this company
+    const existingUser = await db.user.findFirst({
+      where: { companyId },
+      select: { id: true },
+    })
+    if (existingUser) return existingUser.id
+
+    // No user exists — create a default admin
+    const newUser = await db.user.create({
+      data: {
+        email: 'admin@distribusn.com',
+        password: 'admin123',
+        name: 'Administrateur',
+        phone: '+221 77 000 00 00',
+        role: 'admin',
+        active: true,
+        companyId,
+      },
+    })
+    console.log(`[ensureDefaultUser] Created default admin user: ${newUser.id}`)
+    return newUser.id
+  } catch (err) {
+    console.error('[ensureDefaultUser] Error:', err)
+    throw new Error('Impossible de créer un utilisateur par défaut. Vérifiez que l\'entreprise existe.')
   }
 }
 

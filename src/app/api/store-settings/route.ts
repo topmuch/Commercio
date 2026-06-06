@@ -13,6 +13,14 @@ export async function GET() {
 
     // Create default settings if not exists
     if (!settings) {
+      // Verify the company exists before creating settings
+      const company = await db.company.findUnique({ where: { id: companyId } })
+      if (!company) {
+        return NextResponse.json(
+          { error: 'Entreprise introuvable. Veuillez contacter l\'administrateur.' },
+          { status: 404 }
+        )
+      }
       settings = await db.storeSettings.create({
         data: {
           companyId,
@@ -26,6 +34,7 @@ export async function GET() {
 
     return NextResponse.json({ data: settings })
   } catch (error: unknown) {
+    console.error('[GET /api/store-settings] Error:', error)
     const message = error instanceof Error ? error.message : 'Erreur lors du chargement des paramètres'
     return NextResponse.json({ error: message }, { status: 500 })
   }
@@ -125,34 +134,55 @@ export async function PUT(request: Request) {
     if (emailFrom !== undefined) updateData.emailFrom = emailFrom
     if (emailSignature !== undefined) updateData.emailSignature = emailSignature
 
-    const settings = await db.storeSettings.upsert({
+    // Verify the company exists before upserting settings
+    const companyExists = await db.company.findUnique({ where: { id: companyId } })
+    if (!companyExists) {
+      return NextResponse.json(
+        { error: 'Entreprise introuvable. Veuillez contacter l\'administrateur.' },
+        { status: 404 }
+      )
+    }
+
+    // Use findOrCreate pattern instead of upsert to avoid FK race conditions
+    let settings = await db.storeSettings.findUnique({
       where: { companyId },
-      create: {
-        companyId,
-        whatsappNumber: String(whatsappNumber || '+221770000000'),
-        storeTitle: String(storeTitle || 'Boutique DistribuSN'),
-        storeDescription: storeDescription ? String(storeDescription) : null,
-        currency: String(currency || 'XOF'),
-        isActive: isActive !== undefined ? Boolean(isActive) : true,
-        publicSlug: publicSlug ? String(publicSlug) : null,
-        // Entreprise
-        companyLogo: companyLogo || null,
-        companyName: companyName || null,
-        companyAddress: companyAddress || null,
-        // SEO
-        seoTitle: seoTitle || null,
-        seoDescription: seoDescription || null,
-        seoImage: seoImage || null,
-        // Email
-        smtpHost: smtpHost || null,
-        smtpPort: smtpPort ? parseInt(smtpPort, 10) : null,
-        smtpUser: smtpUser || null,
-        smtpPass: smtpPass || null,
-        emailFrom: emailFrom || null,
-        emailSignature: emailSignature || null,
-      },
-      update: updateData,
     })
+
+    if (settings) {
+      // Update existing settings
+      settings = await db.storeSettings.update({
+        where: { companyId },
+        data: updateData,
+      })
+    } else {
+      // Create new settings
+      settings = await db.storeSettings.create({
+        data: {
+          companyId,
+          whatsappNumber: String(whatsappNumber || '+221770000000'),
+          storeTitle: String(storeTitle || 'Boutique DistribuSN'),
+          storeDescription: storeDescription ? String(storeDescription) : null,
+          currency: String(currency || 'XOF'),
+          isActive: isActive !== undefined ? Boolean(isActive) : true,
+          publicSlug: publicSlug ? String(publicSlug) : null,
+          // Entreprise
+          companyLogo: companyLogo || null,
+          companyName: companyName || null,
+          companyAddress: companyAddress || null,
+          // SEO
+          seoTitle: seoTitle || null,
+          seoDescription: seoDescription || null,
+          seoImage: seoImage || null,
+          // Email
+          smtpHost: smtpHost || null,
+          smtpPort: smtpPort ? parseInt(smtpPort, 10) : null,
+          smtpUser: smtpUser || null,
+          smtpPass: smtpPass || null,
+          emailFrom: emailFrom || null,
+          emailSignature: emailSignature || null,
+        },
+      })
+    }
 
     return NextResponse.json({ data: settings })
   } catch (error: unknown) {

@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { getCompanyId } from '@/lib/auth'
+import { getCompanyId, ensureDefaultUser } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/posts - List posts with filters, search, and pagination
@@ -129,21 +129,27 @@ export async function POST(request: NextRequest) {
     // Fallback: find first active user if no valid author
     if (!author) {
       author = await db.user.findFirst({
-        where: { active: true },
+        where: { active: true, companyId },
         select: { id: true, name: true, avatar: true },
       })
       if (!author) {
-        // Try any user regardless of active status
+        // Try any user in this company
         author = await db.user.findFirst({
+          where: { companyId },
           select: { id: true, name: true, avatar: true },
         })
       }
-      if (!author) {
-        return NextResponse.json(
-          { error: 'Aucun utilisateur trouvé en base. Veuillez d\'abord créer un utilisateur.' },
-          { status: 400 }
-        )
-      }
+    }
+
+    // If still no user, auto-create a default admin user
+    if (!author) {
+      const defaultUserId = await ensureDefaultUser(companyId)
+      authorId = defaultUserId
+      author = await db.user.findUnique({
+        where: { id: defaultUserId },
+        select: { id: true, name: true, avatar: true },
+      })
+    } else {
       authorId = author.id
     }
 
