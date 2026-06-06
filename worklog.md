@@ -43,3 +43,27 @@ Stage Summary:
 - All 4 bugs resolved and tested
 - Commit 8b1d2a5 pushed to github.com/topmuch/Commercio
 - Key changes: auth.ts (ensureValidCompanyId with upsert + ensureDefaultUser), store-settings (findOrCreate), posts (auto-user), categories (company check)
+
+---
+Task ID: sec-fix
+Agent: Main Agent
+Task: Fix 3 critical security vulnerabilities
+
+Work Log:
+- Installed bcryptjs + @types/bcryptjs
+- Created src/lib/password.ts with hashPassword, comparePassword, verifyPassword, isLegacyPlaintextPassword
+- Implemented transparent migration: legacy plaintext passwords auto-rehashed on successful login
+- Updated 7 files to hash passwords on create/update: auth.ts, users/route.ts, users/[id]/route.ts, commercials/route.ts, commercials/[id]/route.ts, seed/route.ts, ensureDefaultUser
+- Fixed middleware.ts: removed demo mode bypass, NEXTAUTH_SECRET now required
+- Created .env.example with all required variables documented
+- Updated .gitignore to allow .env.example
+- Fixed next.config.ts: ignoreBuildErrors=false, reactStrictMode=true
+- Added NEXTAUTH_SECRET to .env
+- All tests passed: legacy plaintext detection, bcrypt hashing, wrong password rejection, API auth blocking
+
+Stage Summary:
+- Commit b54dc3a pushed to github.com/topmuch/Commercio
+- 3 critical security vulnerabilities resolved
+- Password hashing: bcrypt with 12 salt rounds
+- Auth middleware: now blocks all API routes without NEXTAUTH_SECRET
+- .env.example created for onboarding
