@@ -2,6 +2,43 @@ import { db } from '@/lib/db'
 import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
+// GET /api/invoices/[id] - Get single invoice with details
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const companyId = await getCompanyId()
+    const { id } = await params
+
+    const invoice = await db.invoice.findUnique({
+      where: { id },
+      include: {
+        client: { select: { companyName: true, contactName: true, phone: true, whatsapp: true, city: true, address: true, email: true } },
+        commercial: { select: { name: true } },
+        items: {
+          include: {
+            product: { select: { name: true, reference: true } },
+          },
+        },
+        payments: {
+          select: { id: true, amount: true, method: true, reference: true, status: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    })
+
+    if (!invoice || invoice.companyId !== companyId) {
+      return NextResponse.json({ error: 'Facture non trouvée' }, { status: 404 })
+    }
+
+    return NextResponse.json({ data: invoice })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
 // PUT /api/invoices/[id] - Update invoice or record payment
 // If body contains `amount`, it records a payment; otherwise it updates notes/dueDate.
 export async function PUT(

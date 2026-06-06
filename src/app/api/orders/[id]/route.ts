@@ -4,6 +4,39 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const VALID_STATUSES = ['new', 'validated', 'preparation', 'shipped', 'delivered']
 
+// GET /api/orders/[id] - Get single order with details
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const companyId = await getCompanyId()
+    const { id } = await params
+
+    const order = await db.order.findUnique({
+      where: { id },
+      include: {
+        client: { select: { companyName: true, contactName: true, phone: true, whatsapp: true, city: true, address: true } },
+        commercial: { select: { name: true } },
+        items: {
+          include: {
+            product: { select: { name: true, reference: true } },
+          },
+        },
+      },
+    })
+
+    if (!order || order.companyId !== companyId) {
+      return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 })
+    }
+
+    return NextResponse.json({ data: order })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur serveur'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
 // PUT /api/orders/[id] - Update order notes and/or status
 export async function PUT(
   request: NextRequest,
