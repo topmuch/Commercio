@@ -40,11 +40,15 @@ import {
   Server,
   Lock,
   PenLine,
+  Download,
+  Printer,
+  Share2,
 } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import StoreQRCode from '@/components/boutique/store-qr-code'
+import BoutiqueQRCode from '@/components/boutique/boutique-qr-code'
 import { ImageUpload } from '@/components/ui/image-upload'
 
 // ── Section Description ────────────────────────────────────────────
@@ -449,30 +453,10 @@ function BoutiqueShareSection({
 
           {/* QR Code */}
           {slug && (
-            <div className="flex flex-col sm:flex-row items-center gap-6 rounded-xl border border-border p-6 bg-muted/30">
-              <StoreQRCode url={publicUrl} size={160} />
-              <div className="text-center sm:text-left space-y-2">
-                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 justify-center sm:justify-start">
-                  <QrCode className="h-4 w-4 text-primary" />
-                  QR Code de votre boutique
-                </h4>
-                <p className="text-xs text-muted-foreground max-w-xs">
-                  Partagez ce QR code avec vos clients. En le scannant, ils accéderont directement
-                  à votre catalogue de produits et pourront commander via WhatsApp.
-                </p>
-                <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs gap-1.5"
-                    onClick={copyToClipboard}
-                  >
-                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    Copier le lien
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <BoutiqueQRCode
+              boutiqueUrl={publicUrl}
+              boutiqueName={data.storeTitle || 'Boutique'}
+            />
           )}
 
           {!slug && (

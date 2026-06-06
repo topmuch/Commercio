@@ -11,6 +11,11 @@ import {
   ArrowDownRight,
   Loader2,
   Trophy,
+  Store,
+  QrCode,
+  ExternalLink,
+  MessageCircle,
+  Smartphone,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +42,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
+import { useAppStore } from '@/lib/store'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -252,6 +258,48 @@ export default function DashboardPage() {
           formatValue={(v) => v.toLocaleString('fr-FR')}
         />
       </div>
+
+      {/* ─── Quick Actions ─── */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold text-foreground shrink-0">Accès rapide :</span>
+            <a href="/install-app" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm" className="gap-2 text-xs">
+                <Smartphone className="h-3.5 w-3.5" />
+                Installer l&apos;App Mobile
+              </Button>
+            </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-xs"
+              onClick={() => window.open('/install-app', '_blank')}
+            >
+              <QrCode className="h-3.5 w-3.5" />
+              QR Code Installation
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-xs"
+              onClick={() => useAppStore.getState().setCurrentPage('boutique')}
+            >
+              <Store className="h-3.5 w-3.5" />
+              Ma Boutique Publique
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-xs"
+              onClick={() => useAppStore.getState().setCurrentPage('settings')}
+            >
+              <QrCode className="h-3.5 w-3.5" />
+              Configurer le QR Code
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ─── Revenue Chart ─── */}
       <Card>

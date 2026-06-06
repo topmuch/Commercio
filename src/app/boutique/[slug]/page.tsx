@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useParams } from 'next/navigation'
+import QRCode from 'react-qr-code'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,8 @@ import {
   ArrowLeft,
   ChevronRight,
   PackageX,
+  QrCode,
+  X,
 } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -112,7 +115,7 @@ const categoryIcons: Record<string, string> = {
 
 // ── Product Card ──────────────────────────────────────────────────────
 
-function ProductCard({ product, whatsappNumber, idx }: { product: Product; whatsappNumber: string; idx: number }) {
+function ProductCard({ product, whatsappNumber, idx, onQR }: { product: Product; whatsappNumber: string; idx: number; onQR: (product: Product) => void }) {
   return (
     <Card className="group overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 flex flex-col h-full">
       <div className={`relative h-48 bg-gradient-to-br ${gradients[idx % gradients.length]} flex items-center justify-center overflow-hidden`}>
@@ -148,17 +151,24 @@ function ProductCard({ product, whatsappNumber, idx }: { product: Product; whats
             </div>
           )}
         </div>
-        <div className="mt-auto pt-2">
-          <a
-            href={buildWhatsAppUrl(product, whatsappNumber)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Commander sur WhatsApp
-          </a>
-        </div>
+        <div className="mt-auto pt-2 flex gap-2">
+            <a
+              href={buildWhatsAppUrl(product, whatsappNumber)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Commander
+            </a>
+            <button
+              onClick={() => onQR(product)}
+              className="shrink-0 inline-flex items-center justify-center h-[42px] w-[42px] bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors duration-200"
+              title="QR Code WhatsApp"
+            >
+              <QrCode className="h-4 w-4" />
+            </button>
+          </div>
       </CardContent>
     </Card>
   )
@@ -193,6 +203,8 @@ export default function PublicBoutiquePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showQR, setShowQR] = useState(false)
+  const [qrProduct, setQrProduct] = useState<Product | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -381,6 +393,7 @@ export default function PublicBoutiquePage() {
                   product={product}
                   whatsappNumber={whatsappNumber}
                   idx={products.findIndex((p) => p.id === product.id)}
+                  onQR={(p) => { setQrProduct(p); setShowQR(true) }}
                 />
               ))}
             </div>
@@ -411,7 +424,7 @@ export default function PublicBoutiquePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredProducts.map((product, idx) => (
-                <ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} idx={idx} />
+                <ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} idx={idx} onQR={(p) => { setQrProduct(p); setShowQR(true) }} />
               ))}
             </div>
           )}
@@ -452,6 +465,47 @@ export default function PublicBoutiquePage() {
           </div>
         </div>
       </footer>
+
+      {/* ── QR Code WhatsApp Modal ── */}
+      {showQR && qrProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowQR(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">QR Code WhatsApp</h3>
+              <button onClick={() => setShowQR(false)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                <X className="h-4 w-4 text-gray-500" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500">
+              Scannez ce QR code pour commander <span className="font-semibold text-gray-700">{qrProduct.name}</span> sur WhatsApp.
+            </p>
+            <div className="flex justify-center">
+              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <QRCode
+                  value={buildWhatsAppUrl(qrProduct, whatsappNumber)}
+                  size={200}
+                  bgColor="#FFFFFF"
+                  fgColor="#16a34a"
+                  level="H"
+                />
+              </div>
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-xs text-gray-400">{formatCFA(qrProduct.price)}</p>
+              <p className="text-[10px] text-gray-400">{qrProduct.reference}</p>
+            </div>
+            <a
+              href={buildWhatsAppUrl(qrProduct, whatsappNumber)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Commander sur WhatsApp
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

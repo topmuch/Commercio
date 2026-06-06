@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import QRCode from 'react-qr-code'
 import {
   Download,
   Printer,
@@ -166,13 +166,12 @@ export default function BoutiqueQRCode({
               ref={qrRef}
               className="bg-white p-5 rounded-xl shadow-md border border-border/30"
             >
-              <QRCodeSVG
+              <QRCode
                 value={boutiqueUrl}
                 size={qrSize}
                 level="H"
-                includeMargin={true}
-                fgColor="#f97316"
                 bgColor="#ffffff"
+                fgColor="#f97316"
               />
             </div>
 
