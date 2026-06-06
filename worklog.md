@@ -79,3 +79,30 @@ Stage Summary:
 - 6 files changed: hero-section.tsx, cta-section.tsx, pricing-section.tsx, reports-page.tsx, api/reports/route.ts, middleware.ts
 - All FIX 4, 5, 6 implemented and verified
 - Pending commit
+- Commit f63c8e9 pushed
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: PROMPT 3 — PAGES MANQUANTES (B1, B2, B3)
+
+Work Log:
+- Explored project structure: mobile/invoices/, mobile/orders/, mobile/quotes/ directories
+- Verified mobile/quotes/[id]/page.tsx already exists from previous session
+- Verified api/quotes/[id]/route.ts has GET handler
+- Found api/invoices/[id]/route.ts only has PUT/DELETE (no GET)
+- Found api/orders/[id]/route.ts only has PUT/DELETE (no GET)
+- Read Prisma schema: Invoice (status: unpaid/partially_paid/paid/overdue), Order (status: new/validated/preparation/shipped/delivered)
+- B1: Added GET handler to api/invoices/[id]/route.ts — returns invoice with client (8 fields), commercial, items[].product, payments[] ordered by createdAt desc
+- B1: Created mobile/invoices/[id]/page.tsx — payment progress bar, client card with WhatsApp, dates with overdue highlight, line items, totals, payments history with method labels, skeleton + error states
+- B2: Added GET handler to api/orders/[id]/route.ts — returns order with client (7 fields), commercial, items[].product
+- B2: Created mobile/orders/[id]/page.tsx — 5-step visual status tracker (New→Validated→Prep→Shipped→Delivered), client card with WhatsApp, dates, commercial, line items, totals, skeleton + error states
+- B3: mobile/quotes/[id]/page.tsx — Already existed and working ✅
+- All 3 pages verified: curl returns 200 with compile times under 1200ms
+- Lint passes clean
+
+Stage Summary:
+- Commit 3e08a61 pushed to origin/main
+- 4 files changed, 752 insertions
+- 2 new pages + 2 GET API handlers added
+- All 3 B-problems resolved (B1 invoice detail, B2 order detail, B3 quote detail)
