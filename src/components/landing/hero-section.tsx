@@ -51,11 +51,11 @@ export default function HeroSection() {
 
               {/* CTA Buttons */}
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/login" className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-8 py-3.5 rounded-xl transition-colors duration-200 text-base">
+                <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-8 py-3.5 rounded-xl transition-colors duration-200 text-base">
                   <Rocket className="h-5 w-5" />
                   Démarrer gratuitement
                 </Link>
-                <Link href="/login" className="inline-flex items-center justify-center gap-2 border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-8 py-3.5 rounded-xl transition-colors duration-200 text-base">
+                <Link href="/demo" className="inline-flex items-center justify-center gap-2 border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-8 py-3.5 rounded-xl transition-colors duration-200 text-base">
                   Voir la démo
                   <span className="ml-1">▶</span>
                 </Link>

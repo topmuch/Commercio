@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
-type ReportType = 'commercial' | 'region' | 'product' | 'client' | 'top-products' | 'performance'
+type ReportType = 'commercial' | 'region' | 'product' | 'client' | 'top-products' | 'performance' | 'full'
 type ReportPeriod = 'week' | 'month' | 'year' | '12months'
 
 function getDateRange(period: ReportPeriod) {
@@ -285,6 +285,91 @@ export async function GET(request: NextRequest) {
         })
 
         data = { topProducts }
+        break
+      }
+
+      case 'full': {
+        // Combined export: salesByCommercial, topProducts, topClients
+        const [commercialRes, productRes, clientRes] = await Promise.all([
+          // Sales by commercial
+          (async () => {
+            const commercials = await db.user.findMany({
+              where: { companyId, role: { in: ['commercial', 'admin'] } },
+              select: { id: true, name: true },
+            })
+            const commercialIds = commercials.map((c) => c.id)
+            const allOrders = await db.order.findMany({
+              where: { commercialId: { in: commercialIds }, companyId, createdAt: { gte: start, lte: end } },
+              select: { commercialId: true, total: true },
+            })
+            const ordersByCommercial = new Map<string, number[]>()
+            for (const order of allOrders) {
+              if (!ordersByCommercial.has(order.commercialId)) ordersByCommercial.set(order.commercialId, [])
+              ordersByCommercial.get(order.commercialId)!.push(order.total)
+            }
+            return commercials.map((c) => {
+              const totals = ordersByCommercial.get(c.id) || []
+              return {
+                name: c.name,
+                revenue: Math.round(totals.reduce((s, t) => s + t, 0)),
+                orderCount: totals.length,
+              }
+            }).sort((a, b) => b.revenue - a.revenue)
+          })(),
+          // Top products
+          (async () => {
+            const orderItems = await db.orderItem.groupBy({
+              by: ['productId'],
+              where: { order: { companyId, createdAt: { gte: start, lte: end } } },
+              _sum: { quantity: true, totalPrice: true },
+              orderBy: { _sum: { quantity: 'desc' } },
+              take: 20,
+            })
+            const productIds = orderItems.map((i) => i.productId)
+            const products = await db.product.findMany({
+              where: { id: { in: productIds } },
+              select: { id: true, name: true, reference: true },
+            })
+            const productMap = new Map(products.map((p) => [p.id, p]))
+            return orderItems.map((item) => ({
+              name: productMap.get(item.productId)?.name || 'Inconnu',
+              reference: productMap.get(item.productId)?.reference || '',
+              quantitySold: item._sum.quantity || 0,
+              revenue: Math.round(item._sum.totalPrice || 0),
+            }))
+          })(),
+          // Top clients
+          (async () => {
+            const orders = await db.order.findMany({
+              where: { companyId, createdAt: { gte: start, lte: end } },
+              include: { client: { select: { companyName: true, contactName: true, city: true, region: true } } },
+            })
+            const clientMap = new Map<string, { companyName: string; contactName: string; city: string | null; region: string | null; revenue: number; orderCount: number }>()
+            for (const order of orders) {
+              if (!clientMap.has(order.clientId)) {
+                clientMap.set(order.clientId, {
+                  companyName: order.client.companyName,
+                  contactName: order.client.contactName,
+                  city: order.client.city,
+                  region: order.client.region,
+                  revenue: 0, orderCount: 0,
+                })
+              }
+              const entry = clientMap.get(order.clientId)!
+              entry.revenue += order.total
+              entry.orderCount++
+            }
+            return Array.from(clientMap.values())
+              .map((c) => ({ ...c, revenue: Math.round(c.revenue) }))
+              .sort((a, b) => b.revenue - a.revenue)
+          })(),
+        ])
+
+        data = {
+          salesByCommercial: commercialRes,
+          topProducts: productRes,
+          topClients: clientRes,
+        }
         break
       }
 

@@ -51,3 +51,31 @@ Stage Summary:
 - 10 files changed, 442 insertions, 20 deletions
 - All 8 button issues (A1-A8) fixed
 - Lint passes clean
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: PROMPT 2 (continued) — FIX 4, 5, 6: Landing CTAs, Excel Export, Mobile Quotes Detail
+
+Work Log:
+- Read worklog, hero-section.tsx, cta-section.tsx, pricing-section.tsx, reports-page.tsx, mobile/quotes/page.tsx, mobile/quotes/[id]/page.tsx, api/reports/route.ts
+- FIX 4 (Landing Page CTAs):
+  - hero-section.tsx: Changed first CTA from `/login` to `/register`, second from `/login` to `/demo`
+  - cta-section.tsx: Changed primary CTA from `/login` to `/register`, secondary from WhatsApp `https://wa.me/...` to `<Link href="/contact">`
+  - pricing-section.tsx: Starter from `/login` to `/register?plan=starter`, Pro from `/login` to `/register?plan=pro`, Enterprise from WhatsApp to `/contact?plan=enterprise` (also changed buttonExternal to false so it uses `<Link>`)
+- FIX 5 (Export Excel):
+  - Installed `xlsx@0.18.5` (SheetJS) package
+  - Added `type=full` to ReportType in api/reports/route.ts
+  - Added `case 'full'` that fetches 3 datasets in parallel: salesByCommercial, topProducts, topClients
+  - Updated reports-page.tsx: replaced `import * as XLSX from 'xlsx'`, replaced `Download` icon with `FileSpreadsheet`
+  - Replaced CSV export with real multi-sheet XLSX export: 3 sheets (Ventes par commercial, Top produits, Top clients)
+  - Added `exporting` loading state to button with disabled + text change
+- FIX 6 (Mobile quotes detail): Already implemented from previous session — verified `router.push('/mobile/quotes/${quote.id}')` on line 213 and detail page at `mobile/quotes/[id]/page.tsx` exists
+- Middleware fix: Added `/`, `/demo`, `/contact`, `/manifest.json` to publicPaths (landing page was being blocked)
+- Lint passes clean
+- Browser verified: All 7 CTA hrefs confirmed correct via agent-browser get attr
+
+Stage Summary:
+- 6 files changed: hero-section.tsx, cta-section.tsx, pricing-section.tsx, reports-page.tsx, api/reports/route.ts, middleware.ts
+- All FIX 4, 5, 6 implemented and verified
+- Pending commit

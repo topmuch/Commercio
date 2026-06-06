@@ -34,14 +34,14 @@ export default function CtaSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
-            <Link href="/login" className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all inline-flex items-center justify-center gap-2">
+            <Link href="/register" className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all inline-flex items-center justify-center gap-2">
               <Rocket className="w-5 h-5" />
               Démarrer gratuitement
             </Link>
-            <a href="https://wa.me/221781234567" target="_blank" rel="noopener noreferrer" className="border border-slate-500 hover:border-emerald-500/50 text-white px-8 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-2">
+            <Link href="/contact" className="border border-slate-500 hover:border-emerald-500/50 text-white px-8 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-2">
               <MessageCircle className="w-5 h-5" />
               Parler à un conseiller
-            </a>
+            </Link>
           </div>
         </motion.div>
       </div>

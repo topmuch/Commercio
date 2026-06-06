@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import {
   BarChart3,
-  Download,
+  FileSpreadsheet,
   FileText,
   PieChart as PieChartIcon,
   TrendingUp,
@@ -318,37 +319,43 @@ export default function ReportsPage() {
     window.print()
   }
 
-  const handleExportExcel = () => {
-    if (!reportData?.chartData?.length) {
-      toast.error('Aucune donnée à exporter')
-      return
-    }
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportExcel = async () => {
+    setExporting(true)
     try {
-      const data = reportData.chartData
-      const headers = Object.keys(data[0])
-      const csvRows = [
-        headers.join(','),
-        ...data.map((row) =>
-          headers
-            .map((h) => {
-              const val = row[h]
-              const str = typeof val === 'number' ? val.toLocaleString('fr-FR') : String(val ?? '')
-              return str.includes(',') ? `"${str}"` : str
-            })
-            .join(',')
-        ),
-      ]
-      const csvString = '\uFEFF' + csvRows.join('\n') // BOM for Excel UTF-8
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `rapport-${selectedReport}-${new Date().toISOString().split('T')[0]}.csv`
-      link.click()
-      URL.revokeObjectURL(url)
-      toast.success('Export réussi', { description: 'Le fichier CSV a été téléchargé.' })
-    } catch {
-      toast.error('Erreur', { description: 'Impossible de générer le fichier.' })
+      const response = await fetch(`/api/reports?type=full&period=${period}`)
+      if (!response.ok) throw new Error('Erreur lors du chargement des données')
+      const data = await response.json()
+
+      const wb = XLSX.utils.book_new()
+
+      // Feuille 1 : Ventes par commercial
+      if (data.salesByCommercial?.length) {
+        const ws1 = XLSX.utils.json_to_sheet(data.salesByCommercial)
+        XLSX.utils.book_append_sheet(wb, ws1, 'Ventes par commercial')
+      }
+
+      // Feuille 2 : Top produits
+      if (data.topProducts?.length) {
+        const ws2 = XLSX.utils.json_to_sheet(data.topProducts)
+        XLSX.utils.book_append_sheet(wb, ws2, 'Top produits')
+      }
+
+      // Feuille 3 : Top clients
+      if (data.topClients?.length) {
+        const ws3 = XLSX.utils.json_to_sheet(data.topClients)
+        XLSX.utils.book_append_sheet(wb, ws3, 'Top clients')
+      }
+
+      // Télécharger
+      XLSX.writeFile(wb, `rapport-teranga-biz-${new Date().toISOString().split('T')[0]}.xlsx`)
+      toast.success('Rapport Excel téléchargé')
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erreur export'
+      toast.error('Erreur export', { description: msg })
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -493,9 +500,9 @@ export default function ReportsPage() {
               <FileText className="h-4 w-4" />
               Exporter PDF
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleExportExcel}>
-              <Download className="h-4 w-4" />
-              Exporter Excel
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleExportExcel} disabled={exporting}>
+              <FileSpreadsheet className="h-4 w-4" />
+              {exporting ? 'Export...' : 'Exporter Excel'}
             </Button>
           </div>
         </CardContent>
