@@ -118,13 +118,13 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen border-r border-teal-700/50 bg-teal-950/95 backdrop-blur-sm transition-all duration-300 flex flex-col',
+        'fixed left-0 top-0 z-40 h-screen border-r border-purple-700/50 bg-gradient-to-b from-violet-950 to-purple-950 backdrop-blur-sm transition-all duration-300 flex flex-col',
         sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-teal-700/40 px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20">
+      <div className="flex h-16 items-center gap-3 border-b border-purple-700/40 px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-400 to-purple-500 text-white font-bold text-sm shadow-lg shadow-purple-500/20">
           T
         </div>
         {sidebarOpen && (
@@ -132,7 +132,7 @@ export function AppSidebar() {
             <span className="text-sm font-bold text-white tracking-tight">
               Teranga Biz
             </span>
-            <span className="text-[10px] text-teal-300/60 uppercase tracking-widest">
+            <span className="text-[10px] text-purple-300/60 uppercase tracking-widest">
               DistribuERP
             </span>
           </div>
@@ -145,7 +145,7 @@ export function AppSidebar() {
           {navGroups.map((group) => (
             <div key={group.label}>
               {sidebarOpen && (
-                <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-teal-400/50">
+                <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-purple-400/50">
                   {group.label}
                 </h3>
               )}
@@ -168,19 +168,19 @@ export function AppSidebar() {
                         className={cn(
                           'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                           isActive
-                            ? 'bg-white/10 text-white shadow-sm'
-                            : 'text-teal-100/60 hover:bg-white/5 hover:text-teal-100'
+                            ? 'bg-purple-500/20 text-white shadow-sm'
+                            : 'text-purple-100/60 hover:bg-purple-500/10 hover:text-purple-100'
                         )}
                       >
                         <Icon className={cn(
                           'h-4 w-4 shrink-0',
-                          isActive ? 'text-emerald-400' : ''
+                          isActive ? 'text-violet-300' : ''
                         )} />
                         <span className="truncate">{item.label}</span>
                         {item.badge && (
                           <Badge
                             variant="secondary"
-                            className="ml-auto h-5 min-w-5 bg-emerald-500 text-white text-[10px] px-1.5 border-0"
+                            className="ml-auto h-5 min-w-5 bg-violet-500 text-white text-[10px] px-1.5 border-0"
                           >
                             {item.badge}
                           </Badge>
@@ -203,13 +203,13 @@ export function AppSidebar() {
                           className={cn(
                             'flex w-full items-center justify-center rounded-lg p-2.5 transition-all duration-150 relative',
                             isActive
-                              ? 'bg-white/10 text-white'
-                              : 'text-teal-100/60 hover:bg-white/5 hover:text-teal-100'
+                              ? 'bg-purple-500/20 text-white'
+                              : 'text-purple-100/60 hover:bg-purple-500/10 hover:text-purple-100'
                           )}
                         >
-                          <Icon className={cn('h-4 w-4', isActive && 'text-emerald-400')} />
+                          <Icon className={cn('h-4 w-4', isActive && 'text-violet-300')} />
                           {item.badge && (
-                            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
+                            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-500 text-[9px] font-bold text-white">
                               {item.badge}
                             </span>
                           )}
@@ -228,15 +228,15 @@ export function AppSidebar() {
       </ScrollArea>
 
       {/* User */}
-      <div className="border-t border-teal-700/40 p-3">
+      <div className="border-t border-purple-700/40 p-3">
         <div
           className={cn(
             'flex items-center gap-3 rounded-lg p-2',
             sidebarOpen ? '' : 'justify-center'
           )}
         >
-          <Avatar className="h-8 w-8 shrink-0 border-2 border-emerald-400/30">
-            <AvatarFallback className="bg-emerald-500 text-white text-xs font-semibold">
+          <Avatar className="h-8 w-8 shrink-0 border-2 border-violet-400/30">
+            <AvatarFallback className="bg-violet-500 text-white text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -245,7 +245,7 @@ export function AppSidebar() {
               <span className="text-sm font-medium text-white truncate">
                 {user?.name}
               </span>
-              <span className="text-[11px] text-teal-300/50 capitalize truncate">
+              <span className="text-[11px] text-purple-300/50 capitalize truncate">
                 {user?.role?.replace('_', ' ')}
               </span>
             </div>

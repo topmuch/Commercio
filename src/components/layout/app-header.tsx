@@ -79,8 +79,6 @@ const commandPages = [
   { id: 'ai-assistant', label: 'Assistant IA', icon: Bot },
 ]
 
-const darkPages: string[] = ['dashboard']
-
 export function AppHeader() {
   const currentPage = useAppStore((s) => s.currentPage)
   const user = useAppStore((s) => s.user)
@@ -91,8 +89,6 @@ export function AppHeader() {
   const setTheme = useAppStore((s) => s.setTheme)
   const [commandOpen, setCommandOpen] = React.useState(false)
 
-  const isDark = darkPages.includes(currentPage)
-
   const initials = user?.name
     ? user.name
         .split(' ')
@@ -101,6 +97,32 @@ export function AppHeader() {
         .toUpperCase()
         .slice(0, 2)
     : 'U'
+
+  // Sync theme class on <html>
+  React.useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [theme])
+
+  // Init theme from localStorage or system preference
+  React.useEffect(() => {
+    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (stored) {
+      setTheme(stored)
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+    }
+  }, [setTheme])
+
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    localStorage.setItem('theme', next)
+  }
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -115,17 +137,11 @@ export function AppHeader() {
 
   return (
     <>
-      <header
-        className={`sticky top-0 z-30 flex h-16 items-center gap-4 backdrop-blur-md px-4 lg:px-6 transition-colors duration-300 ${
-          isDark
-            ? 'bg-teal-900/40 border-b border-teal-700/30 text-white'
-            : 'bg-white/80 border-b border-slate-200 text-slate-900'
-        }`}
-      >
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 bg-white/80 dark:bg-card/80 backdrop-blur-md border-b px-4 lg:px-6">
         <Button
           variant="ghost"
           size="icon"
-          className={`shrink-0 lg:hidden ${isDark ? 'hover:bg-white/10 text-white/80' : ''}`}
+          className="shrink-0 lg:hidden"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           <Menu className="h-5 w-5" />
@@ -134,14 +150,14 @@ export function AppHeader() {
         <Button
           variant="ghost"
           size="icon"
-          className={`hidden lg:flex shrink-0 ${isDark ? 'hover:bg-white/10 text-white/80' : ''}`}
+          className="hidden lg:flex shrink-0"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           <Menu className="h-5 w-5" />
         </Button>
 
         <div className="flex items-center gap-2">
-          <h1 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
+          <h1 className="text-lg font-semibold text-foreground">
             {pageLabels[currentPage] || 'Tableau de bord'}
           </h1>
         </div>
@@ -149,18 +165,12 @@ export function AppHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Button
             variant="outline"
-            className={`hidden sm:flex items-center gap-2 h-9 w-64 justify-start ${
-              isDark
-                ? 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 placeholder:text-white/30'
-                : 'text-muted-foreground'
-            }`}
+            className="hidden sm:flex items-center gap-2 h-9 w-64 justify-start text-muted-foreground"
             onClick={() => setCommandOpen(true)}
           >
             <Search className="h-4 w-4" />
             <span className="text-sm">Rechercher...</span>
-            <kbd className={`pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium ${
-              isDark ? 'border-white/10 bg-white/5 text-white/40' : 'border bg-muted text-muted-foreground'
-            }`}>
+            <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium bg-muted text-muted-foreground">
               <span className="text-xs">⌘</span>K
             </kbd>
           </Button>
@@ -168,28 +178,26 @@ export function AppHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className={`sm:hidden ${isDark ? 'text-white/80 hover:bg-white/10' : ''}`}
+            className="sm:hidden"
             onClick={() => setCommandOpen(true)}
           >
             <Search className="h-5 w-5" />
           </Button>
 
+          {/* Theme Toggle - Blue/Violet */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className={isDark ? 'text-white/80 hover:bg-white/10' : ''}
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            className="bg-gradient-to-br from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 border-0 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200"
+            onClick={toggleTheme}
+            title={theme === 'light' ? 'Passer en mode sombre' : 'Passer en mode clair'}
           >
-            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`relative ${isDark ? 'text-white/80 hover:bg-white/10' : ''}`}
-              >
+              <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -205,13 +213,13 @@ export function AppHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={`flex items-center gap-2 px-2 ${isDark ? '' : ''}`}>
-                <Avatar className={`h-8 w-8 border-2 ${isDark ? 'border-emerald-400/30' : 'border-primary/20'}`}>
-                  <AvatarFallback className={`text-xs font-semibold ${isDark ? 'bg-emerald-500 text-white' : 'bg-primary text-primary-foreground'}`}>
+              <Button variant="ghost" className="flex items-center gap-2 px-2">
+                <Avatar className="h-8 w-8 border-2 border-violet-400/30">
+                  <AvatarFallback className="bg-violet-500 text-white text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className={`hidden md:block text-sm font-medium ${isDark ? 'text-white' : ''}`}>
+                <span className="hidden md:block text-sm font-medium">
                   {user?.name}
                 </span>
               </Button>

@@ -323,3 +323,24 @@ Stage Summary:
 - Lint: 0 errors, 0 warnings
 - No new dependencies added
 - All changes backward-compatible with demo mode (no NEXTAUTH_SECRET)
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Supprimer le nouveau thème dark teal, mettre sidebar en violet, KPI multicolors, bouton dark/light bleu-violet
+
+Work Log:
+- Supprimé le gradient dark teal du DashboardShell (bg-gradient-to-br from-teal-900 → bg-background)
+- Supprimé tout le glassmorphism dark du dashboard-page (bg-white/10, text-white, etc.) → cartes standard shadcn/ui
+- Sidebar : teal-950 → gradient violet-950/purple-950, accents emerald → violet/purple
+- KPI : 4 cartes multicolor conservées (vert, bleu/indigo, violet/purple, orange/ambre) avec ombres colorées
+- Header : supprimé logique isDark conditionnelle, bouton toggle dark/light en gradient bleu-violet avec shadow
+- Toggle : ajoute/retire classe `dark` sur `<html>`, persiste dans localStorage, détecte prefers-color-scheme
+- Lint clean, navigateur vérifié : sidebar violet, toggle bleu-violet, KPI multicolors, dark/light fonctionnel
+
+Stage Summary:
+- DashboardShell : fond neutre bg-background (plus de teal)
+- AppSidebar : violet/purple gradient complet
+- DashboardPage : KPI multicolors sur fond clair standard, cartes normales
+- AppHeader : bouton toggle dark/light gradient blue→violet avec shadow
+- Tout vérifié en navigateur : toggle fonctionne, pas d'erreurs console

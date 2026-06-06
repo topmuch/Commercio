@@ -74,7 +74,7 @@ export function DashboardShell() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900">
+      <div className="min-h-screen bg-background">
         {/* Sidebar */}
         <AppSidebar />
 
@@ -89,7 +89,7 @@ export function DashboardShell() {
           </main>
         </div>
 
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="top-right" richColors closeButton theme={useAppStore.getState().theme} />
       </div>
     </QueryClientProvider>
   )
