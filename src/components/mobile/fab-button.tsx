@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, MapPin, ShoppingCart, X, UserPlus } from 'lucide-react'
+import { Plus, MapPin, ShoppingCart, X, UserPlus, FileText, Receipt } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +31,20 @@ const fabActions = [
     href: '/mobile/orders/new',
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
+  },
+  {
+    label: 'Nouveau Devis',
+    icon: FileText,
+    href: '/mobile/quotes/new',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+  },
+  {
+    label: 'Nouvelle Facture',
+    icon: Receipt,
+    href: '/mobile/invoices/new',
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
   },
 ]
 

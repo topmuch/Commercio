@@ -1,13 +1,13 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Map, ClipboardList, User } from 'lucide-react'
+import { Home, Map, ClipboardList, User, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tabs = [
   { label: 'Accueil', icon: Home, href: '/mobile/dashboard' },
   { label: 'Carte', icon: Map, href: '/mobile/map' },
-  { label: 'Commandes', icon: ClipboardList, href: '/mobile/orders' },
+  { label: 'Ventes', icon: Receipt, href: '/mobile/orders' },
   { label: 'Profil', icon: User, href: '/mobile/profile' },
 ]
 
