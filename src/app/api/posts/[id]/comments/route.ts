@@ -1,10 +1,11 @@
 import { db } from '@/lib/db'
 import { getCompanyId } from '@/lib/auth'
+import { getAuthSession } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/posts/[id]/comments - List top-level comments for a post
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -24,7 +25,6 @@ export async function GET(
     }
 
     // Fetch top-level comments only (parentCommentId is null)
-    // and include the count of replies for each
     const comments = await db.postComment.findMany({
       where: {
         postId: id,
@@ -70,40 +70,45 @@ export async function GET(
   }
 }
 
-// POST /api/posts/[id]/comments - Create a comment on a post
+// POST /api/posts/[id]/comments - Create a comment on a post (auth required, no spoofing)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const companyId = await getCompanyId()
+    const session = await getAuthSession()
     const { id } = await params
     const body = await request.json()
-    let { authorId, content, parentCommentId } = body
+    const { content, parentCommentId } = body
 
-    // Fallback: if no authorId, use first user in DB
-    if (!authorId) {
-      const firstUser = await db.user.findFirst({ where: { active: true }, select: { id: true } })
-        || await db.user.findFirst({ select: { id: true } })
-      if (firstUser) authorId = firstUser.id
-    }
+    // Get authorId from session (NOT from client body to prevent spoofing)
+    const authorId = (session?.user as { id?: string })?.id
 
     if (!authorId || !content) {
       return NextResponse.json(
-        { error: 'authorId et content sont requis.' },
-        { status: 400 }
+        { error: 'Vous devez être connecté pour commenter.' },
+        { status: 401 }
       )
     }
 
-    // Verify the post exists
+    // Verify the post exists and belongs to the same company
     const post = await db.post.findUnique({
       where: { id },
-      select: { id: true, commentsCount: true },
+      select: { id: true, commentsCount: true, companyId: true },
     })
 
     if (!post) {
       return NextResponse.json(
         { error: 'Publication non trouvée.' },
         { status: 404 }
+      )
+    }
+
+    if (post.companyId !== companyId) {
+      return NextResponse.json(
+        { error: 'Non autorisé.' },
+        { status: 403 }
       )
     }
 
@@ -123,7 +128,6 @@ export async function POST(
 
     // Create comment and increment commentsCount in a transaction
     const comment = await db.$transaction(async (tx) => {
-      // Create the comment
       const createdComment = await tx.postComment.create({
         data: {
           postId: id,

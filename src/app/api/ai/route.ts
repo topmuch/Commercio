@@ -5,9 +5,58 @@ import ZAI from 'z-ai-web-dev-sdk'
 
 const ai = new ZAI()
 
+// ─── In-memory rate limiter (no Redis dependency) ───
+interface RateLimitEntry {
+  count: number
+  resetAt: number
+}
+
+const rateLimitMap = new Map<string, RateLimitEntry>()
+const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10 // per window per user
+
+function checkRateLimit(identifier: string): { success: boolean; remaining: number; resetAt: number } {
+  const now = Date.now()
+  const entry = rateLimitMap.get(identifier)
+
+  if (!entry || now > entry.resetAt) {
+    // New window
+    rateLimitMap.set(identifier, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return { success: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetAt: now + RATE_LIMIT_WINDOW_MS }
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { success: false, remaining: 0, resetAt: entry.resetAt }
+  }
+
+  entry.count++
+  return { success: true, remaining: RATE_LIMIT_MAX_REQUESTS - entry.count, resetAt: entry.resetAt }
+}
+
+// Cleanup old entries every 5 minutes to prevent memory leak
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) {
+      rateLimitMap.delete(key)
+    }
+  }
+}, 300_000)
+
 export async function POST(request: NextRequest) {
   try {
     const companyId = await getCompanyId()
+
+    // Rate limiting per company
+    const { success, remaining, resetAt } = checkRateLimit(companyId)
+    if (!success) {
+      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000)
+      return NextResponse.json(
+        { error: `Trop de requêtes IA. Veuillez réessayer dans ${retryAfter} secondes.`, remaining: 0, resetAt },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { message, history = [] } = body
 
@@ -103,7 +152,7 @@ Règles :
 
     const response = completion.choices[0]?.message?.content || 'Désolé, je n\'ai pas pu générer une réponse.'
 
-    return NextResponse.json({ response })
+    return NextResponse.json({ response, remaining })
   } catch (error: unknown) {
     console.error('AI API error:', error)
     const message = error instanceof Error ? error.message : 'Erreur serveur'
