@@ -55,6 +55,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import type { Quote, Client, Product } from '@/lib/types'
+import { ClientSelectWithCreate } from '@/components/shared/client-select-with-create'
 
 // ── Helpers ──────────────────────────────────────────────
 function formatCFA(value: number): string {
@@ -123,8 +124,6 @@ export default function QuotesPage() {
   const [formItems, setFormItems] = useState<QuoteItemRow[]>([
     { productId: '', productName: '', quantity: 1, unitPrice: 0 },
   ])
-  const [clientSearch, setClientSearch] = useState('')
-
   // Edit quote form
   const [editNotes, setEditNotes] = useState('')
   const [editValidUntil, setEditValidUntil] = useState('')
@@ -319,7 +318,6 @@ export default function QuotesPage() {
     setFormDiscount(0)
     setFormValidUntil('')
     setFormItems([{ productId: '', productName: '', quantity: 1, unitPrice: 0 }])
-    setClientSearch('')
   }
 
   // ── Edit quote ──
@@ -375,15 +373,6 @@ export default function QuotesPage() {
       toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
     }
   }
-
-  // ── Filtered clients for dialog ──
-  const filteredClients = clientSearch
-    ? clients.filter(
-        (c) =>
-          c.companyName.toLowerCase().includes(clientSearch.toLowerCase()) ||
-          c.contactName.toLowerCase().includes(clientSearch.toLowerCase())
-      )
-    : clients
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -601,33 +590,13 @@ export default function QuotesPage() {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Client Select */}
-            <div className="space-y-2">
-              <Label>Client *</Label>
-              <div className="relative">
-                <Input
-                  placeholder="Rechercher un client..."
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                  className="mb-2"
-                />
-                <Select value={formClientId} onValueChange={setFormClientId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sélectionner un client" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {filteredClients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        <span className="font-medium">{client.companyName}</span>
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          — {client.contactName}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Client Select with inline creation */}
+            <ClientSelectWithCreate
+              clients={clients}
+              value={formClientId}
+              onClientChange={setFormClientId}
+              onClientsRefresh={fetchClients}
+            />
 
             {/* Validity Date */}
             <div className="space-y-2">

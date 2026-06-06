@@ -61,6 +61,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
+import { ClientSelectWithCreate } from '@/components/shared/client-select-with-create'
 import type { Invoice, Client, Product, Payment } from '@/lib/types'
 
 // ── Helpers ──────────────────────────────────────────────
@@ -139,8 +140,6 @@ export default function InvoicesPage() {
   const [formItems, setFormItems] = useState<InvoiceItemRow[]>([
     { productId: '', productName: '', quantity: 1, unitPrice: 0 },
   ])
-  const [clientSearch, setClientSearch] = useState('')
-
   // Payment form
   const [payAmount, setPayAmount] = useState('')
   const [payMethod, setPayMethod] = useState('cash')
@@ -297,7 +296,6 @@ export default function InvoicesPage() {
     setFormDiscount(0)
     setFormDueDate('')
     setFormItems([{ productId: '', productName: '', quantity: 1, unitPrice: 0 }])
-    setClientSearch('')
   }
 
   // ── Submit payment ──
@@ -433,15 +431,6 @@ export default function InvoicesPage() {
       toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
     }
   }
-
-  // ── Filtered clients for dialog ──
-  const filteredClients = clientSearch
-    ? clients.filter(
-        (c) =>
-          c.companyName.toLowerCase().includes(clientSearch.toLowerCase()) ||
-          c.contactName.toLowerCase().includes(clientSearch.toLowerCase())
-      )
-    : clients
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -747,33 +736,13 @@ export default function InvoicesPage() {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Client Select */}
-            <div className="space-y-2">
-              <Label>Client *</Label>
-              <div className="relative">
-                <Input
-                  placeholder="Rechercher un client..."
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                  className="mb-2"
-                />
-                <Select value={formClientId} onValueChange={setFormClientId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sélectionner un client" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {filteredClients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        <span className="font-medium">{client.companyName}</span>
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          — {client.contactName}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Client Select with inline creation */}
+            <ClientSelectWithCreate
+              clients={clients}
+              value={formClientId}
+              onClientChange={setFormClientId}
+              onClientsRefresh={fetchClients}
+            />
 
             {/* Due Date */}
             <div className="space-y-2">

@@ -40,8 +40,10 @@ import {
   Boxes,
   Pencil,
   Loader2,
+  FolderOpen,
 } from 'lucide-react'
 import type { Product, Category } from '@/lib/types'
+import { CategoryManager } from './category-manager'
 import { toast } from 'sonner'
 
 function formatCFA(amount: number): string {
@@ -88,6 +90,7 @@ export default function ProductsPage() {
   const [stockFilter, setStockFilter] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [page, setPage] = useState(1)
@@ -394,6 +397,15 @@ export default function ProductsPage() {
                   <List className="h-4 w-4" />
                 </Button>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setCategoryManagerOpen(true)}
+                className="gap-2"
+              >
+                <FolderOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Catégories</span>
+                <span className="sm:hidden">Catég.</span>
+              </Button>
               <Button onClick={openCreateDialog} className="gap-2">
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Nouveau Produit</span>
@@ -733,6 +745,11 @@ export default function ProductsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CategoryManager
+        open={categoryManagerOpen}
+        onOpenChange={setCategoryManagerOpen}
+        onCategoriesChange={fetchCategories}
+      />
     </div>
   )
 }
