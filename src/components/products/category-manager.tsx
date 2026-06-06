@@ -94,13 +94,17 @@ export function CategoryManager({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: trimmed }),
       })
-      if (!res.ok) throw new Error('Failed to create category')
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Erreur serveur' }))
+        throw new Error(data.error || 'Erreur serveur')
+      }
       setNewCategoryName('')
       toast.success(`Catégorie "${trimmed}" ajoutée`)
       fetchCategories()
       onCategoriesChange()
-    } catch {
-      toast.error("Erreur lors de l'ajout de la catégorie")
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Erreur lors de l'ajout de la catégorie"
+      toast.error(msg)
     } finally {
       setAdding(false)
     }

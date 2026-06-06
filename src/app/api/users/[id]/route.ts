@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { getCompanyId } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 // ─── PUT: Update a user ────────────────────────────────────────────────────
@@ -7,7 +8,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
     const { id } = await params
     const body = await request.json()
     const { name, email, phone, role, active, password } = body
@@ -77,7 +78,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
     const { id } = await params
 
     // Check user exists in this company

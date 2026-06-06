@@ -1,14 +1,11 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { getCompanyId } from '@/lib/auth'
 
 // GET /api/company — Récupérer les informations de l'entreprise
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.companyId) return Response.json({ error: 'Non authentifié' }, { status: 401 })
-    const companyId = session.user.companyId
+    const companyId = await getCompanyId()
 
     const company = await db.company.findUnique({
       where: { id: companyId },
@@ -31,9 +28,7 @@ export async function GET() {
 // PUT /api/company — Mettre à jour les informations de l'entreprise
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.companyId) return Response.json({ error: 'Non authentifié' }, { status: 401 })
-    const companyId = session.user.companyId
+    const companyId = await getCompanyId()
 
     const body = await request.json()
     const { name, email, phone, address } = body
@@ -64,6 +59,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ data: company })
   } catch (error: unknown) {
+    console.error('Error updating company:', error)
     const message = error instanceof Error ? error.message : 'Échec de la mise à jour des informations de l\'entreprise'
     return NextResponse.json({ error: message }, { status: 500 })
   }

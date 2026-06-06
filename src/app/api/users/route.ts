@@ -1,10 +1,11 @@
 import { db } from '@/lib/db'
+import { getCompanyId } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 // ─── GET: List all users ──────────────────────────────────────────────────
 export async function GET() {
   try {
-    const companyId = 'comp_1' // Default company
+    const companyId = await getCompanyId()
 
     const users = await db.user.findMany({
       where: { companyId },
@@ -44,7 +45,7 @@ export async function GET() {
 // ─── POST: Create a new user ──────────────────────────────────────────────
 export async function POST(request: Request) {
   try {
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
     const body = await request.json()
     const { name, email, phone, password, role } = body
 

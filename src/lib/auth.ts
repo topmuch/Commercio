@@ -9,17 +9,52 @@ import { db } from '@/lib/db'
  */
 const DEMO_COMPANY_ID = 'comp_1'
 
+/**
+ * Ensures a valid companyId exists in the database.
+ * If the given companyId doesn't exist, falls back to the first company in the DB,
+ * or creates a default company if none exists.
+ */
+async function ensureValidCompanyId(companyId: string): Promise<string> {
+  try {
+    // Check if the company exists
+    const company = await db.company.findUnique({ where: { id: companyId } })
+    if (company) return companyId
+
+    // Fall back to the first company in the DB
+    const firstCompany = await db.company.findFirst({ select: { id: true } })
+    if (firstCompany) return firstCompany.id
+
+    // No company exists — create a default one
+    const newCompany = await db.company.create({
+      data: {
+        id: DEMO_COMPANY_ID,
+        name: 'DistribuSN – Distribution Générale',
+        email: 'contact@distribusn.com',
+        phone: '+221 33 800 00 01',
+        address: 'Dakar, Sénégal',
+        plan: 'enterprise',
+      },
+    })
+    return newCompany.id
+  } catch {
+    // DB might not be ready, return the hardcoded fallback
+    return DEMO_COMPANY_ID
+  }
+}
+
 export async function getCompanyId(): Promise<string> {
   try {
     const { getServerSession } = await import('next-auth')
     const session = await getServerSession(authOptions)
     if (session?.user) {
-      return (session.user as { companyId: string }).companyId || DEMO_COMPANY_ID
+      const companyId = (session.user as { companyId: string }).companyId || DEMO_COMPANY_ID
+      return await ensureValidCompanyId(companyId)
     }
   } catch {
     // next-auth not configured or session unavailable
   }
-  return DEMO_COMPANY_ID
+  // In demo mode, ensure the demo company exists
+  return await ensureValidCompanyId(DEMO_COMPANY_ID)
 }
 
 export async function getAuthSession() {

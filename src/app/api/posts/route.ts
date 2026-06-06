@@ -1,16 +1,17 @@
 import { db } from '@/lib/db'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/posts - List posts with filters, search, and pagination
 export async function GET(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
     const { searchParams } = new URL(request.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10')))
     const filter = searchParams.get('filter') || 'all'
     const search = searchParams.get('search') || ''
     const authorId = searchParams.get('authorId') || ''
-    const companyId = searchParams.get('companyId') || 'comp_1'
 
     const where: Record<string, unknown> = { companyId }
 
@@ -27,9 +28,9 @@ export async function GET(request: NextRequest) {
       where.authorId = authorId
     }
 
-    // Search in content
+    // Search in content (SQLite doesn't support mode: 'insensitive')
     if (search) {
-      where.content = { contains: search, mode: 'insensitive' }
+      where.content = { contains: search }
     }
 
     const [posts, total] = await Promise.all([
@@ -110,41 +111,40 @@ export async function GET(request: NextRequest) {
 // POST /api/posts - Create a new post (accepts FormData with files)
 export async function POST(request: NextRequest) {
   try {
+    const companyId = await getCompanyId()
     const formData = await request.formData()
     const content = formData.get('content') as string | null
     let authorId = formData.get('authorId') as string | null
-    const companyId = (formData.get('companyId') as string) || 'comp_1'
 
-    // Fallback: find first user if no authorId provided
-    if (!authorId) {
-      const firstUser = await db.user.findFirst({ select: { id: true } })
-      authorId = firstUser?.id || null
+    // Resolve author: use provided authorId, or fallback to first user in DB
+    let author = null
+
+    if (authorId) {
+      author = await db.user.findUnique({
+        where: { id: authorId },
+        select: { id: true, name: true, avatar: true },
+      })
     }
 
-    if (!authorId) {
-      return NextResponse.json(
-        { error: 'Aucun utilisateur trouvé.' },
-        { status: 400 }
-      )
-    }
-
-    // Verify the author exists, fallback to first user if not found
-    let author = await db.user.findUnique({
-      where: { id: authorId },
-      select: { id: true, name: true, avatar: true },
-    })
-
+    // Fallback: find first active user if no valid author
     if (!author) {
-      const fallbackUser = await db.user.findFirst({ select: { id: true, name: true, avatar: true } })
-      if (fallbackUser) {
-        author = fallbackUser
-        authorId = fallbackUser.id
-      } else {
+      author = await db.user.findFirst({
+        where: { active: true },
+        select: { id: true, name: true, avatar: true },
+      })
+      if (!author) {
+        // Try any user regardless of active status
+        author = await db.user.findFirst({
+          select: { id: true, name: true, avatar: true },
+        })
+      }
+      if (!author) {
         return NextResponse.json(
-          { error: 'Aucun utilisateur trouvé en base.' },
-          { status: 404 }
+          { error: 'Aucun utilisateur trouvé en base. Veuillez d\'abord créer un utilisateur.' },
+          { status: 400 }
         )
       }
+      authorId = author.id
     }
 
     // Process uploaded files

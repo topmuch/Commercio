@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/posts/[id]/comments - List top-level comments for a post
@@ -77,7 +78,14 @@ export async function POST(
   try {
     const { id } = await params
     const body = await request.json()
-    const { authorId, content, parentCommentId } = body
+    let { authorId, content, parentCommentId } = body
+
+    // Fallback: if no authorId, use first user in DB
+    if (!authorId) {
+      const firstUser = await db.user.findFirst({ where: { active: true }, select: { id: true } })
+        || await db.user.findFirst({ select: { id: true } })
+      if (firstUser) authorId = firstUser.id
+    }
 
     if (!authorId || !content) {
       return NextResponse.json(

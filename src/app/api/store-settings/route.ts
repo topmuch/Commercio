@@ -105,7 +105,7 @@ export async function PUT(request: Request) {
     if (storeDescription !== undefined) updateData.storeDescription = storeDescription
     if (currency !== undefined) updateData.currency = currency
     if (isActive !== undefined) updateData.isActive = isActive
-    if (publicSlug !== undefined) updateData.publicSlug = publicSlug || null
+    if (publicSlug !== undefined) updateData.publicSlug = publicSlug === '' ? null : publicSlug || null
 
     // Entreprise
     if (companyLogo !== undefined) updateData.companyLogo = companyLogo
@@ -156,6 +156,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ data: settings })
   } catch (error: unknown) {
+    console.error('Error updating store settings:', error)
     const message = error instanceof Error ? error.message : 'Erreur lors de la mise à jour des paramètres'
     return NextResponse.json({ error: message }, { status: 500 })
   }
