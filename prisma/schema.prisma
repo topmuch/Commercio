@@ -31,6 +31,7 @@ model Company {
   discussions Discussion[]
   payments  Payment[]
   storeSettings StoreSettings?
+  posts     Post[]
 }
 
 // ===== USERS =====
@@ -56,6 +57,9 @@ model User {
   clients     Client[]
 
   targets     Target[]
+  posts      Post[]
+  postReactions PostReaction[]
+  postComments   PostComment[]
 }
 
 // ===== CLIENTS =====
@@ -342,6 +346,65 @@ model StoreSettings {
   updatedAt      DateTime @updatedAt
 
   company        Company  @relation(fields: [companyId], references: [id])
+}
+
+// ===== SOCIAL FEED POSTS =====
+model Post {
+  id           String   @id @default(cuid())
+  content      String?
+  authorId     String
+  companyId    String
+  isPinned     Boolean  @default(false)
+  likesCount   Int      @default(0)
+  commentsCount Int     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company     Company          @relation(fields: [companyId], references: [id])
+  author      User             @relation(fields: [authorId], references: [id])
+  attachments PostAttachment[]
+  reactions   PostReaction[]
+  comments    PostComment[]
+}
+
+model PostAttachment {
+  id        String   @id @default(cuid())
+  postId    String
+  type      String   // image, document
+  fileUrl   String
+  fileName  String
+  mimeType  String?
+  fileSize  Int?
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model PostReaction {
+  id     String @id @default(cuid())
+  postId String
+  userId String
+  type   String @default("like") // like, love, celebrate, insight
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId, type])
+}
+
+model PostComment {
+  id             String   @id @default(cuid())
+  postId         String
+  authorId        String
+  content         String
+  parentCommentId String?
+  createdAt       DateTime @default(now())
+
+  post          Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User          @relation(fields: [authorId], references: [id])
+  parentComment PostComment?  @relation("CommentThread", fields: [parentCommentId], references: [id])
+  replies       PostComment[] @relation("CommentThread")
 }
 
 // ===== TARGETS =====

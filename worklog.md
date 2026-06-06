@@ -344,3 +344,39 @@ Stage Summary:
 - DashboardPage : KPI multicolors sur fond clair standard, cartes normales
 - AppHeader : bouton toggle dark/light gradient blue→violet avec shadow
 - Tout vérifié en navigateur : toggle fonctionne, pas d'erreurs console
+---
+Task ID: 1
+Agent: Main Agent
+Task: Transform "Discussions" tab into internal social feed (Facebook-like timeline)
+
+Work Log:
+- Analyzed existing Discussions page (chat-style client communication)
+- Added 4 new Prisma models: Post, PostAttachment, PostReaction, PostComment
+- Added reverse relations on Company and User models
+- Ran db:push to sync schema to SQLite database
+- Created API route GET/POST /api/posts (list with filters/pagination, create with file upload)
+- Created API route DELETE /api/posts/[id]
+- Created API route POST /api/posts/[id]/react (toggle reactions)
+- Created API route GET/POST /api/posts/[id]/comments
+- Created API route POST /api/upload (file upload to public/uploads/)
+- Created src/lib/feed-utils.ts (getTimeAgo, formatFileSize, formatCount, getInitials)
+- Created src/components/feed/create-post-box.tsx (post creation with image/doc upload)
+- Created src/components/feed/post-card.tsx (Facebook-style post card)
+- Created src/components/feed/comment-section.tsx (expandable comments)
+- Created src/components/feed/reaction-picker.tsx (emoji reaction popup)
+- Created src/components/feed/feed-filters.tsx (filter tabs)
+- Rewrote src/components/discussions/discussions-page.tsx as feed timeline with infinite scroll
+- Updated sidebar label "Discussions" → "Fil d'actualité"
+- Updated header label "Discussions" → "Fil d'actualité"
+- Verified via agent-browser: page renders with create post box, filter tabs, empty state
+- Zero lint errors confirmed
+
+Stage Summary:
+- Complete social feed system built: Posts, Attachments, Reactions, Comments
+- Facebook-style UI with orange accent, black text, responsive design
+- File upload support (images and documents)
+- Reaction system (👍❤️🎉💡)
+- Comment threads
+- Filter tabs (Tout/Images/Documents/Annonces/Mes publications)
+- Infinite scroll pagination
+- All integrated into existing dashboard shell

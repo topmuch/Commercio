@@ -64,7 +64,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Communication',
     items: [
-      { id: 'discussions', label: 'Discussions', icon: MessageSquare },
+      { id: 'discussions', label: "Fil d'actualité", icon: MessageSquare },
     ],
   },
   {
