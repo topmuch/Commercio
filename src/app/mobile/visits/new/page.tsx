@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   MapPin, Phone, Camera, X, Clock, CheckCircle2, ChevronLeft,
   AlertCircle, WifiOff, MessageCircle, ShoppingCart, ArrowRight,
-  Loader2, Search,
+  Loader2, Search, UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { useGeolocation } from '@/hooks/use-geolocation'
 import { useOnlineStatus } from '@/hooks/use-online-status'
+import { MobileInlineClientCreate } from '@/components/mobile/inline-client-create'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -80,6 +81,7 @@ function NewVisitPageContent() {
   const [clients, setClients] = useState<ClientOption[]>([])
   const [clientsLoading, setClientsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showClientCreate, setShowClientCreate] = useState(false)
 
   const [phase, setPhase] = useState<VisitPhase>('select')
   const [visit, setVisit] = useState<VisitState>({
@@ -141,6 +143,13 @@ function NewVisitPageContent() {
   const selectClient = (client: ClientOption) => {
     setVisit(prev => ({ ...prev, clientId: client.id, client }))
     setPhase('checkin')
+  }
+
+  // Handle new client created inline
+  const handleClientCreated = (client: ClientOption) => {
+    setClients(prev => [client, ...prev])
+    setShowClientCreate(false)
+    selectClient(client)
   }
 
   // Check-in
@@ -285,6 +294,30 @@ function NewVisitPageContent() {
 
           {/* Client list */}
           <div className="px-4 space-y-2">
+            {/* Inline client creation toggle */}
+            {!showClientCreate && (
+              <button
+                onClick={() => setShowClientCreate(true)}
+                className="flex w-full items-center gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 active:bg-emerald-500/15 transition-colors"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20">
+                  <UserPlus className="h-4 w-4 text-emerald-400" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-emerald-400">Créer un nouveau client</p>
+                  <p className="text-[11px] text-emerald-400/50">Ajouter rapidement un client</p>
+                </div>
+              </button>
+            )}
+
+            {/* Inline client create form */}
+            {showClientCreate && (
+              <MobileInlineClientCreate
+                onClientCreated={handleClientCreated}
+                onCancel={() => setShowClientCreate(false)}
+              />
+            )}
+
             {clientsLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="rounded-xl bg-slate-800/60 border border-slate-700/50 p-3.5">

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, MapPin, ShoppingCart, X } from 'lucide-react'
+import { Plus, MapPin, ShoppingCart, X, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +11,13 @@ interface FabButtonProps {
 }
 
 const fabActions = [
+  {
+    label: 'Nouveau Client',
+    icon: UserPlus,
+    href: '/mobile/clients/new',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+  },
   {
     label: 'Nouvelle Visite',
     icon: MapPin,

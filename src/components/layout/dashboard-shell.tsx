@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAppStore, type PageId } from '@/lib/store'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { AppHeader } from '@/components/layout/app-header'
+import { RoleGuard } from '@/components/shared/role-guard'
 import { Toaster } from 'sonner'
 
 // Dynamic imports for all ERP pages
@@ -57,7 +58,11 @@ function PageRenderer() {
     )
   }
 
-  return <PageComponent />
+  return (
+    <RoleGuard pageId={currentPage}>
+      <PageComponent />
+    </RoleGuard>
+  )
 }
 
 export function DashboardShell() {

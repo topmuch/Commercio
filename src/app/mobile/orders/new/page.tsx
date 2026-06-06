@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import {
   Search, ArrowLeft, Plus, Minus, Trash2, MessageCircle,
   Package, User, Check, WifiOff, Send, Save, ShoppingBag,
-  ChevronRight, Loader2, ImageIcon,
+  ChevronRight, Loader2, ImageIcon, UserPlus,
 } from 'lucide-react'
+import { MobileInlineClientCreate } from '@/components/mobile/inline-client-create'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { useOnlineStatus } from '@/hooks/use-online-status'
@@ -108,6 +109,7 @@ export default function QuickOrderPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [clientsLoading, setClientsLoading] = useState(true)
   const [recentClients, setRecentClients] = useState<Client[]>([])
+  const [showClientCreate, setShowClientCreate] = useState(false)
 
   // Products
   const [products, setProducts] = useState<Product[]>([])
@@ -276,6 +278,14 @@ export default function QuickOrderPage() {
     return recentClients.length > 0 ? recentClients : clients.slice(0, 10)
   }, [clients, recentClients, clientSearch])
 
+  // ─── Handle new client created inline ───
+  const handleClientCreated = useCallback((client: Client) => {
+    setSelectedClient(client)
+    setClients(prev => [client, ...prev])
+    setShowClientCreate(false)
+    setStep(2)
+  }, [])
+
   // ─── Submit order ───
   const submitOrder = useCallback(async () => {
     if (!selectedClient || cart.length === 0) return
@@ -411,6 +421,9 @@ export default function QuickOrderPage() {
             search={clientSearch}
             onSearchChange={setClientSearch}
             onSelect={(c) => { setSelectedClient(c); setStep(2) }}
+            showClientCreate={showClientCreate}
+            onToggleClientCreate={() => setShowClientCreate(!showClientCreate)}
+            onClientCreated={handleClientCreated}
           />
         )}
         {step === 2 && (
@@ -460,12 +473,18 @@ function ClientStep({
   search,
   onSearchChange,
   onSelect,
+  showClientCreate,
+  onToggleClientCreate,
+  onClientCreated,
 }: {
   clients: Client[]
   loading: boolean
   search: string
   onSearchChange: (v: string) => void
   onSelect: (c: Client) => void
+  showClientCreate: boolean
+  onToggleClientCreate: () => void
+  onClientCreated: (c: Client) => void
 }) {
   return (
     <div className="p-4 space-y-4">
@@ -480,6 +499,30 @@ function ClientStep({
           className="w-full min-h-[44px] rounded-xl border border-slate-700/50 bg-slate-800/60 pl-10 pr-4 text-sm text-slate-200 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/20"
         />
       </div>
+
+      {/* Inline client creation toggle */}
+      {!showClientCreate && (
+        <button
+          onClick={onToggleClientCreate}
+          className="flex w-full items-center gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 active:bg-emerald-500/15 transition-colors"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20">
+            <UserPlus className="h-4 w-4 text-emerald-400" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-emerald-400">Créer un nouveau client</p>
+            <p className="text-[11px] text-emerald-400/50">Ajouter rapidement un client</p>
+          </div>
+        </button>
+      )}
+
+      {/* Inline client create form */}
+      {showClientCreate && (
+        <MobileInlineClientCreate
+          onClientCreated={onClientCreated}
+          onCancel={onToggleClientCreate}
+        />
+      )}
 
       {loading ? (
         <div className="space-y-2">

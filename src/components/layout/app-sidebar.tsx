@@ -1,7 +1,8 @@
 "use client"
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useAppStore, type PageId } from '@/lib/store'
+import { hasAccess, getRoleLabel } from '@/lib/permissions'
 import {
   LayoutDashboard,
   Users,
@@ -105,6 +106,18 @@ export function AppSidebar() {
   const setCurrentPage = useAppStore((s) => s.setCurrentPage)
   const user = useAppStore((s) => s.user)
   const sidebarOpen = useAppStore((s) => s.sidebarOpen)
+  const userRole = user?.role
+
+  // Filter navigation groups by role permissions
+  const filteredNavGroups = useMemo(() => {
+    if (!userRole) return navGroups // No role = demo mode, show all
+    return navGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => hasAccess(userRole, item.id)),
+      }))
+      .filter((group) => group.items.length > 0)
+  }, [userRole])
 
   const initials = user?.name
     ? user.name
@@ -142,7 +155,7 @@ export function AppSidebar() {
       {/* Navigation */}
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-5 px-3">
-          {navGroups.map((group) => (
+          {filteredNavGroups.map((group) => (
             <div key={group.label}>
               {sidebarOpen && (
                 <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-orange-400/50">
@@ -245,8 +258,8 @@ export function AppSidebar() {
               <span className="text-sm font-medium text-white truncate">
                 {user?.name}
               </span>
-              <span className="text-[11px] text-orange-300/50 capitalize truncate">
-                {user?.role?.replace('_', ' ')}
+              <span className="text-[11px] text-orange-300/50 truncate">
+                {getRoleLabel(user?.role || 'admin')}
               </span>
             </div>
           )}
