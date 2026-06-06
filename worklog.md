@@ -106,3 +106,24 @@ Stage Summary:
 - 4 files changed, 752 insertions
 - 2 new pages + 2 GET API handlers added
 - All 3 B-problems resolved (B1 invoice detail, B2 order detail, B3 quote detail)
+---
+Task ID: 1
+Agent: main
+Task: PROMPT 3 - Enhance 3 mobile detail pages + create quote-to-order conversion API
+
+Work Log:
+- Explored existing codebase: all 3 detail pages and 3 API routes already existed from previous session
+- Identified gaps: product name bug (productName vs product.name), missing action buttons
+- Enhanced /mobile/invoices/[id]/page.tsx: added sticky bottom action bar (PDF download, Email, Print), fixed product?.name
+- Enhanced /mobile/orders/[id]/page.tsx: added "Marquer comme livrée" button when status=shipped with PUT API call, fixed product?.name
+- Enhanced /mobile/quotes/[id]/page.tsx: added "Convertir en commande" button when status=accepted, "Envoyer par WhatsApp" with pre-formatted message, expired date indicator, fixed product?.name
+- Created POST /api/quotes/[id]/convert/route.ts: transaction-safe quote-to-order conversion with stock decrement
+- Updated GET /api/quotes/[id]/route.ts: added client.id to select for conversion API
+- Lint passes clean, dev server running without errors
+- Committed as 6b8252e and pushed to origin/main
+
+Stage Summary:
+- 5 files changed, +299/-24 lines
+- 3 mobile detail pages fully functional with all requested action buttons
+- New API route for quote-to-order conversion
+- Bug fix: product name display across all 3 pages
