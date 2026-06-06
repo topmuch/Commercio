@@ -62,7 +62,7 @@ export default function Navbar() {
               Se connecter
             </a>
             <a href="/dashboard" className="text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition-colors duration-200">
-              Démarrer gratuitement
+              Accéder à l'application
             </a>
           </div>
 
@@ -102,7 +102,7 @@ export default function Navbar() {
                   Se connecter
                 </a>
                 <a href="/dashboard" className="block w-full text-center text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition-colors duration-200">
-                  Démarrer gratuitement
+                  Accéder à l'application
                 </a>
               </div>
             </div>

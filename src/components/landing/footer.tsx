@@ -2,7 +2,12 @@
 
 import { Facebook, Linkedin, Twitter } from 'lucide-react';
 
-const productLinks = ['Fonctionnalités', 'Tarifs', 'Intégrations', 'Changelog'];
+const productLinks = [
+  { label: 'Fonctionnalités', href: '#features' },
+  { label: 'Tarifs', href: '#pricing' },
+  { label: 'Accéder à l\'application', href: '/dashboard' },
+  { label: 'Installer l\'App Mobile', href: '/install-app' },
+];
 const companyLinks = ['À propos', 'Blog', 'Carrières', 'Contact'];
 const supportLinks = [
   "Centre d'aide",
@@ -59,10 +64,10 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-3">
               {productLinks.map((link) => (
-                <li key={link}>
-                  <span className="text-sm text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer">
-                    {link}
-                  </span>
+                <li key={link.label}>
+                  <a href={link.href} className="text-sm text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer">
+                    {link.label}
+                  </a>
                 </li>
               ))}
             </ul>

@@ -188,7 +188,9 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setCurrentPage('settings')}>Paramètres</DropdownMenuItem>
               <DropdownMenuItem>Profil</DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem>Déconnexion</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
