@@ -35,7 +35,6 @@ import {
   Warehouse,
   FileText,
   Receipt,
-  Truck,
   MessageSquare,
   MapPin,
   Map,
@@ -80,6 +79,8 @@ const commandPages = [
   { id: 'ai-assistant', label: 'Assistant IA', icon: Bot },
 ]
 
+const darkPages: string[] = ['dashboard']
+
 export function AppHeader() {
   const currentPage = useAppStore((s) => s.currentPage)
   const user = useAppStore((s) => s.user)
@@ -89,6 +90,8 @@ export function AppHeader() {
   const theme = useAppStore((s) => s.theme)
   const setTheme = useAppStore((s) => s.setTheme)
   const [commandOpen, setCommandOpen] = React.useState(false)
+
+  const isDark = darkPages.includes(currentPage)
 
   const initials = user?.name
     ? user.name
@@ -112,11 +115,17 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-md px-4 lg:px-6">
+      <header
+        className={`sticky top-0 z-30 flex h-16 items-center gap-4 backdrop-blur-md px-4 lg:px-6 transition-colors duration-300 ${
+          isDark
+            ? 'bg-teal-900/40 border-b border-teal-700/30 text-white'
+            : 'bg-white/80 border-b border-slate-200 text-slate-900'
+        }`}
+      >
         <Button
           variant="ghost"
           size="icon"
-          className="shrink-0 lg:hidden"
+          className={`shrink-0 lg:hidden ${isDark ? 'hover:bg-white/10 text-white/80' : ''}`}
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           <Menu className="h-5 w-5" />
@@ -125,14 +134,14 @@ export function AppHeader() {
         <Button
           variant="ghost"
           size="icon"
-          className="hidden lg:flex shrink-0"
+          className={`hidden lg:flex shrink-0 ${isDark ? 'hover:bg-white/10 text-white/80' : ''}`}
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           <Menu className="h-5 w-5" />
         </Button>
 
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold text-foreground">
+          <h1 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
             {pageLabels[currentPage] || 'Tableau de bord'}
           </h1>
         </div>
@@ -140,27 +149,47 @@ export function AppHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Button
             variant="outline"
-            className="hidden sm:flex items-center gap-2 text-muted-foreground h-9 w-64 justify-start"
+            className={`hidden sm:flex items-center gap-2 h-9 w-64 justify-start ${
+              isDark
+                ? 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 placeholder:text-white/30'
+                : 'text-muted-foreground'
+            }`}
             onClick={() => setCommandOpen(true)}
           >
             <Search className="h-4 w-4" />
             <span className="text-sm">Rechercher...</span>
-            <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <kbd className={`pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium ${
+              isDark ? 'border-white/10 bg-white/5 text-white/40' : 'border bg-muted text-muted-foreground'
+            }`}>
               <span className="text-xs">⌘</span>K
             </kbd>
           </Button>
 
-          <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => setCommandOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`sm:hidden ${isDark ? 'text-white/80 hover:bg-white/10' : ''}`}
+            onClick={() => setCommandOpen(true)}
+          >
             <Search className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={isDark ? 'text-white/80 hover:bg-white/10' : ''}
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          >
             {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`relative ${isDark ? 'text-white/80 hover:bg-white/10' : ''}`}
+              >
                 <Bell className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -176,13 +205,15 @@ export function AppHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <Avatar className="h-8 w-8 border-2 border-primary/20">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              <Button variant="ghost" className={`flex items-center gap-2 px-2 ${isDark ? '' : ''}`}>
+                <Avatar className={`h-8 w-8 border-2 ${isDark ? 'border-emerald-400/30' : 'border-primary/20'}`}>
+                  <AvatarFallback className={`text-xs font-semibold ${isDark ? 'bg-emerald-500 text-white' : 'bg-primary text-primary-foreground'}`}>
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:block text-sm font-medium">{user?.name}</span>
+                <span className={`hidden md:block text-sm font-medium ${isDark ? 'text-white' : ''}`}>
+                  {user?.name}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

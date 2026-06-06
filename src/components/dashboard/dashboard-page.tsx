@@ -282,7 +282,7 @@ function ChartCard({
 
 function DashboardSkeleton() {
   return (
-    <div className="bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-900 min-h-screen -m-4 lg:-m-6 p-4 lg:p-6 space-y-6">
+    <div className="min-h-screen space-y-6">
       {/* KPI Cards skeleton */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
@@ -355,7 +355,7 @@ export default function DashboardPage() {
   // ─── Error State ───
   if (error || !data) {
     return (
-      <div className="bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-900 min-h-screen -m-4 lg:-m-6 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center">
             <span className="text-2xl">⚠️</span>
@@ -418,7 +418,7 @@ export default function DashboardPage() {
   }))
 
   return (
-    <div className="bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-900 min-h-screen -m-4 lg:-m-6 p-4 lg:p-6 space-y-6">
+    <div className="min-h-screen space-y-6">
       {/* ─── KPI Cards ─── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {/* Clients Actifs */}

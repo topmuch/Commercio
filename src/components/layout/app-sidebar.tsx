@@ -10,7 +10,6 @@ import {
   Warehouse,
   FileText,
   Receipt,
-  Truck,
   MessageSquare,
   MapPin,
   Map,
@@ -18,10 +17,7 @@ import {
   BarChart3,
   Bot,
   Settings,
-  ChevronDown,
-  Boxes,
   Target,
-  Briefcase,
   Smartphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -97,7 +93,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Application Mobile',
+    label: 'Mobile',
     items: [
       { id: 'install-app', label: 'Installer l\'App', icon: Smartphone, badge: 'PWA', external: true },
     ],
@@ -122,22 +118,22 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border bg-sidebar transition-all duration-300 flex flex-col',
+        'fixed left-0 top-0 z-40 h-screen border-r border-teal-700/50 bg-teal-950/95 backdrop-blur-sm transition-all duration-300 flex flex-col',
         sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold text-sm">
-          D
+      <div className="flex h-16 items-center gap-3 border-b border-teal-700/40 px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20">
+          T
         </div>
         {sidebarOpen && (
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold text-sidebar-foreground tracking-tight">
-              DistribuERP
+            <span className="text-sm font-bold text-white tracking-tight">
+              Teranga Biz
             </span>
-            <span className="text-[10px] text-sidebar-foreground/60 uppercase tracking-widest">
-              Plateforme de Distribution
+            <span className="text-[10px] text-teal-300/60 uppercase tracking-widest">
+              DistribuERP
             </span>
           </div>
         )}
@@ -145,11 +141,11 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 py-4">
-        <nav className="space-y-6 px-3">
+        <nav className="space-y-5 px-3">
           {navGroups.map((group) => (
             <div key={group.label}>
               {sidebarOpen && (
-                <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-teal-400/50">
                   {group.label}
                 </h3>
               )}
@@ -172,16 +168,19 @@ export function AppSidebar() {
                         className={cn(
                           'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                           isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-teal-100/60 hover:bg-white/5 hover:text-teal-100'
                         )}
                       >
-                        <Icon className={cn('h-4 w-4 shrink-0', isActive && 'text-erp-orange')} />
+                        <Icon className={cn(
+                          'h-4 w-4 shrink-0',
+                          isActive ? 'text-emerald-400' : ''
+                        )} />
                         <span className="truncate">{item.label}</span>
                         {item.badge && (
                           <Badge
                             variant="secondary"
-                            className="ml-auto h-5 min-w-5 bg-erp-orange text-white text-[10px] px-1.5"
+                            className="ml-auto h-5 min-w-5 bg-emerald-500 text-white text-[10px] px-1.5 border-0"
                           >
                             {item.badge}
                           </Badge>
@@ -204,19 +203,19 @@ export function AppSidebar() {
                           className={cn(
                             'flex w-full items-center justify-center rounded-lg p-2.5 transition-all duration-150 relative',
                             isActive
-                              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                              ? 'bg-white/10 text-white'
+                              : 'text-teal-100/60 hover:bg-white/5 hover:text-teal-100'
                           )}
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon className={cn('h-4 w-4', isActive && 'text-emerald-400')} />
                           {item.badge && (
-                            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-erp-orange text-[9px] font-bold text-white">
+                            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
                               {item.badge}
                             </span>
                           )}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-medium">
+                      <TooltipContent side="right" className="font-medium bg-slate-800 border-slate-700">
                         {item.label}
                       </TooltipContent>
                     </Tooltip>
@@ -229,24 +228,24 @@ export function AppSidebar() {
       </ScrollArea>
 
       {/* User */}
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-teal-700/40 p-3">
         <div
           className={cn(
             'flex items-center gap-3 rounded-lg p-2',
             sidebarOpen ? '' : 'justify-center'
           )}
         >
-          <Avatar className="h-8 w-8 shrink-0 border-2 border-erp-orange/30">
-            <AvatarFallback className="bg-erp-orange text-white text-xs font-semibold">
+          <Avatar className="h-8 w-8 shrink-0 border-2 border-emerald-400/30">
+            <AvatarFallback className="bg-emerald-500 text-white text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           {sidebarOpen && (
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-medium text-sidebar-foreground truncate">
+              <span className="text-sm font-medium text-white truncate">
                 {user?.name}
               </span>
-              <span className="text-[11px] text-sidebar-foreground/50 capitalize truncate">
+              <span className="text-[11px] text-teal-300/50 capitalize truncate">
                 {user?.role?.replace('_', ' ')}
               </span>
             </div>
