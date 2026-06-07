@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 echo "=== Teranga Biz Docker Entrypoint ==="
 
@@ -15,35 +14,32 @@ npx prisma generate 2>&1 || {
   echo "WARNING: Prisma generate failed, attempting to continue..."
 }
 
-# Push schema to database
+# Push schema to database (don't exit on failure)
 echo "[2/3] Pushing Prisma schema to database..."
-npx prisma db push --skip-generate --accept-data-loss 2>&1
+DB_PUSH_OK=0
+npx prisma db push --skip-generate --accept-data-loss 2>&1 || DB_PUSH_OK=1
 
-# If prisma db push failed, try raw SQL fallback
-if [ $? -ne 0 ]; then
-  echo "WARNING: prisma db push failed, running SQL fallback..."
+if [ "$DB_PUSH_OK" -ne 0 ]; then
+  echo "WARNING: prisma db push failed (exit code $DB_PUSH_OK)"
+  echo "Attempting fallback SQL migration..."
   
-  # Check if the database file exists, if not create it
+  # Check if the database file exists
   if [ ! -f "/app/data/commercio.db" ]; then
-    echo "Creating new database..."
-    sqlite3 /app/data/commercio.db "SELECT 1;" 2>/dev/null || true
+    echo "Database file does not exist yet — running prisma db push may need a different approach"
+    # Try creating the DB with prisma migrate
+    echo "Trying prisma db push without --accept-data-loss..."
+    npx prisma db push --skip-generate 2>&1 || true
+  else
+    echo "Database exists, applying raw SQL migrations..."
+    # Fallback: raw SQL to add missing columns
+    sqlite3 /app/data/commercio.db "PRAGMA journal_mode=WAL;" 2>/dev/null || true
+    sqlite3 /app/data/commercio.db "ALTER TABLE StoreSettings ADD COLUMN logoUrl TEXT;" 2>/dev/null && echo "  -> Added logoUrl column" || echo "  -> logoUrl column already exists or table not found"
+    sqlite3 /app/data/commercio.db "ALTER TABLE StoreSettings ADD COLUMN primaryColor TEXT NOT NULL DEFAULT '#10B981';" 2>/dev/null && echo "  -> Added primaryColor column" || echo "  -> primaryColor column already exists or table not found"
   fi
   
-  # Run prisma db push one more time without --accept-data-loss
-  echo "Retrying prisma db push..."
-  npx prisma db push --skip-generate 2>&1 || {
-    echo "ERROR: Could not sync database schema. Attempting raw SQL migration..."
-    sqlite3 /app/data/commercio.db "
-      PRAGMA journal_mode=WAL;
-      -- Add logoUrl column if missing
-      ALTER TABLE StoreSettings ADD COLUMN logoUrl TEXT;
-    " 2>/dev/null || echo "(logoUrl column may already exist or table issue)"
-    sqlite3 /app/data/commercio.db "
-      -- Add primaryColor column if missing  
-      ALTER TABLE StoreSettings ADD COLUMN primaryColor TEXT NOT NULL DEFAULT '#10B981';
-    " 2>/dev/null || echo "(primaryColor column may already exist or table issue)"
-    echo "Raw SQL migration completed (if table StoreBanner is missing, please check logs above)"
-  }
+  echo "Fallback migration completed."
+else
+  echo "  -> Schema pushed successfully."
 fi
 
 echo "[3/3] Starting application server..."
