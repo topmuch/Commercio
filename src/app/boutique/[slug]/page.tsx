@@ -99,13 +99,14 @@ function buildWhatsAppUrl(phone: string, message: string): string {
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 }
 
-function getStockStatus(stock: number, minStock: number): 'en_stock' | 'stock_limite' | 'rupture' {
+function getStockStatus(stock: number, minStock?: number): 'en_stock' | 'stock_limite' | 'rupture' {
+  const threshold = minStock ?? 5
   if (stock === 0) return 'rupture'
-  if (stock <= minStock) return 'stock_limite'
+  if (stock <= threshold) return 'stock_limite'
   return 'en_stock'
 }
 
-function getStockBadge(stock: number, minStock: number) {
+function getStockBadge(stock: number, minStock?: number) {
   const status = getStockStatus(stock, minStock)
   if (status === 'rupture') {
     return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white border-0 font-medium">Rupture</Badge>
@@ -116,14 +117,14 @@ function getStockBadge(stock: number, minStock: number) {
   return <Badge className="text-[10px] px-1.5 py-0 bg-emerald-500 text-white border-0 font-medium">En stock</Badge>
 }
 
-function getStockLabel(stock: number, minStock: number): string {
+function getStockLabel(stock: number, minStock?: number): string {
   const status = getStockStatus(stock, minStock)
   if (status === 'rupture') return 'Rupture de stock'
   if (status === 'stock_limite') return `Stock limité — ${stock} restant${stock > 1 ? 's' : ''}`
   return `${stock} en stock`
 }
 
-function getStockColor(stock: number, minStock: number): string {
+function getStockColor(stock: number, minStock?: number): string {
   const status = getStockStatus(stock, minStock)
   if (status === 'rupture') return 'text-red-600'
   if (status === 'stock_limite') return 'text-amber-600'

@@ -236,3 +236,22 @@ Stage Summary:
 - Checkout WhatsApp avec formulaire Nom/Téléphone
 - Upload images locales (public/uploads/boutique/)
 - Admin boutique: logo upload, bannières CRUD, settings
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix Docker build failure - TypeScript error in boutique page
+
+Work Log:
+- Identified build error: `product.minStock` type `number | undefined` not assignable to `number` parameter in `getStockBadge`, `getStockStatus`, `getStockLabel`, `getStockColor` functions
+- Made `minStock` parameter optional (`minStock?: number`) in all 4 helper functions
+- Added default threshold logic: `const threshold = minStock ?? 5` in `getStockStatus`
+- Ran `bun run build` - build passes successfully
+- Ran `bun run lint` - 0 errors, only 2 harmless warnings
+- Browser verified: homepage (/) renders correctly, boutique page (/boutique/distribusn) loads with products, no console errors
+
+Stage Summary:
+- Fixed TypeScript build error in `src/app/boutique/[slug]/page.tsx`
+- Changed function signatures: `getStockStatus`, `getStockBadge`, `getStockLabel`, `getStockColor` now accept optional `minStock` parameter
+- Docker build should now succeed (no more `exit code 1` at `bun run build` step)
+- All pages verified working in browser
