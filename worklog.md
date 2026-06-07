@@ -255,3 +255,34 @@ Stage Summary:
 - Changed function signatures: `getStockStatus`, `getStockBadge`, `getStockLabel`, `getStockColor` now accept optional `minStock` parameter
 - Docker build should now succeed (no more `exit code 1` at `bun run build` step)
 - All pages verified working in browser
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix 5 critical bugs — images, auth, logo, save, product upload
+
+Work Log:
+- **Bug 1: ImageUpload component** — `formData.append('type', folder)` was sending wrong field name (API expects 'folder'). Response parsing `json.data?.url` was wrong (API returns `json.url`). Fixed both.
+- **Bug 2: Banner creation "Non autorisé"** — `getAuthSession()` returns `null` in demo mode (no login). Created `isAdmin()` helper in auth.ts that returns `true` in demo mode. Updated `/api/store/banners` POST and `/api/store/banners/[id]` DELETE to use `isAdmin()`.
+- **Bug 3: Logo not displaying** — Added try/catch error handling for the backend PUT after logo upload in boutique-settings.tsx. Fixed underlying auth issue (same as Bug 2).
+- **Bug 4: Boutique info save button** — `/api/store-settings` PUT used strict auth check that fails in demo mode. Updated to use `isAdmin()`.
+- **Bug 5: Product image upload** — Replaced simple URL text input with `ImageUpload` component + URL text fallback in product creation/edit form in products-page.tsx.
+
+Files modified (7):
+- `src/components/ui/image-upload.tsx` — Fix field name + response parsing
+- `src/lib/auth.ts` — Added `isAdmin()`, `getRoleOrDemo()` 
+- `src/app/api/store/banners/route.ts` — POST: `isAdmin()`
+- `src/app/api/store/banners/[id]/route.ts` — DELETE: `isAdmin()`
+- `src/app/api/store-settings/route.ts` — PUT: `isAdmin()`
+- `src/components/boutique/boutique-settings.tsx` — Error handling for logo save
+- `src/components/products/products-page.tsx` — ImageUpload in product form
+
+Build: ✅ 0 errors, 2 warnings (pre-existing)
+Lint: ✅ 0 errors
+Browser: ✅ Homepage and boutique render correctly, no console errors
+Commit: `128c7c7` pushed to main
+
+Stage Summary:
+- Root cause for bugs 2/3/4: `getAuthSession()` returns null in demo mode, causing 401 errors on admin-only endpoints
+- Root cause for bug 1: ImageUpload component sent wrong FormData field name and parsed wrong response structure
+- All 5 bugs fixed, build passes, pushed to GitHub
