@@ -22,8 +22,7 @@ RUN npx next build && \
     cp -r .next/static .next/standalone/.next/ && \
     cp -r public .next/standalone/
 
-# Copy and setup entrypoint
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+# Setup entrypoint script (already cloned from repo)
 RUN chmod +x /app/docker-entrypoint.sh
 
 # Create data directory for SQLite
