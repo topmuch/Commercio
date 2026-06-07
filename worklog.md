@@ -286,3 +286,23 @@ Stage Summary:
 - Root cause for bugs 2/3/4: `getAuthSession()` returns null in demo mode, causing 401 errors on admin-only endpoints
 - Root cause for bug 1: ImageUpload component sent wrong FormData field name and parsed wrong response structure
 - All 5 bugs fixed, build passes, pushed to GitHub
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix middleware blocking API routes, Dockerfile DB push, and missing DB columns
+
+Work Log:
+- Root cause 1: middleware.ts blocked all /api/ routes with JWT check, causing silent redirects in production. API routes already handle their own auth via getCompanyId()/isAdmin()
+- Root cause 2: Dockerfile had `2>/dev/null || true` on `prisma db push`, hiding all migration errors silently
+- Root cause 3: StoreSettings.logoUrl and primaryColor columns, plus StoreBanner and WhatsappOrder tables, existed in Prisma schema but never pushed to production DB
+- Fixed middleware: added '/api/' to publicPaths so all API routes bypass JWT middleware check
+- Fixed Dockerfile: changed to `--accept-data-loss 2>&1` for visible error output
+- Ran full API test suite on production build (standalone server) — all 7 endpoints passed
+- Browser verified: boutique page renders with products and banner slider, zero console errors
+
+Stage Summary:
+- Middleware fix is the critical fix: without it, ALL API endpoints returned empty responses in production/Docker
+- 3 files changed: middleware.ts, Dockerfile, worklog.md
+- Build: ✅ 0 errors | Lint: ✅ 0 errors | API: ✅ 7/7 tests pass | Browser: ✅ boutique renders
+- Commit: c429edd pushed to main
