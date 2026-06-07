@@ -209,3 +209,30 @@ Stage Summary:
 - 6 failles sécurité critiques corrigées
 - Tous les boutons morts reconnectés
 - UI/UX amélioré sur 8 fichiers
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: REFONTE BOUTIQUE — Panier multi-produits, Swiper, checkout WhatsApp, upload
+
+Work Log:
+- Mise à jour Prisma schema: StoreBanner + WhatsappOrder models, logoUrl + primaryColor sur StoreSettings
+- Installation swiper@12.2.0 pour slider promotions
+- Création lib/cart-context.tsx: Context API panier avec localStorage, Product/CartItem types
+- Intégration CartProvider dans layout.tsx
+- Création 4 API routes: upload, banners CRUD, whatsapp-orders
+- Refonte complète /boutique/[slug]/page.tsx (1368 lignes)
+- Création boutique-settings.tsx (admin: logo, bannières, paramètres)
+- Ajout PageId boutique-settings dans store + permissions + sidebar + dashboard-shell
+- Fix bug: cart-context API mismatch (addItem/addToCart, nested CartItem structure)
+- Vérification navigateur: panier fonctionnel, 3 produits ajoutés, badge à jour, total correct, +/-/supprimer OK
+
+Stage Summary:
+- Commit 05a258c pushed to origin/main
+- 23 fichiers modifiés, +2103/-758 lignes
+- 7 nouveaux fichiers (cart-context, 4 API routes, boutique-settings, uploads dir)
+- Panier multi-produits avec localStorage
+- Slider promotions Swiper.js
+- Checkout WhatsApp avec formulaire Nom/Téléphone
+- Upload images locales (public/uploads/boutique/)
+- Admin boutique: logo upload, bannières CRUD, settings
