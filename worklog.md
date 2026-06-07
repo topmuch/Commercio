@@ -306,3 +306,27 @@ Stage Summary:
 - 3 files changed: middleware.ts, Dockerfile, worklog.md
 - Build: ✅ 0 errors | Lint: ✅ 0 errors | API: ✅ 7/7 tests pass | Browser: ✅ boutique renders
 - Commit: c429edd pushed to main
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix production DB missing columns/tables — db-init.ts auto-creation
+
+Work Log:
+- Diagnosed that `prisma db push` in Docker silently fails or doesn't execute
+- Root cause: Dockerfile CMD `prisma db push 2>/dev/null || true` hides all errors
+- Even with fix, `prisma db push` is unreliable for ensuring schema consistency
+- Created `src/lib/db-init.ts`: raw SQL execution at startup to:
+  - CREATE TABLE IF NOT EXISTS StoreBanner
+  - CREATE TABLE IF NOT EXISTS WhatsappOrder
+  - ALTER TABLE StoreSettings ADD COLUMN for logoUrl, primaryColor, and 13 other columns
+  - CREATE INDEX IF NOT EXISTS for performance
+- Created `src/instrumentation.ts`: Next.js startup hook that calls initDatabase()
+- Tested by simulating production DB state (dropped StoreBanner/WhatsappOrder, removed logoUrl/primaryColor columns)
+- Verified db-init auto-created all missing columns and tables at startup
+- Logs confirmed: "[DB Init] Added 2 column(s) to StoreSettings"
+
+Stage Summary:
+- 2 new files: instrumentation.ts, db-init.ts
+- This is a DEFENSIVE fix that works regardless of prisma db push success/failure
+- Build: ✅ | Lint: ✅ (0 errors) | Commit: 2cedaa7 pushed to main
