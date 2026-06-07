@@ -234,7 +234,7 @@ export default function MobileProfilePage() {
             icon={<Settings className="h-4 w-4" />}
             label="Paramètres"
             description="Configurer l'application"
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/mobile')}
             showChevron
           />
           <div className="border-t border-slate-700/30" />
@@ -252,7 +252,7 @@ export default function MobileProfilePage() {
             icon={<Info className="h-4 w-4" />}
             label="À propos de Teranga Biz"
             description="Version et informations"
-            onClick={() => {}}
+            onClick={() => window.alert('Teranga Biz v1.0.0 — Fait à Dakar 🇸🇳')}
             showChevron={false}
           />
           <div className="border-t border-slate-700/30" />

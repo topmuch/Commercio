@@ -8,14 +8,26 @@ const productLinks = [
   { label: 'Accéder à l\'application', href: '/dashboard' },
   { label: 'Installer l\'App Mobile', href: '/install-app' },
 ];
-const companyLinks = ['À propos', 'Blog', 'Carrières', 'Contact'];
-const supportLinks = [
-  "Centre d'aide",
-  'Documentation',
-  'Statut',
-  'WhatsApp Support',
+// TODO: Create dedicated pages for À propos, Blog, Carrières
+const companyLinks = [
+  { label: 'À propos', href: '#' },
+  { label: 'Blog', href: '#' },
+  { label: 'Carrières', href: '#' },
+  { label: 'Contact', href: '/contact' },
 ];
-const legalLinks = ['CGU', 'Confidentialité', 'Cookies'];
+// TODO: Create dedicated pages for Centre d'aide, Documentation, Statut
+const supportLinks = [
+  { label: "Centre d'aide", href: '#' },
+  { label: 'Documentation', href: '#' },
+  { label: 'Statut', href: '#' },
+  { label: 'WhatsApp Support', href: 'https://wa.me/221781234567', external: true },
+];
+// TODO: Create dedicated legal pages
+const legalLinks = [
+  { label: 'CGU', href: '#' },
+  { label: 'Confidentialité', href: '#' },
+  { label: 'Cookies', href: '#' },
+];
 
 export default function Footer() {
   return (
@@ -80,10 +92,13 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-3">
               {companyLinks.map((link) => (
-                <li key={link}>
-                  <span className="text-sm text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer">
-                    {link}
-                  </span>
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -96,10 +111,14 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-3">
               {supportLinks.map((link) => (
-                <li key={link}>
-                  <span className="text-sm text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer">
-                    {link}
-                  </span>
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    className="text-sm text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -111,7 +130,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
               <span className="text-sm text-slate-500">
-                © 2026 Teranga Biz. Tous droits réservés.
+                © {new Date().getFullYear()} Teranga Biz. Tous droits réservés.
               </span>
               <span className="text-sm text-slate-500 hidden sm:inline">
                 Fait avec ❤️ à Dakar
@@ -120,11 +139,11 @@ export default function Footer() {
 
             <div className="flex items-center gap-2">
               {legalLinks.map((link, index) => (
-                <span key={link} className="flex items-center">
+                <span key={link.label} className="flex items-center">
                   {index > 0 && <span className="mx-2 text-slate-700">|</span>}
-                  <span className="text-sm text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">
-                    {link}
-                  </span>
+                  <a href={link.href} className="text-sm text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">
+                    {link.label}
+                  </a>
                 </span>
               ))}
             </div>

@@ -87,7 +87,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/orders/[id] - Delete order (with ownership check)
+// DELETE /api/orders/[id] - Delete order (with ownership check and stock restoration)
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -105,9 +105,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 })
     }
 
-    // Delete order items first, then order
-    await db.orderItem.deleteMany({ where: { orderId: id } })
-    await db.order.delete({ where: { id } })
+    // Delete order items, restore stock, then delete order — all in a transaction
+    await db.$transaction(async (tx) => {
+      // Restore stock for each order item
+      for (const item of existing.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        })
+      }
+
+      // Delete order items, then the order itself
+      await tx.orderItem.deleteMany({ where: { orderId: id } })
+      await tx.order.delete({ where: { id } })
+    })
 
     return NextResponse.json({ data: { id } })
   } catch (error: unknown) {

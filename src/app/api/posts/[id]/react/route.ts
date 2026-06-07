@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { getCompanyId } from '@/lib/auth'
+import { getCompanyId, getAuthSession } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // POST /api/posts/[id]/react - Toggle a reaction (like, love, celebrate, insight)
@@ -10,9 +10,17 @@ export async function POST(
   try {
     const { id } = await params
     const body = await request.json()
-    let { userId, type } = body
+    let { type } = body
 
-    // Fallback: if no userId, use first user in DB
+    // SECURITY: Get the real user ID from session — ignore any client-provided userId
+    const session = await getAuthSession()
+    let userId: string | null = null
+
+    if (session?.user) {
+      userId = (session.user as { id: string }).id
+    }
+
+    // Fallback: if no session, use first user in DB
     if (!userId) {
       const firstUser = await db.user.findFirst({ where: { active: true }, select: { id: true } })
         || await db.user.findFirst({ select: { id: true } })

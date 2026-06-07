@@ -453,7 +453,14 @@ export default function BoutiquePage() {
             Livraison disponible à Dakar et dans tout le Sénégal.
           </p>
         </div>
-        <Button className="gap-2 bg-erp-success hover:bg-erp-success/90 text-white shrink-0">
+        <Button
+          className="gap-2 bg-erp-success hover:bg-erp-success/90 text-white shrink-0"
+          onClick={() => {
+            const phone = whatsappNumber ? whatsappNumber.replace(/[^0-9]/g, '') : '221781234567'
+            const message = encodeURIComponent('Bonjour, j\'ai besoin d\'aide pour passer une commande.')
+            window.open(`https://wa.me/${phone}?text=${message}`, '_blank')
+          }}
+        >
           <MessageCircle className="h-4 w-4" />
           Contacter sur WhatsApp
         </Button>

@@ -1,18 +1,24 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { getCompanyId } from '@/lib/auth'
+import { getCompanyId, getAuthSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: Request) {
   try {
-    // Protect seed endpoint: require auth
-    try {
-      await getCompanyId()
-    } catch {
+    // SECURITY: Only super_admin or admin can seed/force-delete data
+    const session = await getAuthSession()
+    if (!session?.user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
+    const role = (session.user as { role: string }).role
+    if (!['admin', 'super_admin'].includes(role)) {
+      return NextResponse.json(
+        { error: 'Accès refusé. Seuls les administrateurs peuvent initialiser les données.' },
+        { status: 403 }
+      )
+    }
 
-    const companyId = 'comp_1'
+    const companyId = await getCompanyId()
 
     // Check if data already exists
     const { searchParams } = new URL(request.url)
@@ -24,24 +30,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'Données déjà insérées', count: existingClients })
       }
     } else {
-      // Clean existing data when force=true — delete children before parents
-      await db.payment.deleteMany({})
-      await db.invoiceItem.deleteMany({})
-      await db.invoice.deleteMany({})
-      await db.orderItem.deleteMany({})
-      await db.order.deleteMany({})
-      await db.quoteItem.deleteMany({})
-      await db.quote.deleteMany({})
-      await db.stockMovement.deleteMany({})
-      await db.visit.deleteMany({})
-      await db.discussion.deleteMany({})
-      await db.target.deleteMany({})
-      await db.client.deleteMany({})
-      await db.product.deleteMany({})
-      await db.category.deleteMany({})
-      await db.user.deleteMany({})
-      await db.storeSettings.deleteMany({})
-      await db.company.deleteMany({})
+      // SECURITY: Clean existing data scoped to this company only
+      await db.payment.deleteMany({ where: { companyId } })
+      await db.invoiceItem.deleteMany({ where: { invoice: { companyId } } })
+      await db.invoice.deleteMany({ where: { companyId } })
+      await db.orderItem.deleteMany({ where: { order: { companyId } } })
+      await db.order.deleteMany({ where: { companyId } })
+      await db.quoteItem.deleteMany({ where: { quote: { companyId } } })
+      await db.quote.deleteMany({ where: { companyId } })
+      await db.stockMovement.deleteMany({ where: { companyId } })
+      await db.visit.deleteMany({ where: { companyId } })
+      await db.discussion.deleteMany({ where: { companyId } })
+      await db.target.deleteMany({ where: { user: { companyId } } })
+      await db.client.deleteMany({ where: { companyId } })
+      await db.product.deleteMany({ where: { companyId } })
+      await db.category.deleteMany({ where: { companyId } })
+      await db.user.deleteMany({ where: { companyId } })
+      await db.storeSettings.deleteMany({ where: { companyId } })
     }
 
     // =====================================================

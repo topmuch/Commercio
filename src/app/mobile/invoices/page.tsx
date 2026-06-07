@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 
 // ─── Types ───
@@ -106,6 +107,7 @@ export default function MobileInvoicesPage() {
   const [activeTab, setActiveTab] = useState('')
   const [showFilter, setShowFilter] = useState(false)
   const [pullDown, setPullDown] = useState(false)
+  const [error, setError] = useState(false)
 
   // KPI data
   const [kpi, setKpi] = useState<Kpi | null>(null)
@@ -119,6 +121,7 @@ export default function MobileInvoicesPage() {
 
   const fetchInvoices = useCallback(async (status?: string) => {
     try {
+      setError(false)
       const params = new URLSearchParams({ limit: '20' })
       if (status) params.set('status', status)
       const res = await fetch(`/api/invoices?${params.toString()}`)
@@ -133,7 +136,7 @@ export default function MobileInvoicesPage() {
         }
       }
     } catch {
-      // Offline — show cached or empty
+      setError(true)
     }
   }, [])
 
@@ -190,6 +193,7 @@ export default function MobileInvoicesPage() {
             )}
             <button
               onClick={() => setShowFilter(!showFilter)}
+              aria-label="Filtrer"
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
                 showFilter
@@ -202,6 +206,7 @@ export default function MobileInvoicesPage() {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
+              aria-label="Rafraîchir"
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700/50 active:bg-slate-700 transition-colors"
             >
               <RefreshCw className={cn('h-4 w-4 text-slate-400', refreshing && 'animate-spin')} />
@@ -268,11 +273,22 @@ export default function MobileInvoicesPage() {
         </div>
       )}
 
+      {/* Error banner */}
+      {error && !loading && (
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <WifiOff className="h-12 w-12 text-red-400 mb-3" />
+          <p className="text-sm text-slate-400 mb-4">Erreur lors du chargement des données</p>
+          <Button variant="outline" size="sm" onClick={() => fetchInvoices(activeTab)}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Réessayer
+          </Button>
+        </div>
+      )}
+
       {/* Invoices list */}
       <div className="flex-1 px-4 pb-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        {loading && !refreshing ? (
+        {!error && loading && !refreshing ? (
           <InvoicesSkeleton />
-        ) : invoices.length === 0 ? (
+        ) : !error && invoices.length === 0 ? (
           <EmptyState onCreateInvoice={() => router.push('/mobile/invoices/new')} />
         ) : (
           <div className="space-y-2">

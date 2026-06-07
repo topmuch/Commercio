@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAppStore, type PageId } from '@/lib/store'
+import { cn } from '@/lib/utils'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { AppHeader } from '@/components/layout/app-header'
 import { RoleGuard } from '@/components/shared/role-guard'
@@ -87,8 +88,7 @@ export function DashboardShell() {
 
         {/* Main content area */}
         <div
-          className="transition-all duration-300"
-          style={{ marginLeft: sidebarOpen ? 256 : 64 }}
+          className={cn("transition-all duration-300", sidebarOpen ? "ml-64" : "ml-16")}
         >
           <AppHeader />
           <main className="p-4 lg:p-6">

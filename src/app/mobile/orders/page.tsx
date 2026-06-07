@@ -9,6 +9,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 
 // ─── Types ───
@@ -81,9 +82,11 @@ export default function MobileOrdersPage() {
   const [activeTab, setActiveTab] = useState('all')
   const [showFilter, setShowFilter] = useState(false)
   const [pullDown, setPullDown] = useState(false)
+  const [error, setError] = useState(false)
 
   const fetchOrders = useCallback(async (status?: string) => {
     try {
+      setError(false)
       const params = new URLSearchParams({ limit: '50' })
       if (status && status !== 'all') params.set('status', status)
       const res = await fetch(`/api/mobile/orders?${params.toString()}`)
@@ -92,7 +95,7 @@ export default function MobileOrdersPage() {
         setOrders(json.orders || [])
       }
     } catch {
-      // Offline — show cached or empty
+      setError(true)
     }
   }, [])
 
@@ -147,6 +150,7 @@ export default function MobileOrdersPage() {
             )}
             <button
               onClick={() => setShowFilter(!showFilter)}
+              aria-label="Filtrer"
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
                 showFilter
@@ -159,6 +163,7 @@ export default function MobileOrdersPage() {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
+              aria-label="Rafraîchir"
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700/50 active:bg-slate-700 transition-colors"
             >
               <RefreshCw className={cn('h-4 w-4 text-slate-400', refreshing && 'animate-spin')} />
@@ -196,11 +201,22 @@ export default function MobileOrdersPage() {
         </div>
       )}
 
+      {/* Error banner */}
+      {error && !loading && (
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <WifiOff className="h-12 w-12 text-red-400 mb-3" />
+          <p className="text-sm text-slate-400 mb-4">Erreur lors du chargement des données</p>
+          <Button variant="outline" size="sm" onClick={() => fetchOrders(activeTab)}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Réessayer
+          </Button>
+        </div>
+      )}
+
       {/* Orders list */}
       <div className="flex-1 px-4 pb-4">
-        {loading && !refreshing ? (
+        {!error && loading && !refreshing ? (
           <OrdersSkeleton />
-        ) : orders.length === 0 ? (
+        ) : !error && orders.length === 0 ? (
           <EmptyState onCreateOrder={() => router.push('/mobile/orders/new')} />
         ) : (
           <div className="space-y-2">

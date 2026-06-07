@@ -146,6 +146,7 @@ export function AppHeader() {
           size="icon"
           className="shrink-0 lg:hidden"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label={sidebarOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -155,6 +156,7 @@ export function AppHeader() {
           size="icon"
           className="hidden lg:flex shrink-0"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label={sidebarOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -200,7 +202,7 @@ export function AppHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -216,7 +218,7 @@ export function AppHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
+              <Button variant="ghost" className="flex items-center gap-2 px-2" aria-label="Menu utilisateur">
                 <Avatar className="h-8 w-8 border-2 border-violet-400/30">
                   <AvatarFallback className="bg-violet-500 text-white text-xs font-semibold">
                     {initials}

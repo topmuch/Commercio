@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { getCompanyId, ensureDefaultUser } from '@/lib/auth'
+import { getCompanyId, getAuthSession, ensureDefaultUser } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/posts - List posts with filters, search, and pagination
@@ -114,19 +114,21 @@ export async function POST(request: NextRequest) {
     const companyId = await getCompanyId()
     const formData = await request.formData()
     const content = formData.get('content') as string | null
-    let authorId = formData.get('authorId') as string | null
 
-    // Resolve author: use provided authorId, or fallback to first user in DB
+    // SECURITY: Get the real user ID from session — ignore any client-provided authorId
+    const session = await getAuthSession()
+    let authorId: string | null = null
     let author: { id: string; name: string; avatar: string | null } | null = null
 
-    if (authorId) {
+    if (session?.user) {
+      authorId = (session.user as { id: string }).id
       author = await db.user.findUnique({
         where: { id: authorId },
         select: { id: true, name: true, avatar: true },
       })
     }
 
-    // Fallback: find first active user if no valid author
+    // Fallback: find first active user in company if session lookup fails
     if (!author) {
       author = await db.user.findFirst({
         where: { active: true, companyId },

@@ -483,6 +483,15 @@ export default function ClientsPage() {
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="h-10 w-10 mb-3 opacity-30" />
               <p className="text-sm">Aucun client trouvé.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 gap-2"
+                onClick={() => setShowNewClient(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Créer un client
+              </Button>
             </div>
           ) : (
             <>

@@ -9,6 +9,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 
 // ─── Types ───
@@ -84,9 +85,11 @@ export default function MobileQuotesPage() {
   const [activeTab, setActiveTab] = useState('')
   const [showFilter, setShowFilter] = useState(false)
   const [pullDown, setPullDown] = useState(false)
+  const [error, setError] = useState(false)
 
   const fetchQuotes = useCallback(async (status?: string) => {
     try {
+      setError(false)
       const params = new URLSearchParams({ limit: '20' })
       if (status) params.set('status', status)
       const res = await fetch(`/api/quotes?${params.toString()}`)
@@ -95,7 +98,7 @@ export default function MobileQuotesPage() {
         setQuotes(json.data || [])
       }
     } catch {
-      // Offline — show cached or empty
+      setError(true)
     }
   }, [])
 
@@ -150,6 +153,7 @@ export default function MobileQuotesPage() {
             )}
             <button
               onClick={() => setShowFilter(!showFilter)}
+              aria-label="Filtrer"
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
                 showFilter
@@ -162,6 +166,7 @@ export default function MobileQuotesPage() {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
+              aria-label="Rafraîchir"
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700/50 active:bg-slate-700 transition-colors"
             >
               <RefreshCw className={cn('h-4 w-4 text-slate-400', refreshing && 'animate-spin')} />
@@ -197,11 +202,22 @@ export default function MobileQuotesPage() {
         </div>
       </div>
 
+      {/* Error banner */}
+      {error && !loading && (
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <WifiOff className="h-12 w-12 text-red-400 mb-3" />
+          <p className="text-sm text-slate-400 mb-4">Erreur lors du chargement des données</p>
+          <Button variant="outline" size="sm" onClick={() => fetchQuotes(activeTab)}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Réessayer
+          </Button>
+        </div>
+      )}
+
       {/* Quotes list */}
       <div className="flex-1 px-4 pb-4">
-        {loading && !refreshing ? (
+        {!error && loading && !refreshing ? (
           <QuotesSkeleton />
-        ) : quotes.length === 0 ? (
+        ) : !error && quotes.length === 0 ? (
           <EmptyState onCreateQuote={() => router.push('/mobile/quotes/new')} />
         ) : (
           <div className="space-y-2">
