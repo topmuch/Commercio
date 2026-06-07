@@ -38,7 +38,7 @@ export function ImageUpload({
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('type', folder)
+      formData.append('folder', folder)
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -52,8 +52,8 @@ export function ImageUpload({
         return
       }
 
-      if (json.data?.url) {
-        onChange(json.data.url)
+      if (json.url) {
+        onChange(json.url)
       }
     } catch {
       setError('Erreur réseau')

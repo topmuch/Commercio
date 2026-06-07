@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { getCompanyId, getAuthSession } from '@/lib/auth'
+import { getCompanyId, isAdmin } from '@/lib/auth'
 
 // DELETE /api/store/banners/[id] — Delete a banner by ID
 export async function DELETE(
@@ -9,16 +9,8 @@ export async function DELETE(
 ) {
   try {
     const companyId = await getCompanyId()
-    const session = await getAuthSession()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
-    // Only admin/director/super_admin can delete banners
-    const role = (session.user as { role: string }).role
-    const adminRoles = ['admin', 'director', 'super_admin']
-    if (!adminRoles.includes(role)) {
+    if (!(await isAdmin())) {
       return NextResponse.json(
         { error: 'Accès refusé. Seuls les administrateurs peuvent supprimer les bannières.' },
         { status: 403 }

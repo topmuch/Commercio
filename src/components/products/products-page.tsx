@@ -41,9 +41,11 @@ import {
   Pencil,
   Loader2,
   FolderOpen,
+  ImageIcon,
 } from 'lucide-react'
 import type { Product, Category } from '@/lib/types'
 import { CategoryManager } from './category-manager'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { toast } from 'sonner'
 
 function formatCFA(amount: number): string {
@@ -724,13 +726,23 @@ export default function ProductsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image">URL de l&apos;image</Label>
-              <Input
-                id="image"
+              <Label>Image du produit</Label>
+              <ImageUpload
                 value={formImage}
-                onChange={(e) => setFormImage(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+                onChange={(url) => setFormImage(url)}
+                label="Télécharger une image"
+                folder="products"
+                previewClassName="h-32"
               />
+              <div className="relative">
+                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={formImage}
+                  onChange={(e) => setFormImage(e.target.value)}
+                  placeholder="Ou coller une URL d'image..."
+                  className="pl-9"
+                />
+              </div>
             </div>
           </div>
 

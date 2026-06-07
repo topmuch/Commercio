@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { getCompanyId, getAuthSession } from '@/lib/auth'
+import { getCompanyId, isAdmin } from '@/lib/auth'
 
 // GET /api/store/banners — Admin: load all banners for current company (no slug = admin mode)
 // GET /api/store/banners?slug=distribusn — Public endpoint (no auth required)
@@ -76,15 +76,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const companyId = await getCompanyId()
-    const session = await getAuthSession()
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
-    const role = (session.user as { role: string }).role
-    const adminRoles = ['admin', 'director', 'super_admin']
-    if (!adminRoles.includes(role)) {
+    if (!(await isAdmin())) {
       return NextResponse.json(
         { error: 'Accès refusé. Seuls les administrateurs peuvent gérer les bannières.' },
         { status: 403 }

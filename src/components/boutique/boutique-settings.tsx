@@ -161,11 +161,19 @@ export default function BoutiqueSettingsPage() {
       setLogoUrl(url)
 
       // Also save to backend immediately
-      await fetch('/api/store-settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ logoUrl: url }),
-      })
+      try {
+        const saveRes = await fetch('/api/store-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ logoUrl: url }),
+        })
+        if (!saveRes.ok) {
+          const err = await saveRes.json()
+          console.error('[Logo save] Backend error:', err.error)
+        }
+      } catch (saveErr) {
+        console.error('[Logo save] Network error:', saveErr)
+      }
       toast.success('Logo téléchargé avec succès')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur lors du téléchargement du logo")

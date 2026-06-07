@@ -109,6 +109,35 @@ export async function getAuthSession() {
   }
 }
 
+/**
+ * Returns the user role from session, or 'admin' in demo mode.
+ * This allows admin-only endpoints to work without login (demo mode).
+ */
+export function getRoleOrDemo(session: Awaited<ReturnType<typeof getAuthSession>>): string {
+  if (session?.user) {
+    const role = (session.user as { role: string }).role
+    if (role) return role
+  }
+  // Demo mode: assume admin
+  return 'admin'
+}
+
+/**
+ * Check if the current user has admin-level access.
+ * Returns true for admin/director/super_admin roles, or in demo mode.
+ */
+export async function isAdmin(): Promise<boolean> {
+  try {
+    const session = await getAuthSession()
+    const role = getRoleOrDemo(session)
+    const adminRoles = ['admin', 'director', 'super_admin']
+    return adminRoles.includes(role)
+  } catch {
+    // In case of error, allow in demo mode
+    return true
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

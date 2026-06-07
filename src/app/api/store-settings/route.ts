@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { getCompanyId, getAuthSession } from '@/lib/auth'
+import { getCompanyId, isAdmin } from '@/lib/auth'
 
 // GET /api/store-settings
 export async function GET() {
@@ -46,13 +46,8 @@ export async function PUT(request: Request) {
     const companyId = await getCompanyId()
 
     // SECURITY: Only admin/director/super_admin can modify store settings (including SMTP)
-    const session = await getAuthSession()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-    const role = (session.user as { role: string }).role
-    const adminRoles = ['admin', 'director', 'super_admin']
-    if (!adminRoles.includes(role)) {
+    // In demo mode (no session), admin access is automatically granted.
+    if (!(await isAdmin())) {
       return NextResponse.json(
         { error: 'Accès refusé. Seuls les administrateurs peuvent modifier les paramètres de la boutique.' },
         { status: 403 }
