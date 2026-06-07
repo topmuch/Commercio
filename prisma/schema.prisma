@@ -32,6 +32,8 @@ model Company {
   payments  Payment[]
   storeSettings StoreSettings?
   posts     Post[]
+  storeBanners    StoreBanner[]
+  whatsappOrders  WhatsappOrder[]
 }
 
 // ===== USERS =====
@@ -382,6 +384,10 @@ model StoreSettings {
   companyName    String?
   companyAddress String?
 
+  // Identité visuelle boutique
+  logoUrl        String?
+  primaryColor   String   @default("#10B981")
+
   // SEO
   seoTitle       String?
   seoDescription String?
@@ -398,7 +404,51 @@ model StoreSettings {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  company        Company  @relation(fields: [companyId], references: [id])
+  company        Company       @relation(fields: [companyId], references: [id])
+  banners        StoreBanner[]
+  whatsappOrders WhatsappOrder[]
+}
+
+// ===== STORE BANNERS (Slider promotions) =====
+model StoreBanner {
+  id           String    @id @default(cuid())
+  companyId    String
+  imageUrl     String
+  title        String?
+  subtitle     String?
+  linkUrl      String?
+  displayOrder Int       @default(0)
+  isActive     Boolean   @default(true)
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company      Company      @relation(fields: [companyId], references: [id])
+  storeSettings StoreSettings @relation(fields: [companyId], references: [companyId])
+
+  @@index([companyId])
+}
+
+// ===== WHATSAPP ORDERS (Commandes boutique publique) =====
+model WhatsappOrder {
+  id           String   @id @default(cuid())
+  companyId    String
+  clientName   String
+  clientPhone  String
+  items        String   // JSON array of order items
+  totalAmount  Float
+  status       String   @default("en_attente_validation") // en_attente_validation, confirmee, preparee, livree, annulee
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company      Company      @relation(fields: [companyId], references: [id])
+  storeSettings StoreSettings @relation(fields: [companyId], references: [companyId])
+
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // ===== SOCIAL FEED POSTS =====

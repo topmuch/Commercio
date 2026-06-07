@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
+import { CartProvider } from "@/lib/cart-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -75,7 +76,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ServiceWorkerRegister />
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
           <SonnerToaster />
         </ThemeProvider>
       </body>

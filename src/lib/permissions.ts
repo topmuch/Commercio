@@ -29,6 +29,7 @@ const adminPages: PageId[] = [
   'map-stores',
   'map-sales',
   'boutique',
+  'boutique-settings',
   'reports',
   'ai-assistant',
   'settings',

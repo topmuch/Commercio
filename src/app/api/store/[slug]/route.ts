@@ -71,6 +71,8 @@ export async function GET(
           description: settings.storeDescription,
           whatsappNumber: settings.whatsappNumber,
           currency: settings.currency,
+          logoUrl: settings.logoUrl,
+          primaryColor: settings.primaryColor,
           company: settings.company,
         },
         products,

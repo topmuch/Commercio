@@ -79,6 +79,7 @@ const navGroups: NavGroup[] = [
     label: 'E-Commerce',
     items: [
       { id: 'boutique', label: 'Boutique Publique', icon: Store },
+      { id: 'boutique-settings', label: 'Paramètres Boutique', icon: Settings },
     ],
   },
   {

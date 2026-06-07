@@ -68,6 +68,9 @@ export async function PUT(request: Request) {
       currency,
       isActive,
       publicSlug,
+      // Identité visuelle
+      logoUrl,
+      primaryColor,
       // Entreprise
       companyLogo,
       companyName,
@@ -129,6 +132,10 @@ export async function PUT(request: Request) {
     if (currency !== undefined) updateData.currency = currency
     if (isActive !== undefined) updateData.isActive = isActive
     if (publicSlug !== undefined) updateData.publicSlug = publicSlug === '' ? null : publicSlug || null
+
+    // Identité visuelle
+    if (logoUrl !== undefined) updateData.logoUrl = logoUrl
+    if (primaryColor !== undefined) updateData.primaryColor = primaryColor
 
     // Entreprise
     if (companyLogo !== undefined) updateData.companyLogo = companyLogo

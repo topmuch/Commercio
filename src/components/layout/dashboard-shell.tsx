@@ -23,6 +23,7 @@ const DiscussionsPage = dynamic(() => import('@/components/discussions/discussio
 const MapStoresPage = dynamic(() => import('@/components/map/map-stores-page').then(m => m.default))
 const MapSalesPage = dynamic(() => import('@/components/map/map-sales-page').then(m => m.default))
 const BoutiquePage = dynamic(() => import('@/components/boutique/boutique-page').then(m => m.default))
+const BoutiqueSettingsPage = dynamic(() => import('@/components/boutique/boutique-settings').then(m => m.default))
 const ReportsPage = dynamic(() => import('@/components/reports/reports-page').then(m => m.default))
 const AiAssistantPage = dynamic(() => import('@/components/ai/ai-assistant-page').then(m => m.default))
 const SettingsPage = dynamic(() => import('@/components/settings/settings-page').then(m => m.default))
@@ -43,6 +44,7 @@ const pageComponents: Partial<Record<PageId, React.ComponentType>> = {
   'map-stores': MapStoresPage,
   'map-sales': MapSalesPage,
   boutique: BoutiquePage,
+  'boutique-settings': BoutiqueSettingsPage,
   reports: ReportsPage,
   'ai-assistant': AiAssistantPage,
   settings: SettingsPage,
