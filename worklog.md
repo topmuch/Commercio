@@ -330,3 +330,31 @@ Stage Summary:
 - 2 new files: instrumentation.ts, db-init.ts
 - This is a DEFENSIVE fix that works regardless of prisma db push success/failure
 - Build: ✅ | Lint: ✅ (0 errors) | Commit: 2cedaa7 pushed to main
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Fix Docker build failure — bun install tarball extraction error
+
+Work Log:
+- Docker build failed at `bun install` step with "Fail extracting tarball for next" error
+- Root cause: bun v1.3.14 (installed via `npm install -g bun` in Docker) has a known tarball extraction bug in Alpine/Docker environments
+- Fix 1: Replaced `bun install` with `npm install --legacy-peer-deps` in Dockerfile (npm handles tarballs reliably)
+- Fix 2: Replaced `bun run build` with `npx next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/` (explicit build steps)
+- Fix 3: Created `docker-entrypoint.sh` for reliable container startup:
+  - Creates /app/data directory for SQLite
+  - Sets DATABASE_URL environment variable
+  - Runs `npx prisma generate` to ensure client matches schema
+  - Runs `npx prisma db push --skip-generate --accept-data-loss` for DB schema sync
+  - Falls back to raw SQL migration (ALTER TABLE ADD COLUMN) if db push fails
+  - Starts server with `exec node .next/standalone/server.js` (proper signal handling)
+- Fix 4: Changed from CMD to ENTRYPOINT for proper process management
+- Fix 5: Removed `COPY docker-entrypoint.sh` (file already cloned from git repo)
+- Added `sqlite3` package to Dockerfile for fallback SQL migrations
+- Removed `--hot` from bun dev in start script, using `node` directly in Docker
+
+Stage Summary:
+- 2 files changed: Dockerfile, docker-entrypoint.sh (new)
+- Commits: 167e76a, 18299ec pushed to main
+- The `npm install --legacy-peer-deps` approach bypasses the bun tarball extraction bug entirely
+- The entrypoint script provides robust DB initialization with SQL fallback
