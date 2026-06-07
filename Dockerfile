@@ -25,8 +25,12 @@ RUN npx next build && \
 # Setup entrypoint script (already cloned from repo)
 RUN chmod +x /app/docker-entrypoint.sh
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
+# Create data directory for SQLite and uploads
+RUN mkdir -p /app/data /app/public/uploads/boutique /app/public/uploads/products /app/public/uploads/general
+
+# Persistent volumes: database + uploaded images
+# In Coolify, configure these as persistent volumes
+VOLUME ["/app/data", "/app/public/uploads"]
 
 EXPOSE 3000
 
