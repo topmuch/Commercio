@@ -242,7 +242,7 @@ export default function PublicBoutiquePage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const catMatch = activeCategory === 'all' || p.category?.id === activeCategory ||
+      const catMatch = activeCategory === 'all' ||
         categories.find((c) => c.id === activeCategory)?.name === p.category?.name
       const matchesSearch = !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

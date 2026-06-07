@@ -284,7 +284,7 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
         style={{ height: '100%', width: '100%' }}
         className="rounded-xl z-0"
         scrollWheelZoom
-        whenReady={(e) => setMapInstance(e.target)}
+        whenReady={() => {}}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

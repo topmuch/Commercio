@@ -146,11 +146,11 @@ export default function QuotesPage() {
         setTotalPages(json.totalPages || 1)
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Impossible de charger les devis', variant: 'destructive' })
+      toast.error('Erreur : Impossible de charger les devis')
     } finally {
       setLoading(false)
     }
-  }, [activeTab, search, page, toast])
+  }, [activeTab, search, page])
 
   // ── Fetch status counts ──
   const fetchCounts = useCallback(async () => {
@@ -234,7 +234,7 @@ export default function QuotesPage() {
         unitPrice: product?.resellerPrice || product?.price || 0,
       }
     } else {
-      ;(updated[idx] as Record<string, string | number>)[field] = value
+      ;(updated[idx] as unknown as Record<string, string | number>)[field] = value
     }
     setFormItems(updated)
   }
@@ -242,12 +242,12 @@ export default function QuotesPage() {
   // ── Submit quote ──
   const handleSubmit = async () => {
     if (!formClientId) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner un client', variant: 'destructive' })
+      toast.error('Erreur : Veuillez sélectionner un client')
       return
     }
     const validItems = formItems.filter((i) => i.productId && i.quantity > 0 && i.unitPrice > 0)
     if (validItems.length === 0) {
-      toast({ title: 'Erreur', description: 'Ajoutez au moins un article valide', variant: 'destructive' })
+      toast.error('Erreur : Ajoutez au moins un article valide')
       return
     }
 
@@ -270,16 +270,16 @@ export default function QuotesPage() {
       })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Devis créé avec succès' })
+        toast.success('Devis créé avec succès')
         setDialogOpen(false)
         resetForm()
         fetchQuotes()
         fetchCounts()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la création', variant: 'destructive' })
+      toast.error('Erreur lors de la création')
     }
   }
 
@@ -297,9 +297,9 @@ export default function QuotesPage() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-      toast({ title: 'PDF téléchargé', description: `Devis ${quoteNumber}` })
+      toast('PDF téléchargé : Devis ' + quoteNumber)
     } catch {
-      toast({ title: 'Erreur', description: 'Impossible de télécharger le PDF', variant: 'destructive' })
+      toast.error('Erreur : Impossible de télécharger le PDF')
     }
   }
 
@@ -343,15 +343,15 @@ export default function QuotesPage() {
       })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Devis modifié avec succès' })
+        toast.success('Devis modifié avec succès')
         setEditOpen(false)
         fetchQuotes()
         fetchCounts()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
+      toast.error('Erreur lors de la modification')
     }
   }
 
@@ -362,15 +362,15 @@ export default function QuotesPage() {
       const res = await fetch(`/api/quotes/${deleteQuote.id}`, { method: 'DELETE' })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Devis supprimé avec succès' })
+        toast.success('Devis supprimé avec succès')
         setDeleteQuote(null)
         fetchQuotes()
         fetchCounts()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+      toast.error('Erreur lors de la suppression')
     }
   }
 

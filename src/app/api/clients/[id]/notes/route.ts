@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
 
 // GET /api/clients/[id]/notes - Get all notes for a client
 export async function GET(
@@ -9,14 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.companyId) return Response.json({ error: 'Non authentifié' }, { status: 401 })
-    const companyId = session.user.companyId
+    const companyId = await getCompanyId()
 
     const { id } = await params
 
-    const notes = await db.clientNote.findMany({
-      where: { clientId: id, companyId },
+    const notes = await db.discussion.findMany({
+      where: { clientId: id, companyId, type: 'note' },
       orderBy: { createdAt: 'desc' },
       include: {
         commercial: {
@@ -38,9 +35,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.companyId) return Response.json({ error: 'Non authentifié' }, { status: 401 })
-    const companyId = session.user.companyId
+    const companyId = await getCompanyId()
 
     const { id } = await params
     const body = await request.json()
@@ -60,9 +55,11 @@ export async function POST(
       return NextResponse.json({ error: 'Client non trouvé.' }, { status: 404 })
     }
 
-    const note = await db.clientNote.create({
+    const note = await db.discussion.create({
       data: {
+        type: 'note',
         content: content.trim(),
+        direction: 'outgoing',
         clientId: id,
         commercialId: commercialId || null,
         companyId,

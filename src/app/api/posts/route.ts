@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     let authorId = formData.get('authorId') as string | null
 
     // Resolve author: use provided authorId, or fallback to first user in DB
-    let author = null
+    let author: { id: string; name: string; avatar: string | null } | null = null
 
     if (authorId) {
       author = await db.user.findUnique({

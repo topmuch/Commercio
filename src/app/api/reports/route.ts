@@ -92,10 +92,11 @@ export async function GET(request: NextRequest) {
         // Build Maps for O(1) lookup
         const ordersByCommercial = new Map<string, number[]>()
         for (const order of allOrders) {
-          if (!ordersByCommercial.has(order.commercialId)) {
-            ordersByCommercial.set(order.commercialId, [])
+          const cid = order.commercialId || ''
+          if (!ordersByCommercial.has(cid)) {
+            ordersByCommercial.set(cid, [])
           }
-          ordersByCommercial.get(order.commercialId)!.push(order.total)
+          ordersByCommercial.get(cid)!.push(order.total)
         }
 
         const targetsByUser = new Map<string, { value: number; achieved: number }>()
@@ -304,8 +305,9 @@ export async function GET(request: NextRequest) {
             })
             const ordersByCommercial = new Map<string, number[]>()
             for (const order of allOrders) {
-              if (!ordersByCommercial.has(order.commercialId)) ordersByCommercial.set(order.commercialId, [])
-              ordersByCommercial.get(order.commercialId)!.push(order.total)
+              const cid2 = order.commercialId || ''
+              if (!ordersByCommercial.has(cid2)) ordersByCommercial.set(cid2, [])
+              ordersByCommercial.get(cid2)!.push(order.total)
             }
             return commercials.map((c) => {
               const totals = ordersByCommercial.get(c.id) || []

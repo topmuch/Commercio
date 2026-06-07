@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
+import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
 
 // POST /api/clients/[id]/interactions - Create a new interaction
 export async function POST(
@@ -9,9 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.companyId) return Response.json({ error: 'Non authentifié' }, { status: 401 })
-    const companyId = session.user.companyId
+    const companyId = await getCompanyId()
 
     const { id } = await params
     const body = await request.json()

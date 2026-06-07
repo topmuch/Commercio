@@ -18,12 +18,12 @@ import {
 /* ------------------------------------------------------------------ */
 const slideLeft = {
   hidden: { opacity: 0, x: -60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: 'easeOut' } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: 'easeOut' as const } },
 };
 
 const slideRight = {
   hidden: { opacity: 0, x: 60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: 'easeOut' } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: 'easeOut' as const } },
 };
 
 const fadeUp = {
@@ -31,7 +31,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, delay: i * 0.1, ease: 'easeOut' },
+    transition: { duration: 0.5, delay: i * 0.1, ease: 'easeOut' as const },
   }),
 };
 

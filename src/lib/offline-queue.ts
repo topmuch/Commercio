@@ -5,7 +5,7 @@
 
 export interface OfflineAction {
   id: string
-  type: 'visit' | 'order' | 'note' | 'photo'
+  type: 'visit' | 'order' | 'note' | 'photo' | 'invoice' | 'quote'
   method: 'POST' | 'PATCH' | 'PUT'
   url: string
   body: unknown

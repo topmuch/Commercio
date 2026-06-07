@@ -143,11 +143,11 @@ export default function OrdersPage() {
         setStatusCounts(json.statusCounts)
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Impossible de charger les commandes', variant: 'destructive' })
+      toast.error('Erreur : Impossible de charger les commandes')
     } finally {
       setLoading(false)
     }
-  }, [activeTab, search, page, toast])
+  }, [activeTab, search, page])
 
   // ── Status counts come from fetchOrders (no separate call needed) ──
 
@@ -211,7 +211,7 @@ export default function OrdersPage() {
         unitPrice: product?.resellerPrice || product?.price || 0,
       }
     } else {
-      ;(updated[idx] as Record<string, string | number>)[field] = value
+      ;(updated[idx] as unknown as Record<string, string | number>)[field] = value
     }
     setFormItems(updated)
   }
@@ -219,12 +219,12 @@ export default function OrdersPage() {
   // ── Submit order (create or update) ──
   const handleSubmit = async () => {
     if (!formClientId) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner un client', variant: 'destructive' })
+      toast.error('Erreur : Veuillez sélectionner un client')
       return
     }
     const validItems = formItems.filter((i) => i.productId && i.quantity > 0 && i.unitPrice > 0)
     if (validItems.length === 0) {
-      toast({ title: 'Erreur', description: 'Ajoutez au moins un article valide', variant: 'destructive' })
+      toast.error('Erreur : Ajoutez au moins un article valide')
       return
     }
 
@@ -254,15 +254,15 @@ export default function OrdersPage() {
           })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: editingOrder ? 'Commande modifiée avec succès' : 'Commande créée avec succès' })
+        toast.success(editingOrder ? 'Commande modifiée avec succès' : 'Commande créée avec succès')
         setDialogOpen(false)
         resetForm()
         fetchOrders()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de l\'enregistrement', variant: 'destructive' })
+      toast.error("Erreur lors de l'enregistrement")
     }
   }
 
@@ -298,14 +298,14 @@ export default function OrdersPage() {
       const res = await fetch(`/api/orders/${deleteOrder.id}`, { method: 'DELETE' })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Commande supprimée avec succès' })
+        toast.success('Commande supprimée avec succès')
         setDeleteOrder(null)
         fetchOrders()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+      toast.error('Erreur lors de la suppression')
     }
   }
 

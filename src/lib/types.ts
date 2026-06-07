@@ -156,6 +156,9 @@ export interface Order {
     name: string
   }
   items?: OrderItem[]
+  _count?: {
+    items: number
+  }
 }
 
 export interface OrderItem {
@@ -194,6 +197,7 @@ export interface Invoice {
     name: string
   }
   items?: InvoiceItem[]
+  payments?: Payment[]
 }
 
 export interface InvoiceItem {

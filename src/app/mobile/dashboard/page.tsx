@@ -229,7 +229,7 @@ export default function MobileDashboardPage() {
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => {
-                  const phone = storeUser?.phone || data.user.phone
+                  const phone = (storeUser as { phone?: string } | undefined)?.phone || (data?.user as { phone?: string } | undefined)?.phone
                   if (phone) window.open(`tel:${phone}`)
                 }}
                 className="flex flex-col items-center gap-1.5 rounded-xl bg-slate-800/60 border border-slate-700/50 p-3 active:bg-slate-700/60 transition-colors"

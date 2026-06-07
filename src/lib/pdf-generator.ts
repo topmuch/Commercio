@@ -105,11 +105,11 @@ export function generateDocumentPDF(data: DocumentData): jsPDF {
   const contentWidth = pageWidth - margin * 2
 
   // ── Colors ──
-  const PRIMARY = [16, 185, 129] // emerald-500
-  const DARK = [15, 23, 42] // slate-900
-  const GRAY = [100, 116, 139] // slate-500
-  const LIGHT = [241, 245, 249] // slate-100
-  const WHITE = [255, 255, 255]
+  const PRIMARY: [number, number, number] = [16, 185, 129] // emerald-500
+  const DARK: [number, number, number] = [15, 23, 42] // slate-900
+  const GRAY: [number, number, number] = [100, 116, 139] // slate-500
+  const LIGHT: [number, number, number] = [241, 245, 249] // slate-100
+  const WHITE: [number, number, number] = [255, 255, 255]
 
   // ── Header: Company info ──
   let yPos = 15
@@ -298,7 +298,8 @@ export function generateDocumentPDF(data: DocumentData): jsPDF {
     doc.setFont('helvetica', row.bold ? 'bold' : 'normal')
     doc.setTextColor(...GRAY)
     doc.text(row.label, totalsX, totalY)
-    doc.setTextColor(...(row.color ? row.color : DARK))
+    const c: [number, number, number] = (row.color as [number, number, number] | undefined) ?? DARK
+    doc.setTextColor(...c)
     doc.text(row.value, pageWidth - margin, totalY, { align: 'right' })
     totalY += 6
   }
@@ -335,7 +336,8 @@ export function generateDocumentPDF(data: DocumentData): jsPDF {
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...GRAY)
     doc.text('Reste à payer', totalsX, totalY)
-    doc.setTextColor(...(data.remaining && data.remaining > 0 ? [239, 68, 68] : PRIMARY))
+    const payColor: [number, number, number] = (data.remaining && data.remaining > 0 ? [239, 68, 68] : PRIMARY)
+    doc.setTextColor(...payColor)
     doc.setFont('helvetica', 'bold')
     doc.text(formatCFA(data.remaining ?? 0), pageWidth - margin, totalY, { align: 'right' })
   }

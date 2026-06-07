@@ -198,7 +198,7 @@ export async function GET() {
       'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
       'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
     ]
-    const monthlyRevenuePromises: Promise<{ month: string; gte: Date; lt: Date }>[] = []
+    const monthlyRevenuePromises: Promise<{ month: string; value: number }>[] = []
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)

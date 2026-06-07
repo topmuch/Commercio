@@ -150,7 +150,7 @@ interface ClientStats {
   paymentsCount: number
 }
 
-interface ClientDetailData extends Client {
+interface ClientDetailData extends Omit<Client, 'commercial'> {
   commercial: {
     id: string
     name: string

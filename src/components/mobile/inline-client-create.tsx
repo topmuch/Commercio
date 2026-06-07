@@ -18,7 +18,7 @@ interface InlineClientData {
   status: string
 }
 
-interface CreatedClient {
+export interface CreatedClient {
   id: string
   companyName: string
   contactName: string

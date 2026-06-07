@@ -173,11 +173,11 @@ export default function InvoicesPage() {
         setStatusCounts(json.statusCounts)
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Impossible de charger les factures', variant: 'destructive' })
+      toast.error('Erreur : Impossible de charger les factures')
     } finally {
       setLoading(false)
     }
-  }, [activeTab, search, page, toast])
+  }, [activeTab, search, page])
 
   // ── Status counts come from fetchInvoices (no separate call needed) ──
   // statusCounts is set in fetchInvoices when data.statusCounts is available
@@ -242,7 +242,7 @@ export default function InvoicesPage() {
         unitPrice: product?.resellerPrice || product?.price || 0,
       }
     } else {
-      ;(updated[idx] as Record<string, string | number>)[field] = value
+      ;(updated[idx] as unknown as Record<string, string | number>)[field] = value
     }
     setFormItems(updated)
   }
@@ -250,12 +250,12 @@ export default function InvoicesPage() {
   // ── Submit invoice ──
   const handleSubmit = async () => {
     if (!formClientId) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner un client', variant: 'destructive' })
+      toast.error('Erreur : Veuillez sélectionner un client')
       return
     }
     const validItems = formItems.filter((i) => i.productId && i.quantity > 0 && i.unitPrice > 0)
     if (validItems.length === 0) {
-      toast({ title: 'Erreur', description: 'Ajoutez au moins un article valide', variant: 'destructive' })
+      toast.error('Erreur : Ajoutez au moins un article valide')
       return
     }
 
@@ -278,15 +278,15 @@ export default function InvoicesPage() {
       })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Facture créée avec succès' })
+        toast.success('Facture créée avec succès')
         setDialogOpen(false)
         resetForm()
         fetchInvoices()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la création', variant: 'destructive' })
+      toast.error('Erreur lors de la création')
     }
   }
 
@@ -301,17 +301,13 @@ export default function InvoicesPage() {
   // ── Submit payment ──
   const handlePayment = async () => {
     if (!selectedInvoice || !payAmount || parseFloat(payAmount) <= 0) {
-      toast({ title: 'Erreur', description: 'Montant invalide', variant: 'destructive' })
+      toast.error('Erreur : Montant invalide')
       return
     }
 
     const remaining = selectedInvoice.total - selectedInvoice.paid
     if (parseFloat(payAmount) > remaining) {
-      toast({
-        title: 'Erreur',
-        description: `Le montant dépasse le restant dû (${formatCFA(remaining)})`,
-        variant: 'destructive',
-      })
+      toast.error('Erreur : Le montant dépasse le restant dû (' + formatCFA(remaining) + ')')
       return
     }
 
@@ -328,15 +324,15 @@ export default function InvoicesPage() {
       })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Paiement enregistré avec succès' })
+        toast.success('Paiement enregistré avec succès')
         setPaymentOpen(false)
         resetPaymentForm()
         fetchInvoices()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de l\'enregistrement', variant: 'destructive' })
+      toast.error("Erreur lors de l'enregistrement")
     }
   }
 
@@ -354,9 +350,9 @@ export default function InvoicesPage() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-      toast({ title: 'PDF téléchargé', description: `Facture ${invoiceNumber}` })
+      toast('PDF téléchargé : Facture ' + invoiceNumber)
     } catch {
-      toast({ title: 'Erreur', description: 'Impossible de télécharger le PDF', variant: 'destructive' })
+      toast.error('Erreur : Impossible de télécharger le PDF')
     }
   }
 
@@ -403,14 +399,14 @@ export default function InvoicesPage() {
       })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Facture modifiée avec succès' })
+        toast.success('Facture modifiée avec succès')
         setEditOpen(false)
         fetchInvoices()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
+      toast.error('Erreur lors de la modification')
     }
   }
 
@@ -421,14 +417,14 @@ export default function InvoicesPage() {
       const res = await fetch(`/api/invoices/${deleteInvoice.id}`, { method: 'DELETE' })
       const json = await res.json()
       if (json.error) {
-        toast({ title: 'Erreur', description: json.error, variant: 'destructive' })
+        toast.error('Erreur : ' + json.error)
       } else {
-        toast({ title: 'Succès', description: 'Facture supprimée avec succès' })
+        toast.success('Facture supprimée avec succès')
         setDeleteInvoice(null)
         fetchInvoices()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+      toast.error('Erreur lors de la suppression')
     }
   }
 

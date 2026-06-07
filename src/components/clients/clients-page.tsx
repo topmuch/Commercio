@@ -196,7 +196,7 @@ export default function ClientsPage() {
         }),
       })
       if (res.ok) {
-        toast({ title: 'Succès', description: 'Client créé avec succès' })
+        toast.success('Client créé avec succès')
         setShowNewClient(false)
         setNewClient({
           companyName: '',
@@ -216,7 +216,7 @@ export default function ClientsPage() {
         fetchClients()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la création', variant: 'destructive' })
+      toast.error('Erreur lors de la création')
     } finally {
       setCreating(false)
     }
@@ -255,7 +255,7 @@ export default function ClientsPage() {
         }),
       })
       if (res.ok) {
-        toast({ title: 'Succès', description: 'Client modifié avec succès' })
+        toast.success('Client modifié avec succès')
         setShowNewClient(false)
         setEditingClient(null)
         setNewClient({
@@ -276,7 +276,7 @@ export default function ClientsPage() {
         fetchClients()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la modification', variant: 'destructive' })
+      toast.error('Erreur lors de la modification')
     } finally {
       setCreating(false)
     }
@@ -288,12 +288,12 @@ export default function ClientsPage() {
     try {
       const res = await fetch(`/api/clients/${deleteClient.id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast({ title: 'Succès', description: 'Client supprimé avec succès' })
+        toast.success('Client supprimé avec succès')
         setDeleteClient(null)
         fetchClients()
       }
     } catch {
-      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' })
+      toast.error('Erreur lors de la suppression')
     } finally {
       setDeleting(false)
     }

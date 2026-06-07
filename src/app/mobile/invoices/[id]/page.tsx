@@ -257,7 +257,7 @@ export default function MobileInvoiceDetailPage() {
           {/* WhatsApp action */}
           {invoice.client?.whatsapp && (
             <button
-              onClick={() => window.open(`https://wa.me/${invoice.client.whatsapp.replace(/[^0-9]/g, '')}`, '_blank')}
+              onClick={() => window.open(`https://wa.me/${invoice.client!.whatsapp!.replace(/[^0-9]/g, '')}`, '_blank')}
               className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 py-2.5 text-emerald-400 text-sm font-medium active:bg-emerald-500/20 transition-colors"
             >
               <MessageCircle className="h-4 w-4" />

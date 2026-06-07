@@ -3,7 +3,12 @@ import { getCompanyId } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import ZAI from 'z-ai-web-dev-sdk'
 
-const ai = new ZAI()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let aiInstance: any = null
+async function getAI() {
+  if (!aiInstance) aiInstance = await ZAI.create()
+  return aiInstance
+}
 
 // ─── In-memory rate limiter (no Redis dependency) ───
 interface RateLimitEntry {
@@ -141,6 +146,7 @@ Règles :
 `
 
     // ─── Call LLM ───
+    const ai = await getAI()
     const completion = await ai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -150,7 +156,7 @@ Règles :
       ],
     })
 
-    const response = completion.choices[0]?.message?.content || 'Désolé, je n\'ai pas pu générer une réponse.'
+    const response = completion.choices?.[0]?.message?.content || 'Désolé, je n\'ai pas pu générer une réponse.'
 
     return NextResponse.json({ response, remaining })
   } catch (error: unknown) {

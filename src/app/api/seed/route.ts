@@ -1,18 +1,14 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { getCompanyId } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: Request) {
   try {
-    // Protect seed endpoint: require NEXTAUTH_SECRET or admin role
-    const token = await getToken({
-      req: request as unknown as Parameters<typeof getToken>[0],
-      secret: process.env.NEXTAUTH_SECRET,
-    })
-
-    // In demo mode (no NEXTAUTH_SECRET), allow seed
-    if (!token && process.env.NEXTAUTH_SECRET) {
+    // Protect seed endpoint: require auth
+    try {
+      await getCompanyId()
+    } catch {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 

@@ -12,6 +12,7 @@ import { useAppStore } from '@/lib/store'
 import { useGeolocation } from '@/hooks/use-geolocation'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 import { MobileInlineClientCreate } from '@/components/mobile/inline-client-create'
+import type { CreatedClient } from '@/components/mobile/inline-client-create'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -146,10 +147,16 @@ function NewVisitPageContent() {
   }
 
   // Handle new client created inline
-  const handleClientCreated = (client: ClientOption) => {
-    setClients(prev => [client, ...prev])
+  const handleClientCreated = (client: CreatedClient) => {
+    const fullClient: ClientOption = {
+      ...client,
+      status: 'lead_rouge',
+      latitude: null,
+      longitude: null,
+    }
+    setClients(prev => [fullClient, ...prev])
     setShowClientCreate(false)
-    selectClient(client)
+    selectClient(fullClient)
   }
 
   // Check-in
@@ -678,7 +685,7 @@ function NewVisitPageContent() {
                   const msg = encodeURIComponent(
                     `Bonjour ${visit.client.contactName}, merci pour votre visite chez ${visit.client.companyName}. N'hésitez pas si vous avez des questions.`
                   )
-                  window.open(`https://wa.me/${visit.client.whatsapp.replace(/[^0-9]/g, '')}?text=${msg}`, '_blank')
+                  window.open(`https://wa.me/${visit.client!.whatsapp!.replace(/[^0-9]/g, '')}?text=${msg}`, '_blank')
                 }
               }}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600/10 border border-green-600/20 py-3.5 text-sm font-medium text-green-400 active:bg-green-600/15 transition-colors"

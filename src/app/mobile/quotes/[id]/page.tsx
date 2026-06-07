@@ -136,7 +136,7 @@ export default function MobileQuoteDetailPage() {
     const message = encodeURIComponent(
       `Bonjour ${quote.client.contactName},\n\nVoici votre devis ${quote.number} :\n\n${itemsText}\n\nTotal : ${formatCurrency(quote.total)}\n\nCe devis est valide jusqu'au ${quote.validUntil ? formatDate(quote.validUntil) : 'date non définie'}.\n\nCordialement.`
     )
-    window.open(`https://wa.me/${quote.client.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`, '_blank')
+    window.open(`https://wa.me/${quote.client!.whatsapp!.replace(/[^0-9]/g, '')}?text=${message}`, '_blank')
   }
 
   if (loading) return <DetailSkeleton />

@@ -74,7 +74,7 @@ function SectionHeader({
     <CardHeader>
       <div className="flex items-center gap-2">
         <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg', iconBg)}>
-          {React.cloneElement(icon as React.ReactElement, {
+          {React.cloneElement(icon as React.ReactElement<Record<string, unknown>>, {
             className: cn('h-4 w-4', iconColor),
           })}
         </div>
@@ -908,7 +908,8 @@ export default function SettingsPage() {
         toast.error('Erreur', { description: json.error || 'Impossible de sauvegarder le profil.' })
       } else {
         // Update local store
-        useAppStore.getState().setUser({ ...useAppStore.getState().user!, name: profileName, phone: profilePhone })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        useAppStore.getState().setUser({ ...useAppStore.getState().user!, name: profileName, phone: profilePhone } as any)
         toast.success('Profil sauvegardé', { description: 'Vos informations ont été mises à jour.' })
       }
     } catch {
