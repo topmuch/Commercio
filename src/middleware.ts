@@ -3,21 +3,24 @@ import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
-  // Vérifier que NEXTAUTH_SECRET est défini
-  if (!process.env.NEXTAUTH_SECRET) {
-    console.error('❌ CRITICAL: NEXTAUTH_SECRET is not defined!')
-    return new NextResponse('Server configuration error', { status: 500 })
-  }
+  // All API routes are handled by their own auth logic (getCompanyId, isAdmin)
+  // Only protect frontend pages here
+  const { pathname } = request.nextUrl
 
-  // Routes publiques (pas d'auth requise)
-  const publicPaths = ['/', '/login', '/register', '/demo', '/contact', '/api/auth', '/api/register', '/boutique', '/_next', '/favicon.ico', '/manifest.json', '/sw.js']
-  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path))
+  // Public routes (no auth needed)
+  const publicPaths = [
+    '/', '/login', '/register', '/demo', '/contact',
+    '/boutique', '/install-app', '/mobile',
+    '/api/', // All API routes handle their own auth
+    '/_next', '/favicon.ico', '/manifest.json', '/sw.js', '/uploads',
+  ]
+  const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
 
   if (isPublicPath) {
     return NextResponse.next()
   }
 
-  // Vérifier le token JWT
+  // For non-public frontend routes, check JWT token
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
@@ -25,18 +28,18 @@ export async function middleware(request: NextRequest) {
 
   if (!token) {
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Vérification de rôle pour les routes admin
-  const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
+  // Check admin role for /admin paths
+  const isAdminPath = pathname.startsWith('/admin')
   const userRole = token.role as string | undefined
   if (isAdminPath && userRole !== 'company_admin' && userRole !== 'super_admin' && userRole !== 'admin' && userRole !== 'director') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Ajouter les infos utilisateur aux headers pour les API
+  // Add user info to headers for API routes
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-user-id', (token.sub || token.id || '') as string)
   requestHeaders.set('x-user-role', (userRole || '') as string)
