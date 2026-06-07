@@ -127,3 +127,36 @@ Stage Summary:
 - 3 mobile detail pages fully functional with all requested action buttons
 - New API route for quote-to-order conversion
 - Bug fix: product name display across all 3 pages
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: PROMPT 6 — Refonte complète de la boutique publique
+
+Work Log:
+- Analyzed existing boutique page at /boutique/[slug]/page.tsx (old version ~512 lines)
+- Read all related files: API route /api/store/[slug], store settings, Prisma schema, middleware
+- Designed complete boutique redesign with: header, hero, categories, featured products, product grid, cart, product detail modal, footer
+- Built 1403-line self-contained boutique page with all components
+- Features implemented:
+  * Sticky header with store logo, cart button with badge, WhatsApp contact
+  * Hero section with gradient, store description, product count, search bar
+  * Category navigation with emoji icons, dynamic counts, horizontal scroll
+  * Featured products section (top 4 by stock)
+  * Product cards with gradient placeholders, brand badges, stock status, prices, WhatsApp + cart buttons
+  * Product detail modal with quantity selector, QR code, add-to-cart, direct WhatsApp
+  * Shopping cart (Sheet panel) with item management, total calculation, multi-product WhatsApp message
+  * Full loading skeleton state
+  * Network error state with retry
+  * 404 "Boutique introuvable" state
+- Seeded database: 8 categories, 17 products, StoreSettings with publicSlug "distribusn"
+- Browser tested: page loads with all data, search works, categories filter, stock badges visible
+- Lint: 0 errors, 2 pre-existing warnings
+- Screenshot saved: screenshot-boutique-publique.png
+
+Stage Summary:
+- File rewritten: src/app/boutique/[slug]/page.tsx (512 → 1403 lines)
+- Database seeded with boutique data
+- Public URL: /boutique/distribusn
+- All features verified in browser (no JS errors)
+- Pending commit
