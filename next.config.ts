@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   reactStrictMode: true,
+  /* Rewrite /uploads/* to /api/uploads/* so uploaded images are served
+     from /app/uploads/ (outside public/) via the API handler */
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/uploads/:path*',
+      },
+    ]
+  },
   headers: async () => [
     {
       source: '/sw.js',

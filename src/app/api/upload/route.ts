@@ -6,6 +6,11 @@ import crypto from 'crypto'
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
+// Upload directory: configurable via env, default to /app/uploads (or ./uploads in dev)
+function getUploadsDir(): string {
+  return process.env.UPLOADS_DIR || join(process.cwd(), 'uploads')
+}
+
 function sanitizeFilename(name: string): string {
   return name
     .toLowerCase()
@@ -14,7 +19,7 @@ function sanitizeFilename(name: string): string {
     .replace(/^-|-$/g, '')
 }
 
-// POST /api/upload — Upload a file to public/uploads/{folder}/
+// POST /api/upload — Upload a file to uploads/{folder}/
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -45,10 +50,11 @@ export async function POST(request: NextRequest) {
     const randomString = crypto.randomBytes(8).toString('hex')
     const sanitizedName = sanitizeFilename(file.name || 'image')
     const ext = sanitizedName.split('.').pop() || 'jpg'
-    const filename = `${Date.now()}-${randomString}-${sanitizedName}`
+    const filename = `${Date.now()}-${randomString}.${ext}`
 
-    // Ensure directory exists
-    const uploadDir = join(process.cwd(), 'public', 'uploads', folder)
+    // Upload to configurable directory (default: /app/uploads)
+    const uploadsBase = getUploadsDir()
+    const uploadDir = join(uploadsBase, folder)
     await mkdir(uploadDir, { recursive: true })
 
     // Read file buffer and write to disk
@@ -57,6 +63,7 @@ export async function POST(request: NextRequest) {
     const filePath = join(uploadDir, filename)
     await writeFile(filePath, buffer)
 
+    // URL served via /uploads/* rewrite → /api/uploads/* handler
     const url = `/uploads/${folder}/${filename}`
 
     return NextResponse.json({

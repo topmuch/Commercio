@@ -59,6 +59,9 @@ server.log
 /agent-ctx/.env
 .env
 
+# Uploaded files (stored in /app/uploads in Docker, ./uploads in dev)
+/uploads/
+
 # Database files (local dev)
 /db/*.db
 /db/*.db-backup

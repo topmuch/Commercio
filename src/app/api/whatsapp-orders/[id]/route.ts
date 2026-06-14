@@ -9,11 +9,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
 
     const { id } = await params
-    const existing = await db.whatsAppOrder.findFirst({ where: { id } })
+    const existing = await db.whatsappOrder.findFirst({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 })
 
     const body = await request.json()
-    const order = await db.whatsAppOrder.update({
+    const order = await db.whatsappOrder.update({
       where: { id },
       data: {
         ...(body.status && { status: body.status }),
