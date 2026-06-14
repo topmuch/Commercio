@@ -58,3 +58,16 @@ server.log
 /upload/
 /agent-ctx/.env
 .env
+
+# Database files (local dev)
+/db/*.db
+/db/*.db-backup
+/db/*.db.backup
+
+# Z-scripts and screenshots
+/.zscripts/
+/verify_screenshots/
+/screenshot-*.png
+
+# Worklog (dev only)
+/worklog.md
