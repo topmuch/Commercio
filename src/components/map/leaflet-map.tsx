@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -221,7 +222,7 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
   }, [bounds, mapInstance])
 
   return (
-    <>
+    <div className="relative h-[600px] lg:h-[650px]">
       {/* ─── CSS Keyframe Animations ─────────────────────────── */}
       <style jsx>{`
         /* Pulse ring: expands outward and fades */
@@ -284,7 +285,7 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
         style={{ height: '100%', width: '100%' }}
         className="rounded-xl z-0"
         scrollWheelZoom
-        whenReady={() => {}}
+        whenReady={(map) => { setMapInstance(map.target) }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -479,7 +480,7 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
       </MapContainer>
 
       {/* ─── Floating Map Control Panel ───────────────────────── */}
-      <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
+      <div className="absolute top-3 right-3 z-[1001] flex flex-col gap-2">
         {/* Client count badge */}
         <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
           <Users className="h-4 w-4 text-primary" />
@@ -519,6 +520,6 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
           <span className="hidden sm:inline">Ajuster</span>
         </button>
       </div>
-    </>
+    </div>
   )
 }
