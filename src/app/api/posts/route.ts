@@ -52,6 +52,11 @@ export async function GET(request: NextRequest) {
               type: true,
             },
           },
+          _count: {
+            select: {
+              comments: { where: { parentCommentId: null } },
+            },
+          },
         },
         orderBy: [
           { isPinned: 'desc' },
@@ -63,35 +68,27 @@ export async function GET(request: NextRequest) {
       db.post.count({ where }),
     ])
 
-    // Get comments count and current user reaction for each post
-    const postsWithDetails = await Promise.all(
-      posts.map(async (post) => {
-        const commentsCount = await db.postComment.count({
-          where: { postId: post.id, parentCommentId: null },
-        })
-
-        return {
-          id: post.id,
-          content: post.content,
-          authorId: post.authorId,
-          companyId: post.companyId,
-          author: post.author,
-          attachments: post.attachments.map((a) => ({
-            id: a.id,
-            type: a.type,
-            fileUrl: a.fileUrl,
-            fileName: a.fileName,
-            mimeType: a.mimeType,
-            fileSize: a.fileSize,
-          })),
-          reactions: post.reactions,
-          likesCount: post.likesCount,
-          commentsCount,
-          isPinned: post.isPinned,
-          createdAt: post.createdAt,
-        }
-      })
-    )
+    // Map posts to response shape (counts already included via _count)
+    const postsWithDetails = posts.map((post) => ({
+      id: post.id,
+      content: post.content,
+      authorId: post.authorId,
+      companyId: post.companyId,
+      author: post.author,
+      attachments: post.attachments.map((a) => ({
+        id: a.id,
+        type: a.type,
+        fileUrl: a.fileUrl,
+        fileName: a.fileName,
+        mimeType: a.mimeType,
+        fileSize: a.fileSize,
+      })),
+      reactions: post.reactions,
+      likesCount: post.likesCount,
+      commentsCount: post._count.comments,
+      isPinned: post.isPinned,
+      createdAt: post.createdAt,
+    }))
 
     return NextResponse.json({
       posts: postsWithDetails,

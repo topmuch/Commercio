@@ -49,7 +49,15 @@ export async function GET(request: Request) {
       where: {
         companyId: settings.companyId,
         isActive: true,
-        startDate: { lte: new Date() },
+        AND: [
+          { startDate: { lte: new Date() } },
+          {
+            OR: [
+              { endDate: null },
+              { endDate: { gte: new Date() } },
+            ],
+          },
+        ],
       },
       select: {
         id: true,

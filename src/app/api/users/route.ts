@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { getCompanyId } from '@/lib/auth'
+import { getCompanyId, getAuthSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 import { NextResponse } from 'next/server'
 
@@ -47,8 +47,27 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const companyId = await getCompanyId()
+    const session = await getAuthSession()
+
+    // Only admin/super_admin/director can create users
+    const callerRole = (session?.user as { role: string }).role
+    if (!['admin', 'super_admin', 'director'].includes(callerRole)) {
+      return NextResponse.json({ error: 'Accès refusé. Seuls les administrateurs peuvent gérer les utilisateurs.' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { name, email, phone, password, role } = body
+
+    // Prevent privilege escalation: cannot assign roles higher than caller
+    const allowedRoles: Record<string, string[]> = {
+      'super_admin': ['super_admin', 'admin', 'director', 'commercial'],
+      'admin': ['admin', 'director', 'commercial'],
+      'director': ['commercial'],
+    }
+    const permittedRoles = allowedRoles[callerRole] || []
+    if (body.role && !permittedRoles.includes(body.role)) {
+      return NextResponse.json({ error: 'Rôle non autorisé' }, { status: 403 })
+    }
 
     // Validation
     if (!name || !email || !password) {

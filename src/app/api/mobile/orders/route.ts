@@ -105,50 +105,57 @@ export async function POST(request: NextRequest) {
     const taxAmount = ((subtotal - discountAmount) * tax) / 100
     const total = subtotal - discountAmount + taxAmount
 
-    // Generate order number
-    const count = await db.order.count({ where: { companyId } })
-    const number = `CMD-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
+    // Use transaction for atomic order creation + stock decrement
+    const order = await db.$transaction(async (tx) => {
+      // Generate order number using transaction-safe count
+      const count = await tx.order.count({ where: { companyId } })
+      const number = `CMD-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
-    const order = await db.order.create({
-      data: {
-        number,
-        status: 'new',
-        total: Math.round(total),
-        discount,
-        tax: Math.round(taxAmount),
-        notes: notes || null,
-        clientId,
-        commercialId: commercialId || null,
-        companyId,
-        items: {
-          create: items.map(
-            (item: { productId: string; quantity: number; unitPrice: number }) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.quantity * item.unitPrice,
-            })
-          ),
-        },
-      },
-      include: {
-        client: { select: { companyName: true, contactName: true, phone: true, whatsapp: true, city: true } },
-        commercial: { select: { name: true } },
-        items: {
-          include: {
-            product: { select: { name: true, reference: true, image: true } },
+      const created = await tx.order.create({
+        data: {
+          number,
+          status: 'new',
+          total: Math.round(total),
+          discount,
+          tax: Math.round(taxAmount),
+          notes: notes || null,
+          clientId,
+          commercialId: commercialId || null,
+          companyId,
+          items: {
+            create: items.map(
+              (item: { productId: string; quantity: number; unitPrice: number }) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.quantity * item.unitPrice,
+              })
+            ),
           },
         },
-      },
-    })
-
-    // Update product stock
-    for (const item of items) {
-      await db.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
+        include: {
+          client: { select: { companyName: true, contactName: true, phone: true, whatsapp: true, city: true } },
+          commercial: { select: { name: true } },
+          items: {
+            include: {
+              product: { select: { name: true, reference: true, image: true } },
+            },
+          },
+        },
       })
-    }
+
+      // Decrement stock for each ordered product (in same transaction)
+      await Promise.all(
+        items.map((item: { productId: string; quantity: number }) =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          })
+        )
+      )
+
+      return created
+    })
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error: unknown) {

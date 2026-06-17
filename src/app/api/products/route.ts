@@ -88,6 +88,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const parsedPrice = parseFloat(price)
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      return NextResponse.json({ error: 'Prix invalide' }, { status: 400 })
+    }
+
+    const parsedMinStock = minStock ? parseInt(minStock) : 5
+    if (isNaN(parsedMinStock) || parsedMinStock < 0) {
+      return NextResponse.json({ error: 'Stock minimum invalide' }, { status: 400 })
+    }
+
     // Check unique reference (per-company)
     const existing = await db.product.findFirst({
       where: { reference, companyId },
@@ -104,13 +114,13 @@ export async function POST(request: NextRequest) {
         name,
         reference,
         description,
-        price: parseFloat(price),
+        price: parsedPrice,
         resellerPrice: resellerPrice ? parseFloat(resellerPrice) : null,
         image: image || null,
         categoryId: categoryId || null,
         brand: brand || null,
         stock: 0,
-        minStock: minStock ? parseInt(minStock) : 5,
+        minStock: parsedMinStock,
         status: status || 'active',
         companyId,
       },
@@ -156,6 +166,20 @@ export async function PUT(request: NextRequest) {
           { error: 'Un produit avec cette référence existe déjà' },
           { status: 400 }
         )
+      }
+    }
+
+    // Validate numeric fields
+    if (updateData.price !== undefined) {
+      const parsedPrice = parseFloat(updateData.price)
+      if (isNaN(parsedPrice) || parsedPrice < 0) {
+        return NextResponse.json({ error: 'Prix invalide' }, { status: 400 })
+      }
+    }
+    if (updateData.minStock !== undefined) {
+      const parsedMinStock = parseInt(updateData.minStock)
+      if (isNaN(parsedMinStock) || parsedMinStock < 0) {
+        return NextResponse.json({ error: 'Stock minimum invalide' }, { status: 400 })
       }
     }
 

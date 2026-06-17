@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  images: {
+    unoptimized: true,  // All images served as-is (no Next.js optimization)
+  },
   transpilePackages: ['leaflet', 'react-leaflet'],
   /* TypeScript: strict mode — do not ignore build errors */
   typescript: {

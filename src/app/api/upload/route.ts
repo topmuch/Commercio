@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import crypto from 'crypto'
+import { getCompanyId } from '@/lib/auth'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
@@ -22,9 +23,17 @@ function sanitizeFilename(name: string): string {
 // POST /api/upload — Upload a file to uploads/{folder}/
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const companyId = await getCompanyId()
+    if (!companyId) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const folder = (formData.get('folder') as string) || 'boutique'
+    // Sanitize folder name to prevent path traversal
+    const safeFolder = folder.replace(/[^a-zA-Z0-9_\-]/g, '_').replace(/\.\./g, '').trim() || 'boutique'
 
     if (!file) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 })
@@ -54,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to configurable directory (default: /app/uploads)
     const uploadsBase = getUploadsDir()
-    const uploadDir = join(uploadsBase, folder)
+    const uploadDir = join(uploadsBase, safeFolder)
     await mkdir(uploadDir, { recursive: true })
 
     // Read file buffer and write to disk
@@ -64,7 +73,7 @@ export async function POST(request: NextRequest) {
     await writeFile(filePath, buffer)
 
     // URL served via /uploads/* rewrite → /api/uploads/* handler
-    const url = `/uploads/${folder}/${filename}`
+    const url = `/uploads/${safeFolder}/${filename}`
 
     return NextResponse.json({
       url,

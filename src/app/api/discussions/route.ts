@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
           _count: 'desc',
         },
       },
+      take: limit,
+      skip: (page - 1) * limit,
     })
 
     // Get discussions with pagination

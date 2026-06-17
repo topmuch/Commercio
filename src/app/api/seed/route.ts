@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       await db.product.deleteMany({ where: { companyId } })
       await db.category.deleteMany({ where: { companyId } })
       await db.user.deleteMany({ where: { companyId } })
+      await db.storeBanner.deleteMany({ where: { companyId } })
       await db.storeSettings.deleteMany({ where: { companyId } })
     }
 
@@ -119,23 +120,23 @@ export async function POST(request: Request) {
     // Products — 17 products, prices in FCFA (500 – 50 000)
     // =====================================================
     const products = await Promise.all([
-      db.product.create({ data: { id: 'prod_1', name: 'Coca-Cola 33cl', reference: 'BOI-001', price: 350, resellerPrice: 280, stock: 500, minStock: 50, categoryId: 'cat_7', brand: 'Coca-Cola', companyId } }),
-      db.product.create({ data: { id: 'prod_2', name: 'Sprite 33cl', reference: 'BOI-002', price: 350, resellerPrice: 280, stock: 400, minStock: 50, categoryId: 'cat_7', brand: 'Coca-Cola', companyId } }),
-      db.product.create({ data: { id: 'prod_3', name: 'Youki Jus d\'Ananas 1L', reference: 'BOI-003', price: 500, resellerPrice: 400, stock: 300, minStock: 40, categoryId: 'cat_7', brand: 'Youki', companyId } }),
-      db.product.create({ data: { id: 'prod_4', name: 'Folli Jus d\'Ananas 1L', reference: 'BOI-004', price: 600, resellerPrice: 480, stock: 250, minStock: 30, categoryId: 'cat_7', brand: 'Folli', companyId } }),
-      db.product.create({ data: { id: 'prod_5', name: 'Aqua Terminale 1.5L', reference: 'BOI-005', price: 200, resellerPrice: 150, stock: 1200, minStock: 150, categoryId: 'cat_8', brand: 'Aqua Terminale', companyId } }),
-      db.product.create({ data: { id: 'prod_6', name: 'Riz Tatam 25kg', reference: 'ALI-001', price: 16500, resellerPrice: 14500, stock: 200, minStock: 20, categoryId: 'cat_2', brand: 'Tatam', companyId } }),
-      db.product.create({ data: { id: 'prod_7', name: 'Huile de table Djama 5L', reference: 'ALI-002', price: 8500, resellerPrice: 7500, stock: 150, minStock: 15, categoryId: 'cat_2', brand: 'Djama', companyId } }),
-      db.product.create({ data: { id: 'prod_8', name: 'Café Moulu Kakao 250g', reference: 'ALI-003', price: 2800, resellerPrice: 2300, stock: 250, minStock: 30, categoryId: 'cat_2', brand: 'Kakao', companyId } }),
-      db.product.create({ data: { id: 'prod_9', name: 'Cubes Maggi 12 pcs', reference: 'ALI-004', price: 750, resellerPrice: 600, stock: 400, minStock: 50, categoryId: 'cat_2', brand: 'Maggi', companyId } }),
-      db.product.create({ data: { id: 'prod_10', name: 'Kiss Margarine 500g', reference: 'ALI-005', price: 1200, resellerPrice: 950, stock: 350, minStock: 40, categoryId: 'cat_2', brand: 'Kiss', companyId } }),
-      db.product.create({ data: { id: 'prod_11', name: 'Omo Poudre 500g', reference: 'ENT-001', price: 1500, resellerPrice: 1200, stock: 180, minStock: 25, categoryId: 'cat_3', brand: 'Omo', companyId } }),
-      db.product.create({ data: { id: 'prod_12', name: 'Savon de Marseille 400g', reference: 'ENT-002', price: 450, resellerPrice: 350, stock: 300, minStock: 30, categoryId: 'cat_3', brand: 'Marseille', companyId } }),
-      db.product.create({ data: { id: 'prod_13', name: 'Yaourt Dolce Gusto pack 6', reference: 'LAIT-001', price: 5000, resellerPrice: 4200, stock: 120, minStock: 15, categoryId: 'cat_4', brand: 'Dolce Gusto', companyId } }),
-      db.product.create({ data: { id: 'prod_14', name: 'Lait UHT Vitalait 1L', reference: 'LAIT-002', price: 750, resellerPrice: 600, stock: 800, minStock: 100, categoryId: 'cat_4', brand: 'Vitalait', companyId } }),
-      db.product.create({ data: { id: 'prod_15', name: 'Sardines John West 125g', reference: 'CON-001', price: 850, resellerPrice: 680, stock: 300, minStock: 30, categoryId: 'cat_5', brand: 'John West', companyId } }),
-      db.product.create({ data: { id: 'prod_16', name: 'Conserve Tomate Mutti 400g', reference: 'CON-002', price: 650, resellerPrice: 520, stock: 250, minStock: 25, categoryId: 'cat_5', brand: 'Mutti', companyId } }),
-      db.product.create({ data: { id: 'prod_17', name: 'Shampooing Dove 400ml', reference: 'HYG-001', price: 3500, resellerPrice: 2800, stock: 180, minStock: 25, categoryId: 'cat_6', brand: 'Dove', companyId } }),
+      db.product.create({ data: { id: 'prod_1', name: 'Coca-Cola 33cl', reference: 'BOI-001', price: 350, resellerPrice: 280, stock: 500, minStock: 50, categoryId: 'cat_7', brand: 'Coca-Cola', image: '/uploads/products/coca-cola-33cl.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_2', name: 'Sprite 33cl', reference: 'BOI-002', price: 350, resellerPrice: 280, stock: 400, minStock: 50, categoryId: 'cat_7', brand: 'Coca-Cola', image: '/uploads/products/sprite-33cl.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_3', name: 'Youki Jus d\'Ananas 1L', reference: 'BOI-003', price: 500, resellerPrice: 400, stock: 300, minStock: 40, categoryId: 'cat_7', brand: 'Youki', image: '/uploads/products/youki-jus-ananas-1l.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_4', name: 'Folli Jus d\'Ananas 1L', reference: 'BOI-004', price: 600, resellerPrice: 480, stock: 250, minStock: 30, categoryId: 'cat_7', brand: 'Folli', image: '/uploads/products/folli-jus-ananas-1l.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_5', name: 'Aqua Terminale 1.5L', reference: 'BOI-005', price: 200, resellerPrice: 150, stock: 1200, minStock: 150, categoryId: 'cat_8', brand: 'Aqua Terminale', image: '/uploads/products/aqua-terminale-1-5l.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_6', name: 'Riz Tatam 25kg', reference: 'ALI-001', price: 16500, resellerPrice: 14500, stock: 200, minStock: 20, categoryId: 'cat_2', brand: 'Tatam', image: '/uploads/products/riz-tatam-25kg.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_7', name: 'Huile de table Djama 5L', reference: 'ALI-002', price: 8500, resellerPrice: 7500, stock: 150, minStock: 15, categoryId: 'cat_2', brand: 'Djama', image: '/uploads/products/huile-djama-5l.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_8', name: 'Café Moulu Kakao 250g', reference: 'ALI-003', price: 2800, resellerPrice: 2300, stock: 250, minStock: 30, categoryId: 'cat_2', brand: 'Kakao', image: null, companyId } }),
+      db.product.create({ data: { id: 'prod_9', name: 'Cubes Maggi 12 pcs', reference: 'ALI-004', price: 750, resellerPrice: 600, stock: 400, minStock: 50, categoryId: 'cat_2', brand: 'Maggi', image: '/uploads/products/cubes-maggi-12pcs.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_10', name: 'Kiss Margarine 500g', reference: 'ALI-005', price: 1200, resellerPrice: 950, stock: 350, minStock: 40, categoryId: 'cat_2', brand: 'Kiss', image: '/uploads/products/kiss-margarine-500g.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_11', name: 'Omo Poudre 500g', reference: 'ENT-001', price: 1500, resellerPrice: 1200, stock: 180, minStock: 25, categoryId: 'cat_3', brand: 'Omo', image: null, companyId } }),
+      db.product.create({ data: { id: 'prod_12', name: 'Savon de Marseille 400g', reference: 'ENT-002', price: 450, resellerPrice: 350, stock: 300, minStock: 30, categoryId: 'cat_3', brand: 'Marseille', image: '/uploads/products/savon-marseille-400g.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_13', name: 'Yaourt Dolce Gusto pack 6', reference: 'LAIT-001', price: 5000, resellerPrice: 4200, stock: 120, minStock: 15, categoryId: 'cat_4', brand: 'Dolce Gusto', image: '/uploads/products/yaourt-dolce-gusto-pack6.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_14', name: 'Lait UHT Vitalait 1L', reference: 'LAIT-002', price: 750, resellerPrice: 600, stock: 800, minStock: 100, categoryId: 'cat_4', brand: 'Vitalait', image: null, companyId } }),
+      db.product.create({ data: { id: 'prod_15', name: 'Sardines John West 125g', reference: 'CON-001', price: 850, resellerPrice: 680, stock: 300, minStock: 30, categoryId: 'cat_5', brand: 'John West', image: '/uploads/products/sardines-john-west-125g.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_16', name: 'Conserve Tomate Mutti 400g', reference: 'CON-002', price: 650, resellerPrice: 520, stock: 250, minStock: 25, categoryId: 'cat_5', brand: 'Mutti', image: '/uploads/products/conserve-tomate-mutti-400g.jpg', companyId } }),
+      db.product.create({ data: { id: 'prod_17', name: 'Shampooing Dove 400ml', reference: 'HYG-001', price: 3500, resellerPrice: 2800, stock: 180, minStock: 25, categoryId: 'cat_6', brand: 'Dove', image: null, companyId } }),
     ])
 
     // =====================================================
@@ -443,9 +444,46 @@ export async function POST(request: Request) {
         companyId,
         whatsappNumber: '+221 77 100 00 01',
         storeTitle: 'DistribuSN Boutique',
+        storeDescription: 'Votre distributeur de confiance au Sénégal. Boissons, alimentation, entretien et plus.',
         currency: 'CFA',
         isActive: true,
+        publicSlug: 'distribusn',
+        logoUrl: null,
+        primaryColor: '#10B981',
       },
+    })
+
+    // Banners for public boutique
+    await db.storeBanner.createMany({
+      data: [
+        {
+          companyId,
+          imageUrl: '/uploads/boutique/promo-boissons.jpg',
+          title: 'Promo Spéciale !',
+          subtitle: '-15% sur toutes les boissons ce mois-ci',
+          displayOrder: 0,
+          isActive: true,
+          startDate: new Date('2025-01-01'),
+        },
+        {
+          companyId,
+          imageUrl: '/uploads/boutique/nouveautes.jpg',
+          title: 'Nouveautés',
+          subtitle: 'Découvrez nos nouveaux produits alimentaires',
+          displayOrder: 1,
+          isActive: true,
+          startDate: new Date('2025-01-01'),
+        },
+        {
+          companyId,
+          imageUrl: '/uploads/boutique/livraison.jpg',
+          title: 'Livraison Gratuite',
+          subtitle: 'À partir de 50 000 FCFA de commande',
+          displayOrder: 2,
+          isActive: true,
+          startDate: new Date('2025-01-01'),
+        },
+      ],
     })
 
     return NextResponse.json({
@@ -454,6 +492,7 @@ export async function POST(request: Request) {
       products: products.length,
       categories: categories.length,
       users: users.length,
+      banners: 3,
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'

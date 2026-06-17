@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['entry', 'exit', 'adjustment'].includes(type)) {
+    if (!['entry', 'exit', 'adjustment', 'inventory'].includes(type)) {
       return NextResponse.json(
-        { error: 'Le type doit être entrée, sortie ou ajustement' },
+        { error: 'Le type doit être entrée, sortie, ajustement ou inventaire' },
         { status: 400 }
       )
     }
@@ -85,6 +85,9 @@ export async function POST(request: NextRequest) {
     }
 
     const qty = parseInt(quantity)
+    if (isNaN(qty) || qty <= 0) {
+      return NextResponse.json({ error: 'Quantité invalide' }, { status: 400 })
+    }
 
     // Update product stock
     let newStock = product.stock

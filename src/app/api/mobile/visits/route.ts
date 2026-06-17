@@ -8,10 +8,14 @@ export async function POST(request: NextRequest) {
     const companyId = await getCompanyId()
 
     const body = await request.json()
-    const { clientId, commercialId, notes, latitude, longitude, status, type, photos } = body
+    const { clientId, commercialId, notes, latitude, longitude, status, type } = body
 
     if (!clientId) {
       return NextResponse.json({ error: 'Le client est requis.' }, { status: 400 })
+    }
+
+    if (!commercialId) {
+      return NextResponse.json({ error: 'ID commercial requis' }, { status: 400 })
     }
 
     // Check client exists
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
         latitude: latitude ?? null,
         longitude: longitude ?? null,
         clientId,
-        commercialId: commercialId || 'usr_1',
+        commercialId,
         companyId,
       },
       include: {

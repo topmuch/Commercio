@@ -19,7 +19,10 @@ export async function GET() {
       orderBy: { createdAt: 'asc' },
     })
 
-    const userId = user?.id || 'usr_1'
+    if (!user) {
+      return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 401 })
+    }
+    const userId = user.id
 
     // ─── Today's visits ───
     const todayVisits = await db.visit.findMany({

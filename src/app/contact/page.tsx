@@ -26,16 +26,21 @@ export default function ContactPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!name || !email || !message) return
 
     setLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false)
+    // Send contact form data
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message }),
+      })
+      if (!res.ok) throw new Error('Erreur serveur')
       setName('')
       setEmail('')
       setSubject('')
@@ -43,7 +48,13 @@ export default function ContactPage() {
       toast.success('Message envoyé !', {
         description: 'Nous vous répondrons dans les plus brefs délais.',
       })
-    }, 1000)
+    } catch {
+      toast.error('Erreur', {
+        description: 'Impossible d\'envoyer le message. Réessayez plus tard.',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
