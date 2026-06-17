@@ -156,6 +156,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate commercialId FK before creating — silently ignore invalid references
+    let validCommercialId: string | null = commercialId || null
+    if (validCommercialId) {
+      const commercialExists = await db.user.findFirst({
+        where: { id: validCommercialId, companyId },
+        select: { id: true },
+      })
+      if (!commercialExists) {
+        validCommercialId = null
+      }
+    }
+
     const client = await db.client.create({
       data: {
         companyName,
@@ -170,7 +182,7 @@ export async function POST(request: NextRequest) {
         type: type || 'boutique',
         status: status || 'lead_rouge',
         notes: notes || null,
-        commercialId: commercialId || null,
+        commercialId: validCommercialId,
         companyId,
       },
       include: {

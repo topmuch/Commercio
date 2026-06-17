@@ -55,13 +55,23 @@ export async function POST(
       return NextResponse.json({ error: 'Client non trouvé.' }, { status: 404 })
     }
 
+    // Validate commercialId FK — silently ignore invalid references
+    let validCommercialId: string | null = commercialId || null
+    if (validCommercialId) {
+      const commercialExists = await db.user.findFirst({
+        where: { id: validCommercialId, companyId },
+        select: { id: true },
+      })
+      if (!commercialExists) validCommercialId = null
+    }
+
     const note = await db.discussion.create({
       data: {
         type: 'note',
         content: content.trim(),
         direction: 'outgoing',
         clientId: id,
-        commercialId: commercialId || null,
+        commercialId: validCommercialId,
         companyId,
       },
       include: {

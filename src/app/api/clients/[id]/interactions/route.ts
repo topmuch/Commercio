@@ -28,10 +28,36 @@ export async function POST(
       return NextResponse.json({ error: 'Client non trouvé.' }, { status: 404 })
     }
 
+    // Validate commercialId FK — silently ignore invalid references
+    let validCommercialId: string | null = commercialId || null
+    if (validCommercialId) {
+      const commercialExists = await db.user.findFirst({
+        where: { id: validCommercialId, companyId },
+        select: { id: true },
+      })
+      if (!commercialExists) validCommercialId = null
+    }
+
     let interaction
 
     // Visit types (visit, field_visit) go to Visit model
+    // Note: Visit.commercialId is required, so we must find a valid user if none provided
     if (type === 'visit') {
+      let visitCommercialId = validCommercialId
+      if (!visitCommercialId) {
+        // Visit requires a commercial — try to find any user in the company
+        const anyUser = await db.user.findFirst({
+          where: { companyId },
+          select: { id: true },
+        })
+        visitCommercialId = anyUser ? anyUser.id : null
+      }
+      if (!visitCommercialId) {
+        return NextResponse.json(
+          { error: 'Aucun commercial trouvé pour cette entreprise. Créez d\'abord un utilisateur.' },
+          { status: 400 }
+        )
+      }
       interaction = await db.visit.create({
         data: {
           type: 'visit',
@@ -40,7 +66,7 @@ export async function POST(
           latitude: latitude || null,
           longitude: longitude || null,
           clientId: id,
-          commercialId: commercialId || 'usr_1',
+          commercialId: visitCommercialId,
           companyId,
         },
         include: {
@@ -69,7 +95,7 @@ export async function POST(
         content,
         direction: direction || 'outgoing',
         clientId: id,
-        commercialId: commercialId || null,
+        commercialId: validCommercialId,
         companyId,
       },
       include: {

@@ -133,7 +133,19 @@ export async function PUT(
     if (type !== undefined) updateData.type = type
     if (status !== undefined) updateData.status = status
     if (notes !== undefined) updateData.notes = notes || null
-    if (commercialId !== undefined) updateData.commercialId = commercialId || null
+
+    // Validate commercialId FK before updating — silently ignore invalid references
+    if (commercialId !== undefined) {
+      if (commercialId) {
+        const commercialExists = await db.user.findFirst({
+          where: { id: commercialId, companyId },
+          select: { id: true },
+        })
+        updateData.commercialId = commercialExists ? commercialId : null
+      } else {
+        updateData.commercialId = null
+      }
+    }
 
     const updated = await db.client.update({
       where: { id },

@@ -86,6 +86,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Au moins un article est requis.' }, { status: 400 })
     }
 
+    // Validate commercialId FK — silently ignore invalid references
+    let validCommercialId: string | null = commercialId || null
+    if (validCommercialId) {
+      const commercialExists = await db.user.findFirst({
+        where: { id: validCommercialId, companyId },
+        select: { id: true },
+      })
+      if (!commercialExists) validCommercialId = null
+    }
+
     for (const item of items) {
       if (!item.productId || !item.quantity || item.unitPrice === undefined) {
         return NextResponse.json(
@@ -120,7 +130,7 @@ export async function POST(request: NextRequest) {
           tax: Math.round(taxAmount),
           notes: notes || null,
           clientId,
-          commercialId: commercialId || null,
+          commercialId: validCommercialId,
           companyId,
           items: {
             create: items.map(

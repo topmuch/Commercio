@@ -14,8 +14,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Le client est requis.' }, { status: 400 })
     }
 
-    if (!commercialId) {
-      return NextResponse.json({ error: 'ID commercial requis' }, { status: 400 })
+    // Validate commercialId FK — if invalid, try to find any user in the company
+    let validCommercialId: string | null = commercialId || null
+    if (validCommercialId) {
+      const commercialExists = await db.user.findFirst({
+        where: { id: validCommercialId, companyId },
+        select: { id: true },
+      })
+      if (!commercialExists) validCommercialId = null
+    }
+    if (!validCommercialId) {
+      const anyUser = await db.user.findFirst({
+        where: { companyId },
+        select: { id: true },
+      })
+      validCommercialId = anyUser ? anyUser.id : null
+    }
+    if (!validCommercialId) {
+      return NextResponse.json(
+        { error: 'Aucun commercial trouvé. Créez d\'abord un utilisateur.' },
+        { status: 400 }
+      )
     }
 
     // Check client exists
@@ -32,7 +51,7 @@ export async function POST(request: NextRequest) {
         latitude: latitude ?? null,
         longitude: longitude ?? null,
         clientId,
-        commercialId,
+        commercialId: validCommercialId,
         companyId,
       },
       include: {
