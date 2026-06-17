@@ -25,7 +25,6 @@ import {
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Tooltip,
   TooltipContent,
@@ -156,7 +155,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 py-4">
+      <div className="flex-1 overflow-y-auto py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/40">
         <nav className="space-y-5 px-3">
           {filteredNavGroups.map((group) => (
             <div key={group.label}>
@@ -238,7 +237,7 @@ export function AppSidebar() {
             </div>
           ))}
         </nav>
-      </ScrollArea>
+      </div>
 
       {/* User */}
       <div className="border-t border-orange-500/40 p-3">
