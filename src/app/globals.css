@@ -189,6 +189,15 @@
   border: none !important;
 }
 
+/* ─── Scrollbar hide utility ─── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ─── Print styles for install-app page ─── */
 @media print {
   /* Reset dark background to white for printing */
