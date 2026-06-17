@@ -214,6 +214,9 @@ export default function ClientsPage() {
           commercialId: '',
         })
         fetchClients()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Erreur lors de la création du client.')
       }
     } catch {
       toast.error('Erreur lors de la création')
@@ -274,6 +277,9 @@ export default function ClientsPage() {
           commercialId: '',
         })
         fetchClients()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Erreur lors de la modification du client.')
       }
     } catch {
       toast.error('Erreur lors de la modification')

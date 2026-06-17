@@ -4,10 +4,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Check, ChevronDown, Plus, UserPlus, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import type { Client } from '@/lib/types'
 
 interface ClientSelectWithCreateProps {
@@ -37,6 +35,7 @@ export function ClientSelectWithCreate({
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [justCreated, setJustCreated] = useState<Client | null>(null)
   const [form, setForm] = useState<NewClientForm>({
     companyName: '',
     contactName: '',
@@ -47,19 +46,27 @@ export function ClientSelectWithCreate({
   const containerRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
+  // Merge the just-created client into the list for immediate display
+  const allClients = useMemo(() => {
+    if (!justCreated) return clients
+    if (clients.some((c) => c.id === justCreated.id)) return clients
+    return [justCreated, ...clients]
+  }, [clients, justCreated])
+
   const filteredClients = useMemo(() => {
-    if (!search.trim()) return clients.slice(0, 50)
+    if (!search.trim()) return allClients.slice(0, 50)
     const q = search.toLowerCase()
-    return clients.filter(
+    return allClients.filter(
       (c) =>
         c.companyName.toLowerCase().includes(q) ||
         c.contactName.toLowerCase().includes(q) ||
         c.phone.toLowerCase().includes(q) ||
         (c.email && c.email.toLowerCase().includes(q))
     )
-  }, [clients, search])
+  }, [allClients, search])
 
-  const selectedClient = clients.find((c) => c.id === value)
+  // Find selected client from merged list
+  const selectedClient = allClients.find((c) => c.id === value)
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -71,6 +78,13 @@ export function ClientSelectWithCreate({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Clear justCreated once the parent's client list catches up
+  useEffect(() => {
+    if (justCreated && clients.some((c) => c.id === justCreated.id)) {
+      setJustCreated(null)
+    }
+  }, [clients, justCreated])
 
   const resetForm = () => {
     setForm({ companyName: '', contactName: '', phone: '', whatsapp: '', email: '' })
@@ -109,8 +123,13 @@ export function ClientSelectWithCreate({
       setShowCreateForm(false)
       setSearch('')
       setDropdownOpen(false)
-      await onClientsRefresh()
+
+      // Immediately select the new client & store locally for display
+      setJustCreated(newClient)
       onClientChange(newClient.id)
+
+      // Refresh parent list in background (no await — non-blocking)
+      onClientsRefresh()
     } catch {
       toast.error('Erreur réseau. Veuillez réessayer.')
     } finally {
@@ -151,6 +170,7 @@ export function ClientSelectWithCreate({
                 onClick={() => {
                   onClientChange('')
                   setSearch('')
+                  setJustCreated(null)
                 }}
               >
                 <X className="h-3 w-3" />
