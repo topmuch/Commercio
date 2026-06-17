@@ -16,6 +16,7 @@ const MIME_TYPES: Record<string, string> = {
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
+  '.pdf': 'application/pdf',
 }
 
 // Cache duration: 7 days for images
