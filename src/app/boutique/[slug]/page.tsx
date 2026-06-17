@@ -167,10 +167,10 @@ function buildCheckoutMessage(items: CartItem[], storeTitle: string): string {
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
 }
 
-function AnimatedSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function AnimatedSection({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
 
@@ -191,6 +191,7 @@ function AnimatedSection({ children, className = '' }: { children: React.ReactNo
   return (
     <motion.div
       ref={ref}
+      id={id}
       initial="hidden"
       animate={isVisible ? 'visible' : 'hidden'}
       variants={fadeInUp}
