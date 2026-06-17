@@ -10,6 +10,7 @@ import {
   Sun,
   Menu,
   LogOut,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -91,6 +92,19 @@ export function AppHeader() {
   const theme = useAppStore((s) => s.theme)
   const setTheme = useAppStore((s) => s.setTheme)
   const [commandOpen, setCommandOpen] = React.useState(false)
+  const [boutiqueSlug, setBoutiqueSlug] = React.useState<string | null>(null)
+
+  // Fetch boutique slug for header link
+  React.useEffect(() => {
+    fetch('/api/store-settings')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.publicSlug) {
+          setBoutiqueSlug(json.data.publicSlug)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const initials = user?.name
     ? user.name
@@ -187,6 +201,18 @@ export function AppHeader() {
             onClick={() => setCommandOpen(true)}
           >
             <Search className="h-5 w-5" />
+          </Button>
+
+          {/* Lien Boutique Publique */}
+          <Button
+            variant="outline"
+            size="icon"
+            className={boutiqueSlug ? '' : 'opacity-40 pointer-events-none'}
+            onClick={() => boutiqueSlug && window.open(`/boutique/${boutiqueSlug}`, '_blank')}
+            title={boutiqueSlug ? 'Voir la boutique publique' : 'Boutique non configurée'}
+            aria-label="Voir la boutique publique"
+          >
+            <ExternalLink className="h-4 w-4" />
           </Button>
 
           {/* Theme Toggle - Blue/Violet */}
