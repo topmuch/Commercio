@@ -116,6 +116,16 @@ function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
   return null
 }
 
+// ─── Map instance initializer ──────────────────────────────────────────
+
+function MapInstanceSetter({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    onReady(map)
+  }, [map, onReady])
+  return null
+}
+
 // ─── Region circle overlay data ────────────────────────────────────────
 
 interface RegionCircle {
@@ -285,8 +295,9 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
         style={{ height: '100%', width: '100%' }}
         className="rounded-xl z-0"
         scrollWheelZoom
-        whenReady={(map) => { setMapInstance(map.target) }}
+        whenReady={() => {}}
       >
+        <MapInstanceSetter onReady={(m) => setMapInstance(m)} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
