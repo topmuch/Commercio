@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile, stat } from 'fs/promises'
 import { join, extname } from 'path'
 
-// Upload directory: same as upload route
+// Upload directory: use env var in production (Docker), fallback to local uploads/
+const UPLOADS_FALLBACK = 'uploads'
 function getUploadsDir(): string {
-  return process.env.UPLOADS_DIR || join(process.cwd(), 'uploads')
+  if (process.env.UPLOADS_DIR) return process.env.UPLOADS_DIR
+  return UPLOADS_FALLBACK
 }
 
 // MIME types by extension

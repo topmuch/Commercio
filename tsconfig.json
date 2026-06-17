@@ -40,6 +40,9 @@
     "node_modules",
     "examples",
     "mini-services",
-    "skills"
+    "skills",
+    "agent-ctx",
+    "download",
+    ".github"
   ]
 }

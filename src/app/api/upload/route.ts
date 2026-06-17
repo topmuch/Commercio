@@ -7,9 +7,10 @@ import { getCompanyId } from '@/lib/auth'
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
-// Upload directory: configurable via env, default to /app/uploads (or ./uploads in dev)
+// Upload directory: configurable via env, default to ./uploads in dev
 function getUploadsDir(): string {
-  return process.env.UPLOADS_DIR || join(process.cwd(), 'uploads')
+  if (process.env.UPLOADS_DIR) return process.env.UPLOADS_DIR
+  return 'uploads'
 }
 
 function sanitizeFilename(name: string): string {

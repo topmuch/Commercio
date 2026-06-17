@@ -234,7 +234,7 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
   return (
     <div className="relative h-[600px] lg:h-[650px]">
       {/* ─── CSS Keyframe Animations ─────────────────────────── */}
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         /* Pulse ring: expands outward and fades */
         @keyframes markerPulse {
           0% {
@@ -286,7 +286,7 @@ export default function LeafletMap({ clients, onClientSelect }: LeafletMapProps)
         .dark .leaflet-popup-close-button:hover {
           color: #f1f5f9 !important;
         }
-      `}</style>
+      `}} />
 
       {/* ─── Map Container ────────────────────────────────────── */}
       <MapContainer

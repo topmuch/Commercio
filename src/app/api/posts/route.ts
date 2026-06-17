@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, '_')
       const uniqueFileName = `${timestamp}-${Math.random().toString(36).slice(2, 8)}-${safeName}`
 
-      const uploadsBase = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads')
+      const uploadsBase = process.env.UPLOADS_DIR || 'uploads'
       const uploadDir = path.join(uploadsBase, 'posts')
       await mkdir(uploadDir, { recursive: true })
 
