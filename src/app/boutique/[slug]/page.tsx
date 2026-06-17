@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swiper from 'swiper/bundle'
@@ -454,15 +455,24 @@ function HeroBanner({ banners, store, primaryColor }: {
               <div className="swiper-pagination !-bottom-1" />
             </div>
           ) : (
-            /* Default hero with store info */
+            /* Default hero with store info + real grocery image */
             <div
               className="relative h-[220px] sm:h-[320px] lg:h-[400px] rounded-2xl overflow-hidden"
-              style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}cc, ${primaryColor}88)` }}
             >
-              {/* Decorative shapes */}
-              <div className="absolute top-8 right-12 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute bottom-4 right-32 w-32 h-32 rounded-full bg-white/5 blur-xl" />
-              <div className="absolute top-20 left-1/3 w-24 h-24 rounded-full bg-white/5 blur-lg" />
+              <Image
+                src="/hero-grocery.jpg"
+                alt={store.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              {/* Green gradient overlay */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(to right, ${primaryColor}ee 0%, ${primaryColor}99 50%, ${primaryColor}44 100%)`,
+                }}
+              />
 
               <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 lg:px-16 max-w-2xl">
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-3">
@@ -594,12 +604,14 @@ function ProductCard({
   onAdd,
   primaryColor,
   currency,
+  slug,
 }: {
   product: Product
   idx: number
   onAdd: (product: Product) => void
   primaryColor: string
   currency: string
+  slug: string
 }) {
   const [added, setAdded] = useState(false)
   const [liked, setLiked] = useState(false)
@@ -624,6 +636,7 @@ function ProductCard({
       whileHover={{ y: -4, boxShadow: '0 12px 24px -4px rgba(0,0,0,0.12)' }}
       transition={{ duration: 0.2 }}
     >
+      <Link href={`/boutique/${slug}/product/${product.id}`}>
       <Card className="group overflow-hidden border border-gray-100 flex flex-col h-full bg-white transition-all duration-300 rounded-xl">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden">
@@ -700,6 +713,7 @@ function ProductCard({
           </div>
         </CardContent>
       </Card>
+      </Link>
     </motion.div>
   )
 }
@@ -716,6 +730,7 @@ function PopularProductsSection({
   onAdd,
   primaryColor,
   currency,
+  slug,
 }: {
   products: Product[]
   categories: CategoryItem[]
@@ -724,6 +739,7 @@ function PopularProductsSection({
   onAdd: (product: Product) => void
   primaryColor: string
   currency: string
+  slug: string
 }) {
   const popularProducts = products.filter((p) => p.stock > 0).slice(0, 8)
 
@@ -781,6 +797,7 @@ function PopularProductsSection({
               onAdd={onAdd}
               primaryColor={primaryColor}
               currency={currency}
+              slug={slug}
             />
           ))}
         </div>
@@ -844,11 +861,13 @@ function AllProductsSection({
   onAdd,
   primaryColor,
   currency,
+  slug,
 }: {
   products: Product[]
   onAdd: (product: Product) => void
   primaryColor: string
   currency: string
+  slug: string
 }) {
   const [visibleCount, setVisibleCount] = useState(8)
   const visibleProducts = products.slice(0, visibleCount)
@@ -871,6 +890,7 @@ function AllProductsSection({
               onAdd={onAdd}
               primaryColor={primaryColor}
               currency={currency}
+              slug={slug}
             />
           ))}
         </div>
@@ -1415,6 +1435,7 @@ function BoutiquePageContent() {
           onAdd={handleAddToCart}
           primaryColor={primaryColor}
           currency={currency}
+          slug={slug}
         />
 
         {/* 6. Features/Stats Section */}
@@ -1426,6 +1447,7 @@ function BoutiquePageContent() {
           onAdd={handleAddToCart}
           primaryColor={primaryColor}
           currency={currency}
+          slug={slug}
         />
       </main>
 
