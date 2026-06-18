@@ -23,6 +23,12 @@ import {
   SheetDescription,
   SheetFooter,
 } from '@/components/ui/sheet'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { CartProvider, useCart, type CartItem, type Product } from '@/lib/cart-context'
 import {
   ShoppingCart,
@@ -246,26 +252,33 @@ function TopInfoBar({ store }: { store: StoreInfo }) {
 // ── STICKY HEADER ─────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
 
-function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChange, primaryColor }: {
+function StickyHeader({ store, categories, onCartOpen, totalItems, searchQuery, onSearchChange, onCategoryClick, activeCategory, primaryColor }: {
   store: StoreInfo
+  categories: CategoryItem[]
   onCartOpen: () => void
   totalItems: number
   searchQuery: string
   onSearchChange: (q: string) => void
+  onCategoryClick: (id: string | null) => void
+  activeCategory: string | null
   primaryColor: string
 }) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false)
 
   const navLinks = [
-    { label: 'Accueil', href: '#' },
-    { label: 'Boutique', href: '#categories' },
+    { label: 'Accueil', href: '#', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
     { label: 'Produits Populaires', href: '#popular' },
     { label: 'Tous les Produits', href: '#all-products' },
   ]
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (href: string, customAction?: () => void) => {
     setMobileMenuOpen(false)
+    if (customAction) {
+      customAction()
+      return
+    }
     if (href === '#') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
@@ -276,6 +289,12 @@ function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChan
       const top = el.getBoundingClientRect().top + window.scrollY - offset
       window.scrollTo({ top, behavior: 'smooth' })
     }
+  }
+
+  const handleCategoryNavClick = (catId: string | null) => {
+    setMobileMenuOpen(false)
+    setCatDropdownOpen(false)
+    onCategoryClick(catId)
   }
 
   useEffect(() => {
@@ -310,12 +329,45 @@ function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChan
             {navLinks.map((link) => (
               <button
                 key={link.href}
-                onClick={() => handleNavClick(link.href)}
+                onClick={() => handleNavClick(link.href, link.action)}
                 className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
               >
                 {link.label}
               </button>
             ))}
+
+            {/* Categories Dropdown */}
+            {categories.length > 0 && (
+              <DropdownMenu open={catDropdownOpen} onOpenChange={setCatDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+                  >
+                    Catégories
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${catDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-56 max-h-80 overflow-y-auto">
+                  <DropdownMenuItem
+                    onClick={() => { setCatDropdownOpen(false); onCategoryClick(null) }}
+                    className={!activeCategory ? 'font-semibold' : ''}
+                  >
+                    Toutes les catégories
+                  </DropdownMenuItem>
+                  {categories.map((cat) => (
+                    <DropdownMenuItem
+                      key={cat.id}
+                      onClick={() => handleCategoryNavClick(cat.id)}
+                      className={activeCategory === cat.id ? 'font-semibold' : ''}
+                    >
+                      <span className="mr-2">{getCategoryEmoji(cat.name)}</span>
+                      {cat.name}
+                      <span className="ml-auto text-xs text-gray-400">{cat._count.products}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
 
           {/* Search Bar (desktop) */}
@@ -400,12 +452,40 @@ function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChan
             {navLinks.map((link) => (
               <button
                 key={link.href}
-                onClick={() => handleNavClick(link.href)}
+                onClick={() => handleNavClick(link.href, link.action)}
                 className="block w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 {link.label}
               </button>
             ))}
+
+            {/* Categories in mobile menu */}
+            {categories.length > 0 && (
+              <>
+                <div className="pt-2 pb-1 px-4">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Catégories</span>
+                </div>
+                <button
+                  onClick={() => handleCategoryNavClick(null)}
+                  className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${!activeCategory ? 'text-white' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'}`}
+                  style={!activeCategory ? { backgroundColor: primaryColor } : undefined}
+                >
+                  Toutes les catégories
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryNavClick(cat.id)}
+                    className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeCategory === cat.id ? 'text-white' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'}`}
+                    style={activeCategory === cat.id ? { backgroundColor: primaryColor } : undefined}
+                  >
+                    <span className="mr-2">{getCategoryEmoji(cat.name)}</span>
+                    {cat.name}
+                    <span className="ml-2 text-xs text-gray-400">({cat._count.products})</span>
+                  </button>
+                ))}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -586,81 +666,6 @@ function HeroBanner({ banners, store, primaryColor }: {
         }}
       />
     </section>
-  )
-}
-
-// ══════════════════════════════════════════════════════════════════
-// ── CATEGORIES SECTION ────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════════
-
-function CategorySection({ categories, products, onCategoryClick, activeCategory }: {
-  categories: CategoryItem[]
-  products: Product[]
-  onCategoryClick: (id: string | null) => void
-  activeCategory: string | null
-}) {
-  if (!categories || categories.length === 0) return null
-
-  return (
-    <AnimatedSection className="w-full bg-white" id="categories">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Nos Catégories</h2>
-          <button className="flex items-center gap-1 text-sm font-medium transition-colors hover:opacity-80" style={{ color: activeCategory ? undefined : 'var(--accent-color, #16a34a)' }}>
-            Voir tout
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 sm:gap-4 sm:overflow-visible sm:pb-0">
-          {categories.map((cat) => {
-            const emoji = getCategoryEmoji(cat.name)
-            // Find first product image from this category
-            const catProduct = products.find((p) => p.category?.name === cat.name && p.image)
-            const isActive = activeCategory === cat.id
-
-            return (
-              <motion.button
-                key={cat.id}
-                onClick={() => onCategoryClick(isActive ? null : cat.id)}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex-shrink-0 w-[110px] sm:w-auto"
-              >
-                <div
-                  className={`flex flex-col items-center gap-2.5 p-4 bg-white rounded-xl shadow-sm border transition-all duration-300 ${
-                    isActive ? 'border-emerald-400 shadow-md' : 'border-gray-100 hover:shadow-md hover:border-gray-200'
-                  }`}
-                >
-                  {catProduct ? (
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-gray-100">
-                      <Image
-                        src={catProduct.image!}
-                        alt={cat.name}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-50 flex items-center justify-center text-2xl sm:text-3xl">
-                      {emoji}
-                    </div>
-                  )}
-                  <div className="text-center">
-                    <h3 className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-1">
-                      {cat.name}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">
-                      {cat._count.products} Produit{cat._count.products > 1 ? 's' : ''}
-                    </p>
-                  </div>
-                </div>
-              </motion.button>
-            )
-          })}
-        </div>
-      </div>
-    </AnimatedSection>
   )
 }
 
@@ -1453,15 +1458,16 @@ function BoutiquePageContent() {
   )
 
   const handleCategoryClick = useCallback((catId: string | null) => {
-    setActiveCategory(catId)
-    setActiveCategoryFilter(catId)
-    if (catId) {
-      const section = document.getElementById('products')
+    const newCat = catId && catId === activeCategory ? null : catId
+    setActiveCategory(newCat)
+    setActiveCategoryFilter(newCat)
+    if (newCat) {
+      const section = document.getElementById('popular')
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     }
-  }, [])
+  }, [activeCategory])
 
   if (loading) return <LoadingSkeleton />
   if (error || !storeData) return <ErrorState message={error || 'Données non disponibles'} onRetry={() => window.location.reload()} />
@@ -1476,10 +1482,13 @@ function BoutiquePageContent() {
       {/* 2. Sticky Header */}
       <StickyHeader
         store={store}
+        categories={categories}
         onCartOpen={() => setIsCartOpen(true)}
         totalItems={totalItems}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onCategoryClick={handleCategoryClick}
+        activeCategory={activeCategory}
         primaryColor={primaryColor}
       />
 
@@ -1488,15 +1497,7 @@ function BoutiquePageContent() {
         {/* 3. Hero Banner/Slider */}
         <HeroBanner banners={banners} store={store} primaryColor={primaryColor} />
 
-        {/* 4. Categories Section */}
-        <CategorySection
-          categories={categories}
-          products={storeData.products}
-          onCategoryClick={handleCategoryClick}
-          activeCategory={activeCategory}
-        />
-
-        {/* 5. Popular Products Section */}
+        {/* 4. Popular Products Section */}
         <PopularProductsSection
           products={filteredProducts}
           categories={categories}
