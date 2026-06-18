@@ -45,18 +45,20 @@ export async function GET(request: Request) {
     }
 
     // Fetch active banners ordered by display order
+    // Date filter: only apply when dates are actually set (null = always valid)
     const banners = await db.storeBanner.findMany({
       where: {
         companyId: settings.companyId,
         isActive: true,
-        AND: [
-          { startDate: { lte: new Date() } },
-          {
-            OR: [
-              { endDate: null },
-              { endDate: { gte: new Date() } },
-            ],
-          },
+        OR: [
+          // Banner with no start/end dates — always show
+          { startDate: null, endDate: null },
+          // Banner with only startDate set
+          { startDate: { lte: new Date() }, endDate: null },
+          // Banner with only endDate set
+          { startDate: null, endDate: { gte: new Date() } },
+          // Banner with both dates set and currently active
+          { startDate: { lte: new Date() }, endDate: { gte: new Date() } },
         ],
       },
       select: {
