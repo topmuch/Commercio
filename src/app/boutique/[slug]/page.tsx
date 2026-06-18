@@ -255,6 +255,28 @@ function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChan
   primaryColor: string
 }) {
   const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const navLinks = [
+    { label: 'Accueil', href: '#' },
+    { label: 'Boutique', href: '#categories' },
+    { label: 'Produits Populaires', href: '#popular' },
+    { label: 'Tous les Produits', href: '#all-products' },
+  ]
+
+  const handleNavClick = (href: string) => {
+    setMobileMenuOpen(false)
+    if (href === '#') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    const el = document.querySelector(href)
+    if (el) {
+      const offset = 72 // sticky header height
+      const top = el.getBoundingClientRect().top + window.scrollY - offset
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
@@ -264,26 +286,94 @@ function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChan
 
   return (
     <header className={`sticky top-0 z-50 bg-white transition-shadow duration-300 ${scrolled ? 'shadow-md' : 'shadow-sm'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
-        {/* Logo + Name */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div
-            className="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center text-white font-bold text-sm"
-            style={{ borderColor: primaryColor, backgroundColor: primaryColor }}
-          >
-            {store.logoUrl ? (
-              <Image src={store.logoUrl} alt={store.title} width={40} height={40} className="w-full h-full object-cover rounded-full" />
-            ) : (
-              <Store className="h-5 w-5 text-white" />
-            )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          {/* Logo + Name */}
+          <button onClick={() => handleNavClick('#')} className="flex items-center gap-3 flex-shrink-0 hover:opacity-80 transition-opacity">
+            <div
+              className="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center text-white font-bold text-sm"
+              style={{ borderColor: primaryColor, backgroundColor: primaryColor }}
+            >
+              {store.logoUrl ? (
+                <Image src={store.logoUrl} alt={store.title} width={40} height={40} className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <Store className="h-5 w-5 text-white" />
+              )}
+            </div>
+            <h1 className="font-bold text-gray-900 text-base sm:text-lg truncate max-w-[120px] sm:max-w-none">
+              {store.title}
+            </h1>
+          </button>
+
+          {/* Desktop Nav Menu */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <button
+                key={link.href}
+                onClick={() => handleNavClick(link.href)}
+                className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                {link.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Search Bar (desktop) */}
+          <div className="hidden md:flex flex-1 max-w-xs xl:max-w-sm">
+            <div className="relative w-full">
+              <Input
+                type="text"
+                placeholder="Rechercher un produit..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full pl-4 pr-12 h-10 rounded-full border-gray-200 bg-gray-50 focus:bg-white text-sm"
+              />
+              <button
+                className="absolute right-1 top-1 h-8 w-8 flex items-center justify-center rounded-full text-white"
+                style={{ backgroundColor: primaryColor }}
+                aria-label="Rechercher"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-          <h1 className="font-bold text-gray-900 text-base sm:text-lg truncate max-w-[120px] sm:max-w-none">
-            {store.title}
-          </h1>
+
+          {/* Right icons: Mobile menu + Cart */}
+          <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5 text-gray-700" /> : (
+                <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+
+            {/* Cart Button */}
+            <button
+              onClick={onCartOpen}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Ouvrir le panier"
+            >
+              <ShoppingCart className="h-5 w-5 text-gray-700" />
+              {totalItems > 0 && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 h-5 min-w-5 px-1 flex items-center justify-center rounded-full text-[10px] font-bold text-white"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="hidden sm:flex flex-1 max-w-md">
+        {/* Mobile search bar */}
+        <div className="md:hidden pb-3">
           <div className="relative w-full">
             <Input
               type="text"
@@ -301,44 +391,24 @@ function StickyHeader({ store, onCartOpen, totalItems, searchQuery, onSearchChan
             </button>
           </div>
         </div>
-
-        {/* Cart Button */}
-        <button
-          onClick={onCartOpen}
-          className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors"
-          aria-label="Ouvrir le panier"
-        >
-          <ShoppingCart className="h-5 w-5 text-gray-700" />
-          {totalItems > 0 && (
-            <span
-              className="absolute -top-0.5 -right-0.5 h-5 min-w-5 px-1 flex items-center justify-center rounded-full text-[10px] font-bold text-white"
-              style={{ backgroundColor: primaryColor }}
-            >
-              {totalItems}
-            </span>
-          )}
-        </button>
       </div>
 
-      {/* Mobile search bar */}
-      <div className="sm:hidden px-4 pb-3">
-        <div className="relative w-full">
-          <Input
-            type="text"
-            placeholder="Rechercher un produit..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-4 pr-12 h-10 rounded-full border-gray-200 bg-gray-50 focus:bg-white text-sm"
-          />
-          <button
-            className="absolute right-1 top-1 h-8 w-8 flex items-center justify-center rounded-full text-white"
-            style={{ backgroundColor: primaryColor }}
-            aria-label="Rechercher"
-          >
-            <Search className="h-4 w-4" />
-          </button>
+      {/* Mobile dropdown menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-gray-100 bg-white">
+          <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
+            {navLinks.map((link) => (
+              <button
+                key={link.href}
+                onClick={() => handleNavClick(link.href)}
+                className="block w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   )
 }
@@ -532,7 +602,7 @@ function CategorySection({ categories, products, onCategoryClick, activeCategory
   if (!categories || categories.length === 0) return null
 
   return (
-    <AnimatedSection className="w-full bg-white">
+    <AnimatedSection className="w-full bg-white" id="categories">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Nos Catégories</h2>
@@ -750,7 +820,7 @@ function PopularProductsSection({
   if (filteredProducts.length === 0) return null
 
   return (
-    <AnimatedSection className="w-full bg-white" id="products">
+    <AnimatedSection className="w-full bg-white" id="popular">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Produits Populaires</h2>
@@ -830,7 +900,7 @@ function FeaturesSection({ primaryColor }: { primaryColor: string }) {
   ]
 
   return (
-    <AnimatedSection className="w-full bg-gray-50">
+    <AnimatedSection className="w-full bg-gray-50" id="features">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
           {features.map((feat, idx) => (
@@ -874,7 +944,7 @@ function AllProductsSection({
   const hasMore = visibleCount < products.length
 
   return (
-    <AnimatedSection className="w-full bg-white">
+    <AnimatedSection className="w-full bg-white" id="all-products">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Tous les Produits</h2>
