@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       image,
       categoryId,
       brand,
+      stock,
       minStock,
       status,
     } = body
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
         image: image || null,
         categoryId: categoryId || null,
         brand: brand || null,
-        stock: 0,
+        stock: stock !== undefined ? parseInt(stock) || 0 : 0,
         minStock: parsedMinStock,
         status: status || 'active',
         companyId,
@@ -182,6 +183,12 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Stock minimum invalide' }, { status: 400 })
       }
     }
+    if (updateData.stock !== undefined) {
+      const parsedStock = parseInt(updateData.stock)
+      if (isNaN(parsedStock) || parsedStock < 0) {
+        return NextResponse.json({ error: 'Stock invalide' }, { status: 400 })
+      }
+    }
 
     const data: Record<string, unknown> = {}
     if (updateData.name !== undefined) data.name = updateData.name
@@ -194,6 +201,7 @@ export async function PUT(request: NextRequest) {
     if (updateData.categoryId !== undefined) data.categoryId = updateData.categoryId || null
     if (updateData.brand !== undefined) data.brand = updateData.brand || null
     if (updateData.minStock !== undefined) data.minStock = parseInt(updateData.minStock)
+    if (updateData.stock !== undefined) data.stock = parseInt(updateData.stock)
     if (updateData.status !== undefined) data.status = updateData.status
 
     const product = await db.product.update({

@@ -107,6 +107,7 @@ export default function ProductsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [formCategoryId, setFormCategoryId] = useState('')
   const [formBrand, setFormBrand] = useState('')
+  const [formStock, setFormStock] = useState('0')
   const [formMinStock, setFormMinStock] = useState('5')
   const [formStatus, setFormStatus] = useState('active')
   const [formImage, setFormImage] = useState('')
@@ -180,6 +181,7 @@ export default function ProductsPage() {
     setFormDescription('')
     setFormCategoryId('')
     setFormBrand('')
+    setFormStock('0')
     setFormMinStock('5')
     setFormStatus('active')
     setFormImage('')
@@ -200,6 +202,7 @@ export default function ProductsPage() {
     setFormDescription(product.description || '')
     setFormCategoryId(product.categoryId || '')
     setFormBrand(product.brand || '')
+    setFormStock(product.stock.toString())
     setFormMinStock(product.minStock.toString())
     setFormStatus(product.status)
     setFormImage(product.image || '')
@@ -228,6 +231,7 @@ export default function ProductsPage() {
             description: formDescription || null,
             categoryId: formCategoryId || null,
             brand: formBrand || null,
+            stock: parseInt(formStock, 10) || 0,
             minStock: formMinStock,
             status: formStatus,
             image: formImage || null,
@@ -251,6 +255,7 @@ export default function ProductsPage() {
             description: formDescription || null,
             categoryId: formCategoryId || null,
             brand: formBrand || null,
+            stock: parseInt(formStock, 10) || 0,
             minStock: formMinStock,
             status: formStatus,
             image: formImage || null,
@@ -702,14 +707,28 @@ export default function ProductsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="minStock">Stock Minimum</Label>
+                <Label htmlFor="stock">Quantité en stock *</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  min="0"
+                  value={formStock}
+                  onChange={(e) => setFormStock(e.target.value)}
+                  placeholder="10"
+                />
+                <p className="text-xs text-muted-foreground">Nombre d'unités disponibles</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minStock">Stock Minimum (alerte)</Label>
                 <Input
                   id="minStock"
                   type="number"
+                  min="0"
                   value={formMinStock}
                   onChange={(e) => setFormMinStock(e.target.value)}
                   placeholder="5"
                 />
+                <p className="text-xs text-muted-foreground">Seuil d'alerte de stock bas</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Statut</Label>
