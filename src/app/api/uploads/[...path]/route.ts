@@ -21,8 +21,8 @@ const MIME_TYPES: Record<string, string> = {
   '.pdf': 'application/pdf',
 }
 
-// Cache duration: 7 days for images
-const CACHE_MAX_AGE = 60 * 60 * 24 * 7
+// Cache duration: 1 hour for images (allows quick updates after banner changes)
+const CACHE_MAX_AGE = 60 * 60
 
 // GET /api/uploads/[...path] — Serve uploaded files from /app/uploads/
 export async function GET(
@@ -60,7 +60,7 @@ export async function GET(
       headers: {
         'Content-Type': contentType,
         'Content-Length': String(buffer.length),
-        'Cache-Control': `public, max-age=${CACHE_MAX_AGE}, immutable`,
+        'Cache-Control': `public, max-age=${CACHE_MAX_AGE}, must-revalidate`,
         'X-Content-Type-Options': 'nosniff',
       },
     })

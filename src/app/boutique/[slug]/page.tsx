@@ -1333,8 +1333,8 @@ function BoutiquePageContent() {
     ;(async () => {
       try {
         const [storeRes, bannersRes] = await Promise.all([
-          fetch(`/api/store/${slug}`, { signal }),
-          fetch(`/api/store/banners?slug=${slug}`, { signal }),
+          fetch(`/api/store/${slug}`, { signal, cache: 'no-store' }),
+          fetch(`/api/store/banners?slug=${slug}`, { signal, cache: 'no-store' }),
         ])
 
         if (signal.aborted) return
