@@ -157,6 +157,7 @@ function ProductPageContent() {
   if (error || !product) return <ErrorState message={error || 'Produit introuvable'} onRetry={() => router.back()} />
 
   const isOutOfStock = product.stock === 0
+  const hasStockInfo = product.stock > 0
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -292,12 +293,21 @@ function ProductPageContent() {
               )}
 
               {/* Stock status */}
-              <div className="flex items-center gap-2">
-                <div className={`h-2.5 w-2.5 rounded-full ${isOutOfStock ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                <span className={`text-sm font-medium ${isOutOfStock ? 'text-red-500' : 'text-emerald-600'}`}>
-                  {isOutOfStock ? 'Rupture de stock' : `En stock (${product.stock} disponibles)`}
-                </span>
-              </div>
+              {hasStockInfo ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  <span className="text-sm font-medium text-emerald-600">
+                    En stock ({product.stock} disponibles)
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                  <span className="text-sm font-medium text-amber-600">
+                    Commander pour vérifier la disponibilité
+                  </span>
+                </div>
+              )}
 
               {/* Quantity + Add to cart */}
               <div className="flex items-center gap-3 mt-2">
@@ -329,11 +339,8 @@ function ProductPageContent() {
                       : { backgroundColor: primaryColor, color: 'white' }
                   }
                   onClick={handleAddToCart}
-                  disabled={isOutOfStock}
                 >
-                  {isOutOfStock ? (
-                    'Rupture de stock'
-                  ) : added ? (
+                  {added ? (
                     <>
                       <ShoppingCart className="h-5 w-5" />
                       Ajouté au panier !

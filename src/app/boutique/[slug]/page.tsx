@@ -693,7 +693,6 @@ function ProductCard({
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (product.stock === 0) return
     onAdd(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
@@ -705,6 +704,7 @@ function ProductCard({
   }
 
   const isOutOfStock = product.stock === 0
+  const hasStockInfo = product.stock > 0
 
   return (
     <motion.div
@@ -761,22 +761,29 @@ function ProductCard({
             {formatPrice(product.price, currency)}
           </span>
           <div className="mt-auto pt-1">
+            {hasStockInfo && (
+              <p className="text-[10px] text-gray-400 mb-1">{product.stock} en stock</p>
+            )}
             <Button
               className="w-full gap-1.5 text-xs font-medium py-2.5 rounded-lg transition-all duration-200"
               style={
                 added
                   ? { backgroundColor: `${primaryColor}20`, color: primaryColor, border: `1px solid ${primaryColor}60` }
-                  : { backgroundColor: primaryColor, color: 'white' }
+                  : isOutOfStock
+                    ? { backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }
+                    : { backgroundColor: primaryColor, color: 'white' }
               }
               onClick={handleAdd}
-              disabled={isOutOfStock}
             >
-              {isOutOfStock ? (
-                'Rupture de stock'
-              ) : added ? (
+              {added ? (
                 <>
                   <ShoppingCart className="h-3.5 w-3.5" />
                   Ajouté ✓
+                </>
+              ) : isOutOfStock ? (
+                <>
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Commander
                 </>
               ) : (
                 <>
