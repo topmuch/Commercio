@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import crypto from 'crypto'
 import { getCompanyId } from '@/lib/auth'
 
@@ -11,6 +10,11 @@ const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 function getUploadsDir(): string {
   if (process.env.UPLOADS_DIR) return process.env.UPLOADS_DIR
   return 'uploads'
+}
+
+// Use string concatenation instead of path.join to avoid Turbopack NFT issues
+function resolveUploadPath(...segments: string[]): string {
+  return segments.filter(Boolean).join('/').replace(/\/+/g, '/')
 }
 
 function sanitizeFilename(name: string): string {
@@ -64,13 +68,13 @@ export async function POST(request: NextRequest) {
 
     // Upload to configurable directory (default: /app/uploads)
     const uploadsBase = getUploadsDir()
-    const uploadDir = join(uploadsBase, safeFolder)
+    const uploadDir = resolveUploadPath(uploadsBase, safeFolder)
     await mkdir(uploadDir, { recursive: true })
 
     // Read file buffer and write to disk
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const filePath = join(uploadDir, filename)
+    const filePath = resolveUploadPath(uploadDir, filename)
     await writeFile(filePath, buffer)
 
     // URL served via /uploads/* rewrite → /api/uploads/* handler

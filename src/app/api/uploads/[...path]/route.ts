@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile, stat } from 'fs/promises'
-import { join, extname } from 'path'
 
 // Upload directory: use env var in production (Docker), fallback to local uploads/
 const UPLOADS_FALLBACK = 'uploads'
 function getUploadsDir(): string {
   if (process.env.UPLOADS_DIR) return process.env.UPLOADS_DIR
   return UPLOADS_FALLBACK
+}
+
+// Use string concatenation instead of path.join to avoid Turbopack NFT issues
+function resolveUploadPath(...segments: string[]): string {
+  return segments.filter(Boolean).join('/').replace(/\/+/g, '/')
 }
 
 // MIME types by extension
@@ -42,7 +46,9 @@ export async function GET(
       return NextResponse.json({ error: 'Chemin invalide' }, { status: 400 })
     }
 
-    const filePath = join(getUploadsDir(), relativePath)
+    // Build absolute path using resolveUploadPath to avoid Turbopack NFT issues
+    const uploadsDir = getUploadsDir()
+    const filePath = resolveUploadPath(uploadsDir, relativePath)
 
     // Check file exists and is within uploads directory
     const fileStat = await stat(filePath).catch(() => null)
@@ -52,7 +58,8 @@ export async function GET(
 
     // Read file
     const buffer = await readFile(filePath)
-    const ext = extname(filePath).toLowerCase()
+    const fileExt = filePath.split('.').pop()?.toLowerCase() || ''
+    const ext = '.' + fileExt
     const contentType = MIME_TYPES[ext] || 'application/octet-stream'
 
     return new NextResponse(buffer, {
